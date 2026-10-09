@@ -39,11 +39,12 @@ const levels = [
         </div>
         <p class="pen">
           <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden="true"><path d="M36 28 C30 14, 18 6, 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M12 1 L5 6 L12 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-          a quick chat first, and the first lesson is on me
+          A quick chat to learn a bit about you, and the first lesson is on me
         </p>
       </div>
 
       <div class="card">
+        {photo && <Image class="avatar" src={photo} alt="" width={160} height={160} />}
         <h2>What I teach</h2>
         <ul>
           {levels.map((l) => (
@@ -127,6 +128,9 @@ const levels = [
   h1 em { color: var(--cobalt); }
   .lede { font-size: 19px; color: var(--muted); max-width: 48ch; margin: 22px 0 30px; }
   .ctas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  /* Small photo pinned to the corner of the "What I teach" card. */
+  .card :global(.avatar) { position: absolute; border-radius: 50%; object-fit: cover; top: -22px; right: -18px; width: 80px; height: 80px; border: 3px solid var(--bg); box-shadow: 0 8px 20px -10px rgba(24, 32, 58, .5); transform: rotate(-4deg); }
   .btn { display: inline-block; background: var(--cobalt); color: #fff; text-decoration: none; font-weight: 600; padding: 15px 24px; border-radius: 8px; box-shadow: 0 2px 0 #1A2F95; }
   .btn:hover { background: var(--cobalt-hover); }
   .addr { font-size: 15px; color: var(--muted); user-select: all; }
@@ -134,7 +138,7 @@ const levels = [
   .pen svg { flex: none; }
 
 
-  .card { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 26px 28px; box-shadow: 0 18px 40px -26px rgba(24, 32, 58, .45); transform: rotate(1.2deg); }
+  .card { position: relative; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 26px 28px; box-shadow: 0 18px 40px -26px rgba(24, 32, 58, .45); transform: rotate(1.2deg); }
   .card h2 { font: 600 13px var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .card ul { list-style: none; margin: 0; padding: 0; }
   .card li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding-block: 12px; border-top: 1px dashed var(--line); }
