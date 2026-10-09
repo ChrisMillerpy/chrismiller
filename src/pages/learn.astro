@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import Base from '../layouts/Base.astro';
+import CursorGlow from '../components/CursorGlow.astro';
 import { SITE } from '../site';
 
 // Drop a photo at src/assets/me.jpg (or .png/.webp) and it appears in the About section.
@@ -22,7 +23,7 @@ const levels = [
   description="One-to-one maths tuition through conversation, for GCSE, A Level, Further Maths and the MAT, TMUA and STEP. 60-minute lessons online, or in person in central and south London."
   background="paper"
 >
-  <div class="hero-bg" slot="before" aria-hidden="true"></div>
+  <div class="hero-bg" slot="before" aria-hidden="true"><CursorGlow /></div>
 
   <main class="wrap">
     <div class="hero">
@@ -119,7 +120,6 @@ const levels = [
     background-size: 28px 28px;
     mask-image: linear-gradient(to bottom, #000 50%, transparent);
   }
-  :global(body) { position: relative; isolation: isolate; }
 
   /* Hero: the pitch on the left, an index card of levels on the right. */
   .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; align-items: center; padding-block: 48px 104px; }

@@ -39,6 +39,9 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
+  /* Own stacking context, so background layers (z-index: -1) sit above the body colour but below content. */
+  position: relative;
+  isolation: isolate;
   background: var(--bg);
   color: var(--ink);
   font: 17px/1.65 var(--ui);
