@@ -26,3 +26,7 @@ npm-debug.log*
 
 # local tooling
 .playwright-mcp/
+
+# claude
+.claude/
+!.claude/CLAUDE.md
