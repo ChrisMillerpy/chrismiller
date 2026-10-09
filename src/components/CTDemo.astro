@@ -1,0 +1,15 @@
+---
+// Use in an .mdx post:  import CTDemo from '../../components/CTDemo.astro';  then  <CTDemo />
+---
+
+<div class="ct-demo"></div>
+
+<script>
+  import { mountCT } from '../scripts/ct-demo.js';
+  document.querySelectorAll<HTMLElement>('.ct-demo').forEach((el) => mountCT(el));
+</script>
+
+<style>
+  .ct-demo { --ct-fg: var(--ink); --ct-muted: var(--muted); --ct-accent: var(--cobalt); --ct-radius: 6px;
+    margin: 32px 0; padding: 18px; background: var(--panel); border-radius: 12px; font-family: var(--ui); font-size: 15px; }
+</style>

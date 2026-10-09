@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://withchris.uk/sitemap-index.xml

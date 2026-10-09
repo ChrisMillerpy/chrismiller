@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learn · Option C · Level finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a small tool, not a brochure. Pick level + goal, the page answers with what lessons cover and pre-fills the enquiry email. */
+:root{
+  --bg:#EDF1EF; --ink:#18211E; --muted:#5B6863; --line:#CBD5D0; --card:#FFFFFF;
+  --cobalt:#2443C9; --cobalt-soft:#DDE3FA;
+  --display:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--display)}
+a{color:var(--cobalt)}
+.mock{background:var(--ink);color:#fff;font-size:13px;padding:8px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mock a{color:#fff}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
+header{display:flex;justify-content:space-between;align-items:center;padding-block:20px;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;font-stretch:115%;text-decoration:none;color:var(--ink);font-size:18px;letter-spacing:-.01em}
+nav{display:flex;gap:20px;font-family:var(--mono);font-size:13px}
+nav a{color:var(--muted);text-decoration:none}
+h1{font-weight:800;font-stretch:72%;font-size:clamp(46px,9vw,104px);line-height:.92;letter-spacing:-.01em;margin:28px 0 18px;text-transform:uppercase;text-wrap:balance}
+.lede{font-size:19px;color:var(--muted);max-width:54ch;margin:0 0 36px}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.levels{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:22px}
+.levels button,.goal button{font:inherit;cursor:pointer;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:14px 14px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:border-color .15s,background .15s}
+.levels button b{font-weight:700;font-stretch:100%;font-size:17px}
+.levels button small{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.levels button[aria-pressed=true],.goal button[aria-pressed=true]{border-color:var(--cobalt);background:var(--cobalt-soft)}
+button:focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+.goal{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.goal button{flex-direction:row;align-items:center;padding:10px 16px;border-radius:999px;font-weight:600}
+.answer{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;margin-bottom:72px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px}
+.card h2{font-weight:800;font-stretch:90%;font-size:30px;margin:0 0 8px;line-height:1.1;text-wrap:balance}
+.card p{margin:0 0 16px;max-width:58ch}
+.topics{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.topics li{font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--ink)}
+.facts{display:grid;gap:0;margin:0}
+.facts div{display:grid;grid-template-columns:110px 1fr;gap:12px;padding-block:12px;border-bottom:1px solid var(--line)}
+.facts div:last-child{border-bottom:0}
+.facts dt{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:2px}
+.facts dd{margin:0}
+.ph{background:#FFF0A6;padding:0 4px;border-radius:2px}
+.contact{background:var(--cobalt);color:#fff;border:0}
+.contact h2{color:#fff}
+.contact .sub{opacity:.85}
+.mail{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.mail a.go{background:#fff;color:var(--cobalt);text-decoration:none;font-weight:700;padding:13px 18px;border-radius:10px}
+.mail a.go:focus-visible,.mail button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.mail code{font-family:var(--mono);font-size:14px;background:rgba(255,255,255,.14);padding:12px 12px;border-radius:10px;user-select:all}
+.mail button{font:inherit;font-size:13px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:11px 12px;cursor:pointer}
+.subject{font-family:var(--mono);font-size:12.5px;opacity:.85;margin-top:14px}
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-block:8px 72px;border-top:1px solid var(--line);padding-top:40px}
+.strip h3{font-weight:700;font-size:18px;margin:0 0 6px}
+.strip p{margin:0;color:var(--muted)}
+footer{padding-block:24px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media (max-width:880px){.levels{grid-template-columns:repeat(2,minmax(0,1fr))}.answer,.strip{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="mock"><span>Mockup C of 3 for <b>/learn</b>: level finder. Click the buttons; the enquiry email pre-fills.</span><a href="index.html">← All mockups</a></div>
+
+<div class="wrap">
+  <header>
+    <a class="brand" href="#">CHRIS MILLER / LEARN</a>
+    <nav><a href="#">Tuition</a><a href="blog-3-shelves.html">Blog</a></nav>
+  </header>
+
+  <h1>Maths, from where you are</h1>
+  <p class="lede">One-to-one tuition from GCSE to undergraduate. Pick your level and what you want out of it, and I'll show you what lessons would cover.</p>
+
+  <p class="label" id="lvl-label">1 · Your level</p>
+  <div class="levels" role="group" aria-labelledby="lvl-label" id="levels"></div>
+
+  <p class="label" id="goal-label">2 · What you want</p>
+  <div class="goal" role="group" aria-labelledby="goal-label" id="goals">
+    <button type="button" data-goal="confidence" aria-pressed="true">I'm finding it hard</button>
+    <button type="button" data-goal="stretch" aria-pressed="false">I want to go further</button>
+  </div>
+
+  <div class="answer" aria-live="polite">
+    <div class="card">
+      <h2 id="a-title"></h2>
+      <p id="a-body"></p>
+      <ul class="topics" id="a-topics"></ul>
+    </div>
+    <div class="card">
+      <dl class="facts">
+        <div><dt>Format</dt><dd>60 min, weekly. Online with a shared whiteboard, or in person in <span class="ph">[town]</span></dd></div>
+        <div><dt>First step</dt><dd>Free 20-minute call to check fit</dd></div>
+        <div><dt>Rate</dt><dd id="a-rate"></dd></div>
+        <div><dt>Tutor</dt><dd>Chris, <span class="ph">[degree, university]</span>. Researches maths and medical imaging.</dd></div>
+      </dl>
+    </div>
+    <div class="card contact" style="grid-column:1/-1">
+      <h2>Ask about availability</h2>
+      <p class="sub">The email below already says your level and goal. Add a line about the student and send.</p>
+      <div class="mail">
+        <a class="go" id="mailto" href="#">Write the email</a>
+        <code id="addr">learn@chrismiller.uk</code>
+        <button type="button" id="copy">Copy address</button>
+      </div>
+      <p class="subject" id="subject"></p>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div><h3>Patient with stuck students</h3><p>We find the missing step, however far back it is, and rebuild from there.</p></div>
+    <div><h3>Ambitious with keen ones</h3><p>Proof, olympiad problems and admissions tests, well past the syllabus.</p></div>
+    <div><h3>Notes after every lesson</h3><p>You keep the whiteboard and a short summary of what to practise.</p></div>
+  </div>
+
+  <footer>© 2026 Chris Miller · <a href="blog-3-shelves.html">Blog</a></footer>
+</div>
+
+<script>
+const LEVELS = {
+  gcse:  {name:'GCSE', when:'Years 10–11', rate:'£__',
+    confidence:{t:'GCSE: getting back on top of it', b:'We find the topics that are costing marks, fill the gaps from earlier years, and build a past-paper routine so the exam holds no surprises.', k:['Number & algebra basics','Equations','Ratio & proportion','Graphs','Exam technique','Past papers']},
+    stretch:{t:'GCSE: aiming for a 9 and beyond', b:'Secure the 9, then start on the ideas that make A-level easy: proof, harder algebra and UKMT-style problem solving.', k:['Grade 9 problems','Algebraic proof','UKMT Intermediate','Further Maths Level 2','Intro to proof']}},
+  alevel:{name:'A-level', when:'Years 12–13', rate:'£__',
+    confidence:{t:'A-level: making sense of the jump', b:'The step up from GCSE is big. We slow down on the algebra and calculus that everything else depends on, then practise exam questions until they feel routine.', k:['Algebra fluency','Differentiation','Integration','Trigonometry','Statistics','Mechanics']},
+    stretch:{t:'A-level: beyond the A*', b:'Harder problems, proper proofs and a first look at university ideas, which also sets you up for admissions tests.', k:['Proof','Hard integration','Series','Problem solving','MAT-style questions']}},
+  further:{name:'Further Maths', when:'Years 12–13', rate:'£__',
+    confidence:{t:'Further Maths: untangling the new ideas', b:'Complex numbers, matrices and the other new topics come fast. We take each one apart until you can see why it works.', k:['Complex numbers','Matrices','Proof by induction','Polar coordinates','Differential equations']},
+    stretch:{t:'Further Maths: towards university', b:'Use Further Maths as a launch pad into linear algebra, analysis and the style of thinking universities look for.', k:['Linear algebra','Hyperbolic functions','Series & limits','Group theory taster','STEP problems']}},
+  tests:{name:'Admissions tests', when:'Year 13', rate:'£__',
+    confidence:{t:'MAT, TMUA, STEP: a calm plan', b:'These papers feel unlike school exams. We build a timetable, learn the recurring tricks, and work through past papers together.', k:['MAT','TMUA','STEP 2 & 3','Timed practice','Writing clear solutions']},
+    stretch:{t:'MAT, TMUA, STEP: aiming for a top grade', b:'Hard past papers, full written solutions marked line by line, and the habits that turn a good candidate into a strong one.', k:['STEP 3','Olympiad problems','Proof writing','Mock papers','Interview problems']}},
+  uni:{name:'Undergraduate', when:'University', rate:'£__',
+    confidence:{t:'University maths: getting unstuck', b:'Lectures move quickly. We go back over the definitions and proofs until the course makes sense, then practise problem sheets.', k:['Analysis','Linear algebra','Calculus of several variables','Proof technique','Problem sheets']},
+    stretch:{t:'University maths: going deeper', b:'Reading beyond the course, project help, and topics close to my own research such as Fourier methods and inverse problems.', k:['Fourier analysis','Inverse problems','Numerical methods','Probability','Reading groups']}},
+};
+const state = {level:'gcse', goal:'confidence'};
+const lv = document.getElementById('levels');
+for (const [id, L] of Object.entries(LEVELS)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.level = id;
+  b.innerHTML = `<b>${L.name}</b><small>${L.when}</small>`;
+  lv.appendChild(b);
+}
+function render() {
+  const L = LEVELS[state.level], G = L[state.goal];
+  lv.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.level === state.level));
+  document.querySelectorAll('#goals button').forEach(b => b.setAttribute('aria-pressed', b.dataset.goal === state.goal));
+  document.getElementById('a-title').textContent = G.t;
+  document.getElementById('a-body').textContent = G.b;
+  document.getElementById('a-topics').innerHTML = G.k.map(k => `<li>${k}</li>`).join('');
+  document.getElementById('a-rate').innerHTML = `<span class="ph">${L.rate}</span> per hour`;
+  const subject = `Tuition enquiry: ${L.name}, ${state.goal === 'confidence' ? 'building confidence' : 'going further'}`;
+  document.getElementById('subject').textContent = 'Subject: ' + subject;
+  document.getElementById('mailto').href = 'mailto:learn@chrismiller.uk?subject=' + encodeURIComponent(subject);
+}
+lv.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { state.level = b.dataset.level; render(); } });
+document.getElementById('goals').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { state.goal = b.dataset.goal; render(); } });
+document.getElementById('copy').addEventListener('click', e => {
+  const btn = e.currentTarget;
+  navigator.clipboard.writeText('learn@chrismiller.uk').then(() => { btn.textContent = 'Copied'; }, () => {
+    const r = document.createRange(); r.selectNodeContents(document.getElementById('addr'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, press ⌘C';
+  });
+});
+render();
+</script>
+</body>
+</html>

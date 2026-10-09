@@ -1,0 +1,79 @@
+---
+// A post's cover: its own image if it has one, otherwise a generated line pattern
+// drawn in the accent colour (so it follows light/dark mode).
+import { Image } from 'astro:assets';
+import type { Post } from '../lib/posts';
+
+interface Props { post: Post; class?: string; tall?: boolean }
+const { post, class: className, tall = false } = Astro.props;
+const { cover, coverAlt, motif: chosen } = post.data;
+
+const W = 640, H = tall ? 240 : 360;
+const MOTIFS = ['waves', 'sines', 'rings', 'dots', 'rays', 'grid'] as const;
+
+// Seeded random numbers so each post always gets the same picture.
+let seed = [...post.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 2147483647, 7) || 1;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const motif = chosen ?? MOTIFS[Math.floor(rnd() * MOTIFS.length)];
+
+type Shape = { d?: string; circle?: [number, number, number]; opacity: number; fill?: boolean; width?: number };
+const shapes: Shape[] = [];
+const path = (f: (t: number) => number, step = 4) => {
+  let d = '';
+  for (let t = 0; t <= W; t += step) d += `${t ? 'L' : 'M'}${t},${f(t).toFixed(1)}`;
+  return d;
+};
+
+if (motif === 'waves') {
+  for (let k = 1; k < 9; k++)
+    shapes.push({ opacity: 1 - k / 10, d: path((t) => {
+      let y = 0;
+      for (let n = 1; n <= k; n++) y += Math.sin(((2 * n - 1) * t / W) * 4 * Math.PI) / (2 * n - 1);
+      return H / 2 - y * H * 0.22;
+    }, 3) });
+} else if (motif === 'sines') {
+  for (let k = 0; k < 16; k++) {
+    const r = H * (0.08 + rnd() * 0.3), ph = rnd() * 6.28;
+    shapes.push({ opacity: 0.2 + rnd() * 0.55, d: path((t) => H / 2 + r * Math.sin((t / W) * 6.28 + ph)) });
+  }
+} else if (motif === 'rings') {
+  const cx = W * (0.35 + rnd() * 0.3);
+  for (let k = 1; k < 16; k++) shapes.push({ opacity: 1 - k / 17, circle: [cx, H / 2, k * Math.pow(1.22, k) * 4] });
+} else if (motif === 'dots') {
+  for (let i = 0; i < 10; i++)
+    for (let j = 0; j < Math.floor(H / 60); j++)
+      shapes.push({ fill: true, opacity: rnd() < 0.18 ? 0.9 : 0.22, circle: [64 + i * 57, 50 + j * 52, 9] });
+} else if (motif === 'rays') {
+  const cx = W * 0.72, cy = H * 0.38;
+  for (let k = 0; k < 40; k++) {
+    const a = rnd() * 6.28, L = 80 + rnd() * 400;
+    shapes.push({ opacity: 0.15 + rnd() * 0.5, d: `M${cx},${cy}L${(cx + Math.cos(a) * L).toFixed(1)},${(cy + Math.sin(a) * L).toFixed(1)}` });
+  }
+  shapes.push({ fill: true, opacity: 1, circle: [cx, cy, 34] });
+} else {
+  for (let i = 0; i <= W; i += 32) shapes.push({ opacity: 0.15, d: `M${i},0V${H}` });
+  for (let j = 0; j <= H; j += 32) shapes.push({ opacity: 0.15, d: `M0,${j}H${W}` });
+  shapes.push({ opacity: 0.9, width: 3, d: path((t) => H - 40 - Math.pow(t / W, 2.2) * (H - 90)) });
+}
+---
+
+{cover ? (
+  <Image class:list={['cover', className]} src={cover} alt={coverAlt ?? ''} width={1280} />
+) : (
+  <svg class:list={['cover', className]} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width={W} height={H} fill="var(--cover)" />
+    <g stroke="var(--mark)" stroke-width="1.4" fill="none">
+      {shapes.map((s) =>
+        s.circle ? (
+          <circle cx={s.circle[0]} cy={s.circle[1]} r={s.circle[2]} opacity={s.opacity} fill={s.fill ? 'var(--mark)' : 'none'} stroke={s.fill ? 'none' : undefined} />
+        ) : (
+          <path d={s.d} opacity={s.opacity} stroke-width={s.width} />
+        ),
+      )}
+    </g>
+  </svg>
+)}
+
+<style>
+  .cover { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--cover); }
+</style>

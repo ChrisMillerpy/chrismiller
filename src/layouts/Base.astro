@@ -1,0 +1,53 @@
+---
+import '@fontsource-variable/literata';
+import '@fontsource-variable/public-sans';
+import '@fontsource/kalam/400.css';
+import '@fontsource/kalam/700.css';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Blog pages offer a light/dark reading-mode switch. */
+  themeable?: boolean;
+  /** Page background: 'paper' (tutoring) or 'bg' (blog). */
+  background?: 'paper' | 'bg';
+}
+
+const { title, description = SITE.description, themeable = false, background = 'bg' } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} · Blog`} href="/rss.xml" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    {themeable && (
+      <script is:inline>
+        try { if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+      </script>
+    )}
+  </head>
+  <body style={background === 'paper' ? 'background: var(--paper)' : undefined}>
+    <slot name="before" />
+    <div class="wrap"><Header /></div>
+    <slot />
+    <div class="wrap"><Footer themeable={themeable} /></div>
+  </body>
+</html>

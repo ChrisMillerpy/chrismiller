@@ -1,0 +1,55 @@
+---
+import 'katex/dist/katex.min.css';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PostCover from '../../components/PostCover.astro';
+import { getPosts, formatDate, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+---
+
+<Base title={post.data.title} description={post.data.description} themeable>
+  <article class="wrap">
+    <PostCover post={post} tall class="post-cover" />
+    <div class="reading">
+      <a class="back" href="/blog">← All posts</a>
+      <h1>{post.data.title}</h1>
+      <p class="meta">
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        {post.data.draft && <span class="draft">Draft</span>}
+      </p>
+      <div class="prose"><Content /></div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  article :global(.post-cover) { border-radius: 14px; aspect-ratio: auto; height: clamp(160px, 26vw, 300px); width: 100%; }
+  .reading { max-width: 680px; margin: 0 auto; padding-block: 32px 64px; }
+  .back { font-size: 14px; text-decoration: none; color: var(--muted); }
+  h1 { font-size: clamp(30px, 4.4vw, 42px); letter-spacing: -.01em; margin: 16px 0 10px; }
+  .meta { font-size: 14px; color: var(--muted); margin: 0 0 32px; }
+  .draft { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--pen); border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px; margin-left: 8px; }
+
+  /* Styles for everything a post's Markdown can produce. */
+  .prose { font-family: var(--display); font-size: 18.5px; line-height: 1.7; }
+  .prose :global(p) { margin: 0 0 20px; }
+  .prose :global(h2) { font-family: var(--ui); font-size: 22px; margin: 40px 0 8px; }
+  .prose :global(h3) { font-family: var(--ui); font-size: 19px; margin: 32px 0 6px; }
+  .prose :global(img) { height: auto; border-radius: 8px; }
+  .prose :global(figure) { margin: 32px 0; }
+  .prose :global(figcaption) { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: 10px; }
+  .prose :global(blockquote) { margin: 24px 0; padding-left: 18px; border-left: 3px solid var(--line); color: var(--muted); }
+  .prose :global(code) { font-family: var(--mono); font-size: .85em; font-variant-ligatures: none; }
+  .prose :global(:not(pre) > code) { background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+  .prose :global(pre) { padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.55; }
+  .prose :global(.katex-display) { overflow-x: auto; overflow-y: hidden; padding-block: 4px; }
+  .prose :global(table) { border-collapse: collapse; width: 100%; font-family: var(--ui); font-size: 15px; display: block; overflow-x: auto; }
+  .prose :global(th), .prose :global(td) { border-bottom: 1px solid var(--line); padding: 8px 12px 8px 0; text-align: left; }
+</style>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blog · Round 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<script>try{const t=localStorage.getItem('theme');if(t==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+<script>window.MathJax={tex:{inlineMath:[['$','$']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+<script src="assets/ct-demo.js"></script>
+<style>
+/* Layout: card grid with image-led covers (from Option C), Medium-style reading view (from Option A). Light by default; footer switch for dark reading mode. */
+:root{
+  --bg:#FFFFFF; --panel:#F4F6FB; --fg:#18203A; --muted:#5A6480; --line:#E1E6EF; --accent:#2443C9; --cover:#F0F3FA; --mark:#2443C9;
+  --display:"Literata",Georgia,serif; --ui:"Public Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  --ct-fg:var(--fg); --ct-muted:var(--muted); --ct-accent:var(--accent); --ct-radius:6px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{--bg:#12161D;--panel:#1A2029;--fg:#E7EAF0;--muted:#99A3B5;--line:#29303B;--accent:#8EA6FF;--cover:#181E28;--mark:#8EA6FF;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--ui);transition:background .2s,color .2s}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.mock{background:var(--fg);color:var(--bg);font-size:13px;padding:8px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mock a{color:var(--bg)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
+header{display:flex;justify-content:space-between;align-items:center;padding-block:22px;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:600;font-size:21px;color:var(--fg);text-decoration:none}
+nav{display:flex;gap:22px;font-size:15px}
+nav a{color:var(--muted);text-decoration:none}
+nav a[aria-current]{color:var(--fg);font-weight:600}
+.head{padding-block:40px 32px}
+.head h1{font-family:var(--display);font-weight:600;font-size:clamp(34px,5vw,52px);line-height:1.08;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.head p{color:var(--muted);font-size:18px;margin:12px 0 0;max-width:56ch}
+.cover{display:block;width:100%;max-width:100%;aspect-ratio:16/9;background:var(--cover)}
+.feature{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;align-items:center;text-decoration:none;color:var(--fg);padding-bottom:40px;border-bottom:1px solid var(--line);margin-bottom:40px}
+.feature .cover{border-radius:14px}
+.feature h2{font-family:var(--display);font-weight:600;font-size:clamp(26px,3.4vw,36px);line-height:1.15;margin:8px 0 12px;text-wrap:balance}
+.feature p{color:var(--muted);margin:0;font-size:17px}
+.meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.new{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-right:10px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 28px;padding-bottom:72px}
+.card{text-decoration:none;color:var(--fg);display:flex;flex-direction:column;gap:10px}
+.card .cover{border-radius:10px;transition:transform .2s}
+.card:hover .cover,.feature:hover .cover{transform:translateY(-3px)}
+.card h3{font-family:var(--display);font-weight:600;font-size:20px;line-height:1.25;margin:4px 0 0}
+.card p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+.card:hover h3,.feature:hover h2{color:var(--accent)}
+footer{border-top:1px solid var(--line);padding-block:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.mode{display:flex;align-items:center;gap:8px}
+.mode button{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--muted);padding:4px 12px;border-radius:999px;cursor:pointer}
+.mode button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+/* post */
+.post-cover{display:block;width:100%;max-width:100%;height:clamp(160px,26vw,300px);background:var(--cover);border-radius:14px}
+.reading{max-width:680px;margin:0 auto;padding-block:32px 80px}
+.back{font-size:14px;text-decoration:none;color:var(--muted)}
+.reading h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.4vw,42px);line-height:1.12;letter-spacing:-.01em;margin:16px 0 10px;text-wrap:balance}
+.reading .meta{margin-bottom:32px}
+.prose{font-family:var(--display);font-size:18.5px;line-height:1.7}
+.prose p{margin:0 0 20px}
+.prose h2{font-family:var(--ui);font-weight:600;font-size:22px;margin:40px 0 8px}
+.prose mjx-container[display=true]{overflow-x:auto;overflow-y:hidden}
+.fig{margin:32px 0;padding:18px;background:var(--panel);border-radius:12px}
+.figcap{font-size:14px;color:var(--muted);margin:12px 0 0}
+pre{background:var(--panel);border-radius:8px;padding:16px;overflow-x:auto;font:13.5px/1.55 var(--mono);color:var(--fg)}
+@media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.feature{grid-template-columns:1fr;gap:18px}}
+@media (max-width:540px){.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="mock"><span>Round 2 · <b>/blog</b>: cards and covers from C, reading view from A, light by default with a dark switch in the footer. Titles are examples; the CT post opens.</span><a href="index.html">← All mockups</a></div>
+
+<div class="wrap">
+  <header>
+    <a class="brand" href="#">Chris Miller</a>
+    <nav><a href="learn-v2.html">Tuition</a><a href="#" aria-current="page">Blog</a></nav>
+  </header>
+
+  <main id="index-view">
+    <div class="head">
+      <h1>Blog</h1>
+      <p>Maths, medical imaging, code, and the history behind them.</p>
+    </div>
+    <div id="feature"></div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <article id="post-view" hidden>
+    <canvas class="post-cover" id="post-cover" aria-hidden="true"></canvas>
+    <div class="reading">
+      <a class="back" href="#">← All posts</a>
+      <h1>Backprojection by hand: how a CT scanner sees inside you</h1>
+      <p class="meta">28 September 2026 · 6 min read</p>
+      <div class="prose">
+        <p>A CT scanner never photographs a slice of your body. It fires X-rays through you from hundreds of directions and records how much each beam is dimmed. The picture you see afterwards is a calculation. This post builds that calculation from scratch, and you can run it below.</p>
+        <h2>What the scanner measures</h2>
+        <p>Each beam loses intensity according to the Beer–Lambert law, so after taking logs the detector reading is a line integral of the attenuation $f(x,y)$ along the beam. Collect every line at angle $\theta$ and offset $s$ and you get the Radon transform:</p>
+        $$p_\theta(s) = \int_{-\infty}^{\infty} f(s\cos\theta - t\sin\theta,\; s\sin\theta + t\cos\theta)\,dt.$$
+        <p>Stack these projections for $\theta \in [0,\pi)$ and you get the <em>sinogram</em>, named for the sine curve each point of the object traces out.</p>
+        <h2>Smearing it back</h2>
+        <p>The obvious inverse is to smear each projection back across the image along the direction it came from, and add everything up:</p>
+        $$b(x,y) = \int_0^{\pi} p_\theta(x\cos\theta + y\sin\theta)\,d\theta.$$
+        <p>Try it with the filter off. The shapes are there but blurred. In fact $b = f * \tfrac{1}{r}$: the true image convolved with a $1/r$ halo.</p>
+      </div>
+      <div class="fig"><div id="ct"></div><p class="figcap">Figure 1. The Shepp–Logan phantom, its sinogram, and the reconstruction from the chosen number of angles.</p></div>
+      <div class="prose">
+        <h2>The fix is a filter</h2>
+        <p>The Fourier slice theorem says the 1-D Fourier transform of $p_\theta$ is a slice through the 2-D Fourier transform of $f$. Backprojection samples those slices densely near the origin and sparsely far out, which is exactly the $1/r$ blur. Multiplying each projection's spectrum by $|\omega|$ undoes it:</p>
+        $$f(x,y) = \int_0^{\pi} (p_\theta * h)(x\cos\theta + y\sin\theta)\,d\theta, \qquad \hat h(\omega) = |\omega|.$$
+        <p>Tick <em>Ramp filter</em> above. With 180 angles the phantom comes back almost exactly; with 12 you can see streaks, which is why scanners take so many views.</p>
+      </div>
+<pre><code>def ramp_filter(p, ds):
+    n = np.arange(-len(p) + 1, len(p))
+    h = np.where(n == 0, 1 / (4 * ds**2),
+                 np.where(n % 2, -1 / (np.pi * n * ds)**2, 0))
+    return ds * np.convolve(p, h)[len(p) - 1 : 2 * len(p) - 1]</code></pre>
+    </div>
+  </article>
+
+  <footer>
+    <span>© 2026 Chris Miller · <a href="learn-v2.html">Tuition</a></span>
+    <div class="mode" role="group" aria-label="Reading mode"><span>Reading mode</span><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div>
+  </footer>
+</div>
+
+<script>
+// [date, title, summary, cover motif]. In the real site a post can set its own cover image; these motifs are the fallback.
+const POSTS = [
+  ['2026-09-28','Backprojection by hand: how a CT scanner sees inside you','Fire X-rays from every angle, then do some maths. A reconstruction you can run in the browser.','sino'],
+  ['2026-09-12','Why every GCSE student should meet the pigeonhole principle','Five problems that need nothing but counting.','dots'],
+  ['2026-08-30','A tiny ray tracer in 200 lines of TypeScript','One sphere, one light, and a lot of vector algebra.','rays'],
+  ["2026-08-14","Napier's bones and the invention of logarithms",'How logarithms were invented to make multiplication bearable.','rings'],
+  ['2026-07-21','Notes on the Fourier slice theorem','A short proof and three pictures.','waves'],
+  ['2026-06-03','A gentle route into STEP Paper 2','What changes between A-level questions and STEP ones.','grid'],
+  ['2025-12-18','Reading list: inverse problems for the curious','Where to start with A-level maths and curiosity.','sino'],
+];
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const v = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function cover(cv, motif, s) {
+  seed = s + 11; const W = cv.width = 640, H = cv.height = 360, x = cv.getContext('2d');
+  x.fillStyle = v('--cover'); x.fillRect(0, 0, W, H); x.strokeStyle = x.fillStyle = v('--mark'); x.lineWidth = 1.4;
+  if (motif === 'sino') for (let k = 0; k < 16; k++) { const r = 30 + rnd() * 110, ph = rnd() * 6.28; x.globalAlpha = .2 + rnd() * .55; x.beginPath(); for (let t = 0; t <= W; t += 4) x.lineTo(t, H / 2 + r * Math.sin(t / W * 6.28 + ph)); x.stroke(); }
+  if (motif === 'waves') for (let k = 1; k < 9; k++) { x.globalAlpha = 1 - k / 10; x.beginPath(); for (let t = 0; t <= W; t += 3) { let y = 0; for (let n = 1; n <= k; n++) y += Math.sin((2 * n - 1) * t / W * 12.56) / (2 * n - 1); x.lineTo(t, H / 2 - y * 80); } x.stroke(); }
+  if (motif === 'rings') { const cx = W * (.35 + rnd() * .3), cy = H / 2; for (let k = 1; k < 16; k++) { x.globalAlpha = 1 - k / 17; x.beginPath(); x.arc(cx, cy, k * Math.pow(1.22, k) * 4, 0, 6.29); x.stroke(); } }
+  if (motif === 'dots') { const cols = 10, rows = 6; for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) { x.globalAlpha = rnd() < .18 ? .9 : .22; x.beginPath(); x.arc(64 + i * 57, 50 + j * 52, 9, 0, 6.29); x.fill(); } }
+  if (motif === 'rays') { const cx = W * .72, cy = H * .38; for (let k = 0; k < 40; k++) { const a = rnd() * 6.28, L = 80 + rnd() * 400; x.globalAlpha = .15 + rnd() * .5; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * L, cy + Math.sin(a) * L); x.stroke(); } x.globalAlpha = 1; x.beginPath(); x.arc(cx, cy, 34, 0, 6.29); x.fill(); }
+  if (motif === 'grid') { for (let i = 0; i < W; i += 32) for (let j = 0; j < H; j += 32) { x.globalAlpha = .15; x.strokeRect(i + .5, j + .5, 32, 32); } x.globalAlpha = .9; x.lineWidth = 3; x.beginPath(); for (let t = 0; t <= W; t += 4) x.lineTo(t, H - 40 - Math.pow(t / W, 2.2) * (H - 90)); x.stroke(); }
+  x.globalAlpha = 1;
+}
+const fmt = d => new Date(d).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+const [f, ...rest] = POSTS;
+document.getElementById('feature').innerHTML = `<a class="feature" href="#post"><canvas class="cover" data-m="${f[3]}" data-s="0"></canvas><div><span class="new">Latest</span><span class="meta">${fmt(f[0])}</span><h2>${f[1]}</h2><p>${f[2]}</p></div></a>`;
+document.getElementById('grid').innerHTML = rest.map((p, i) => `<a class="card" href="#post"><canvas class="cover" data-m="${p[3]}" data-s="${i + 1}"></canvas><span class="meta">${fmt(p[0])}</span><h3>${p[1]}</h3><p>${p[2]}</p></a>`).join('');
+function drawCovers() {
+  document.querySelectorAll('canvas.cover').forEach(cv => cover(cv, cv.dataset.m, +cv.dataset.s));
+  cover(document.getElementById('post-cover'), 'sino', 0);
+}
+
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('theme', t); } catch (e) {}
+  document.querySelectorAll('.mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === t));
+  drawCovers();
+}
+document.querySelector('.mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTheme(b.dataset.t); });
+
+let mounted = false;
+function route() {
+  const post = location.hash === '#post';
+  document.getElementById('index-view').hidden = post;
+  document.getElementById('post-view').hidden = !post;
+  if (post && !mounted) { mountCT(document.getElementById('ct')); mounted = true; }
+  if (post && window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+setTheme(document.documentElement.dataset.theme);
+route();
+</script>
+</body>
+</html>

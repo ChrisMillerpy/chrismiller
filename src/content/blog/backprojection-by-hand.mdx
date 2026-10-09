@@ -1,0 +1,53 @@
+---
+title: 'Backprojection by hand: how a CT scanner sees inside you'
+date: 2026-09-28
+description: Fire X-rays from every angle, then do some maths. A reconstruction you can run in the browser.
+motif: sines
+draft: true
+---
+
+import CTDemo from '../../components/CTDemo.astro';
+
+A CT scanner never photographs a slice of your body. It fires X-rays through you from hundreds of directions and records how much each beam is dimmed. The picture you see afterwards is a calculation. This post builds that calculation from scratch, and you can run it below.
+
+## What the scanner measures
+
+Each beam loses intensity according to the Beer–Lambert law, so after taking logs the detector reading is a line integral of the attenuation $f(x,y)$ along the beam. Collect every line at angle $\theta$ and offset $s$ and you get the Radon transform:
+
+$$
+p_\theta(s) = \int_{-\infty}^{\infty} f(s\cos\theta - t\sin\theta,\; s\sin\theta + t\cos\theta)\,dt.
+$$
+
+Stack these projections for $\theta \in [0,\pi)$ and you get the _sinogram_, named for the sine curve each point of the object traces out.
+
+## Smearing it back
+
+The obvious inverse is to smear each projection back across the image along the direction it came from, and add everything up:
+
+$$
+b(x,y) = \int_0^{\pi} p_\theta(x\cos\theta + y\sin\theta)\,d\theta.
+$$
+
+Try it with the filter off. The shapes are there but blurred. In fact $b = f * \tfrac{1}{r}$: the true image convolved with a $1/r$ halo.
+
+<CTDemo />
+
+## The fix is a filter
+
+The Fourier slice theorem says the 1-D Fourier transform of $p_\theta$ is a slice through the 2-D Fourier transform of $f$. Backprojection samples those slices densely near the origin and sparsely far out, which is exactly the $1/r$ blur. Multiplying each projection's spectrum by $|\omega|$ undoes it:
+
+$$
+f(x,y) = \int_0^{\pi} (p_\theta * h)(x\cos\theta + y\sin\theta)\,d\theta, \qquad \hat h(\omega) = |\omega|.
+$$
+
+Tick _Ramp filter_ above. With 180 angles the phantom comes back almost exactly; with 12 you can see streaks, which is why scanners take so many views. In code the filter is a few lines:
+
+```python
+import numpy as np
+
+def ramp_filter(p, ds):
+    n = np.arange(-len(p) + 1, len(p))
+    h = np.where(n == 0, 1 / (4 * ds**2),
+                 np.where(n % 2, -1 / (np.pi * n * ds)**2, 0))
+    return ds * np.convolve(p, h)[len(p) - 1 : 2 * len(p) - 1]
+```

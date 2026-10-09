@@ -1,0 +1,69 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostCover from '../../components/PostCover.astro';
+import { getPosts, formatDate } from '../../lib/posts';
+
+const [latest, ...rest] = await getPosts();
+---
+
+<Base title="Blog" description="Writing on maths, medical imaging, code and the history behind them." themeable>
+  <main class="wrap">
+    <div class="head">
+      <h1>Blog</h1>
+      <p>Maths, medical imaging, code, and the history behind them.</p>
+    </div>
+
+    {!latest && <p class="empty">The first posts are on the way.</p>}
+
+    {latest && (
+      <a class="feature" href={`/blog/${latest.id}/`}>
+        <PostCover post={latest} />
+        <div>
+          <span class="new">Latest</span>
+          <time class="meta" datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time>
+          {latest.data.draft && <span class="draft">Draft</span>}
+          <h2>{latest.data.title}</h2>
+          <p>{latest.data.description}</p>
+        </div>
+      </a>
+    )}
+
+    {rest.length > 0 && (
+      <div class="grid">
+        {rest.map((post) => (
+          <a class="card" href={`/blog/${post.id}/`}>
+            <PostCover post={post} />
+            <time class="meta" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+            {post.data.draft && <span class="draft">Draft</span>}
+            <h3>{post.data.title}</h3>
+            <p>{post.data.description}</p>
+          </a>
+        ))}
+      </div>
+    )}
+  </main>
+</Base>
+
+<style>
+  .head { padding-block: 40px 32px; }
+  .head h1 { font-size: clamp(34px, 5vw, 52px); letter-spacing: -.01em; }
+  .head p { color: var(--muted); font-size: 18px; margin: 12px 0 0; }
+  .empty { color: var(--muted); padding-block: 40px 80px; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .new { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--cobalt); margin-right: 10px; }
+  .draft { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--pen); border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px; margin-left: 8px; }
+  .feature, .card { text-decoration: none; color: var(--ink); }
+  .feature { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-bottom: 40px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+  .feature h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.15; margin: 8px 0 12px; }
+  .feature p { color: var(--muted); margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 28px; padding-bottom: 48px; }
+  .card { display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { font-size: 20px; line-height: 1.25; margin-top: 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .feature :global(.cover) { border-radius: 14px; transition: transform .2s; }
+  .card :global(.cover) { border-radius: 10px; transition: transform .2s; }
+  .feature:hover :global(.cover), .card:hover :global(.cover) { transform: translateY(-3px); }
+  .feature:hover h2, .card:hover h3 { color: var(--cobalt); }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .feature { grid-template-columns: 1fr; gap: 18px; } }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+</style>

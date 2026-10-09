@@ -1,0 +1,56 @@
+/* Design tokens shared by every page. Blog pages also support a dark reading mode. */
+:root {
+  --paper: #FAFBFD;
+  --bg: #FFFFFF;
+  --panel: #F4F6FB;
+  --ink: #18203A;
+  --muted: #5A6480;
+  --line: #DDE3EE;
+  --grid: #DCE4F4;
+  --cobalt: #2443C9;
+  --cobalt-hover: #1E39B0;
+  --cobalt-soft: #E6EBFC;
+  --pen: #C2362B;
+  --mark: #2443C9;
+  --cover: #F0F3FA;
+
+  --display: 'Literata Variable', Georgia, serif;
+  --ui: 'Public Sans Variable', system-ui, sans-serif;
+  --hand: 'Kalam', 'Comic Sans MS', cursive;
+  --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --paper: #12161D;
+  --bg: #12161D;
+  --panel: #1A2029;
+  --ink: #E7EAF0;
+  --muted: #99A3B5;
+  --line: #29303B;
+  --cobalt: #8EA6FF;
+  --cobalt-hover: #A9BBFF;
+  --mark: #8EA6FF;
+  --cover: #181E28;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.65 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+img, svg, canvas { max-width: 100%; }
+a { color: var(--cobalt); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.12; text-wrap: balance; margin: 0; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,43 @@
+---
+import { SITE } from '../site';
+
+interface Props { themeable?: boolean }
+const { themeable = false } = Astro.props;
+---
+
+<footer>
+  <span>© {new Date().getFullYear()} {SITE.name} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a></span>
+  {themeable && (
+    <div class="mode" role="group" aria-label="Reading mode">
+      <span>Reading mode</span>
+      <button type="button" data-theme-choice="light">Light</button>
+      <button type="button" data-theme-choice="dark">Dark</button>
+    </div>
+  )}
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]');
+  const sync = () => {
+    const current = document.documentElement.dataset.theme ?? 'light';
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === current)));
+  };
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const choice = b.dataset.themeChoice ?? 'light';
+      if (choice === 'dark') document.documentElement.dataset.theme = 'dark';
+      else delete document.documentElement.dataset.theme;
+      try { localStorage.setItem('theme', choice); } catch {}
+      sync();
+    }),
+  );
+  sync();
+</script>
+
+<style>
+  footer { border-top: 1px solid var(--line); padding-block: 24px; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  footer a { color: var(--muted); }
+  .mode { display: flex; align-items: center; gap: 8px; }
+  .mode button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+  .mode button[aria-pressed='true'] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+</style>

@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+
+# cloudflare
+.wrangler/
+.dev.vars*
+
+# environment
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.log*
+*.log
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# local tooling
+.playwright-mcp/

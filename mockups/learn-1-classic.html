@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learn · Option A · Clear and professional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: classic single page. Split hero with a "levels" ladder, then trust-building sections in a calm 1100px column. */
+:root{
+  --paper:#FAFBFA; --ink:#14211C; --muted:#56645E; --rule:#D5DEDA;
+  --green:#1F5E4A; --green-tint:#E4EEE9; --ph:#FFF4C2;
+  --display:"Spectral",Georgia,serif; --body:"Public Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--body)}
+a{color:var(--green)}
+.mock{background:var(--ink);color:var(--paper);font-size:13px;padding:8px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mock a{color:var(--paper)}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px}
+.ph{background:var(--ph);padding:0 4px;border-radius:2px;font-style:normal}
+header.top{display:flex;justify-content:space-between;align-items:center;padding-block:22px;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:600;font-size:22px;text-decoration:none;color:var(--ink)}
+nav{display:flex;gap:22px;font-size:15px}
+nav a{color:var(--muted);text-decoration:none}
+nav a[aria-current]{color:var(--ink);font-weight:600}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(34px,5vw,54px);letter-spacing:-.01em}
+h2{font-size:clamp(26px,3vw,34px)}
+h3{font-size:20px}
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:56px;padding-block:48px 72px;align-items:center}
+.hero>*{min-width:0}
+.lede{font-size:19px;color:var(--muted);max-width:52ch;margin:20px 0 32px}
+.cta{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:14px 22px;border-radius:6px;font-weight:600}
+.cta:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.email{display:block;margin-top:12px;font-size:14px;color:var(--muted)}
+.ladder{border:1px solid var(--rule);border-radius:10px;background:#fff;overflow:hidden}
+.ladder h3{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:16px 20px;border-bottom:1px solid var(--rule);font-weight:600}
+.ladder ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column-reverse}
+.ladder li{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 20px;border-top:1px solid var(--rule)}
+.ladder li:last-child{border-top:0}
+.ladder b{font-weight:600}
+.ladder span{color:var(--muted);font-size:14px;text-align:right}
+.ladder small{display:block;color:var(--muted);font-size:13px}
+section{padding-block:64px;border-top:1px solid var(--rule)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:32px}
+.panel{background:var(--green-tint);border-radius:10px;padding:28px}
+.panel p{margin:10px 0 0;color:var(--ink)}
+.panel ul{margin:14px 0 0;padding-left:20px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:32px;counter-reset:s}
+.steps li{list-style:none;counter-increment:s}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--green);color:var(--green);font-family:var(--display);font-weight:600;margin-bottom:12px}
+.steps ol{padding:0;margin:0}
+.steps p{color:var(--muted);margin:6px 0 0}
+.about{display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
+.photo{aspect-ratio:4/5;max-width:100%;border-radius:10px;background:repeating-linear-gradient(45deg,var(--green-tint) 0 10px,#fff 10px 20px);display:grid;place-items:center;color:var(--muted);font-size:13px;border:1px solid var(--rule)}
+.about p{max-width:62ch}
+table{width:100%;border-collapse:collapse;margin-top:28px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:14px 0;border-bottom:1px solid var(--rule)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+td:last-child,th:last-child{text-align:right}
+details{border-bottom:1px solid var(--rule);padding-block:16px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin:10px 0 0;max-width:68ch}
+.closing{background:var(--green);color:#fff;border-radius:14px;padding:48px;margin-block:64px;display:flex;justify-content:space-between;gap:24px;align-items:center;flex-wrap:wrap}
+.closing h2{color:#fff}
+.closing p{margin:8px 0 0;opacity:.85}
+.closing .cta{background:#fff;color:var(--green)}
+footer{padding-block:28px;color:var(--muted);font-size:14px;border-top:1px solid var(--rule)}
+@media (max-width:760px){
+  .hero,.two,.steps,.about{grid-template-columns:1fr}
+  .hero{gap:36px;padding-block:24px 48px}
+  .photo{max-width:200px}
+  .closing{padding:28px}
+}
+</style>
+</head>
+<body>
+<div class="mock"><span>Mockup A of 3 for <b>/learn</b>: clear and professional. Yellow highlights are placeholders for you to fill.</span><a href="index.html">← All mockups</a></div>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#">Chris Miller</a>
+    <nav><a href="#" aria-current="page">Tuition</a><a href="blog-1-index.html">Blog</a><a href="#contact">Contact</a></nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Maths tuition from GCSE to university</h1>
+      <p class="lede">One-to-one lessons for students who are finding maths hard and for students who want to go further than the syllabus. Online or in person in <i class="ph">[your town]</i>.</p>
+      <a class="cta" href="mailto:learn@chrismiller.uk?subject=Tuition%20availability">Email to check availability</a>
+      <span class="email">or write to learn@chrismiller.uk</span>
+    </div>
+    <div class="ladder" aria-label="Levels taught">
+      <h3>What I teach</h3>
+      <ol>
+        <li><div><b>GCSE Maths</b><small>Foundation and Higher, all boards</small></div><span>Years 10–11</span></li>
+        <li><div><b>A-level Maths</b><small>Pure, statistics, mechanics</small></div><span>Years 12–13</span></li>
+        <li><div><b>Further Maths</b><small>AQA, Edexcel, OCR, OCR MEI</small></div><span>Years 12–13</span></li>
+        <li><div><b>Admissions tests</b><small>MAT, TMUA, STEP</small></div><span>Year 13</span></li>
+        <li><div><b>Undergraduate</b><small>First and second-year modules</small></div><span>University</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <section>
+    <h2>Two kinds of student, one approach</h2>
+    <div class="two">
+      <div class="panel">
+        <h3>If maths feels like a wall</h3>
+        <p>We find the exact point where things stopped making sense and rebuild from there, slowly, until the method feels like yours.</p>
+        <ul><li>Gaps from earlier years filled properly</li><li>Exam technique and past papers</li><li>Calm, patient, no judgement</li></ul>
+      </div>
+      <div class="panel">
+        <h3>If school maths is too easy</h3>
+        <p>We go past the syllabus into proof, problem solving and the kind of questions that appear in olympiads and admissions tests.</p>
+        <ul><li>UKMT challenges and olympiad problems</li><li>MAT, TMUA and STEP preparation</li><li>A first taste of university maths</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <div class="steps"><ol style="display:contents">
+      <li><h3>Send an email</h3><p>Tell me the level, the exam board and what's going on. A parent or the student can write.</p></li>
+      <li><h3>Free 20-minute call</h3><p>We talk through goals and I check I'm the right fit before anything is booked.</p></li>
+      <li><h3>Weekly lessons</h3><p>Usually 60 minutes, online with a shared whiteboard or in person. Notes sent after each lesson.</p></li>
+    </ol></div>
+  </section>
+
+  <section class="about">
+    <div class="photo">Your photo</div>
+    <div>
+      <h2>About me</h2>
+      <p>I'm Chris. I studied <i class="ph">[degree, university]</i> and now work as <i class="ph">[current role]</i>. Outside of work I research mathematics and medical imaging, and I write about it on <a href="blog-1-index.html">my blog</a>.</p>
+      <p><i class="ph">[One or two sentences on tutoring experience and why you enjoy it.]</i></p>
+      <p><i class="ph">[Enhanced DBS checked, if applicable.]</i></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rates</h2>
+    <table>
+      <thead><tr><th>Level</th><th>60-minute lesson</th></tr></thead>
+      <tbody>
+        <tr><td>GCSE</td><td><span class="ph">£__</span></td></tr>
+        <tr><td>A-level and Further Maths</td><td><span class="ph">£__</span></td></tr>
+        <tr><td>Admissions tests and undergraduate</td><td><span class="ph">£__</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Questions</h2>
+    <div style="margin-top:20px">
+      <details open><summary>Do you teach online?</summary><p>Yes. Lessons use a video call and a shared digital whiteboard, and you keep a copy of everything we write.</p></details>
+      <details><summary>Which exam boards do you cover?</summary><p>AQA, Edexcel, OCR and OCR MEI for GCSE, A-level and Further Maths.</p></details>
+      <details><summary>How far ahead do I need to book?</summary><p>Weekly slots fill up before exam season. Email and I'll tell you what's free this term.</p></details>
+      <details><summary>What if we need to cancel?</summary><p class="ph">[Your cancellation policy, e.g. 24 hours' notice.]</p></details>
+    </div>
+  </section>
+
+  <div class="closing" id="contact">
+    <div><h2>Check availability</h2><p>learn@chrismiller.uk · I reply within a day or two.</p></div>
+    <a class="cta" href="mailto:learn@chrismiller.uk?subject=Tuition%20availability">Email me</a>
+  </div>
+
+  <footer>© 2026 Chris Miller · <a href="blog-1-index.html">Blog</a></footer>
+</div>
+</body>
+</html>

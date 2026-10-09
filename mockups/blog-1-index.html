@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blog · Option A · Plain index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>window.MathJax={tex:{inlineMath:[['$','$']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+<script src="assets/ct-demo.js"></script>
+<style>
+/* Layout: one 680px column. Index is a dated list with topic filters; posts read like a plain, fast personal site. Light and dark. */
+:root{
+  --bg:#FFFFFF; --fg:#1C1E21; --muted:#6A6F76; --rule:#E6E8EB; --accent:#0F6E74; --code:#F4F6F7;
+  --serif:"Newsreader",Georgia,serif; --sans:"Atkinson Hyperlegible",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --ct-fg:var(--fg); --ct-muted:var(--muted); --ct-accent:var(--accent);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--fg:#E7E9EC;--muted:#9AA0A7;--rule:#2A2E33;--accent:#5FC4C9;--code:#1B1E22;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121417;--fg:#E7E9EC;--muted:#9AA0A7;--rule:#2A2E33;--accent:#5FC4C9;--code:#1B1E22;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--sans)}
+a{color:var(--accent)}
+.mock{background:var(--fg);color:var(--bg);font-size:13px;padding:8px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mock a{color:var(--bg)}
+.col{max-width:680px;margin:0 auto;padding-inline:20px;padding-block:40px 80px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:48px}
+.name{font-weight:700;color:var(--fg);text-decoration:none}
+header nav{display:flex;gap:18px;font-size:15px}
+header nav a{color:var(--muted);text-decoration:none}
+header nav a[aria-current]{color:var(--fg)}
+.intro{font-family:var(--serif);font-size:21px;line-height:1.5;margin:0 0 36px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--rule);background:transparent;color:var(--muted);border-radius:999px;padding:4px 12px;cursor:pointer}
+.chips button[aria-pressed=true]{color:var(--bg);background:var(--fg);border-color:var(--fg)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.year{font-family:var(--mono);font-size:13px;color:var(--muted);margin:28px 0 4px}
+.posts{list-style:none;margin:0;padding:0}
+.posts li{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:baseline;padding-block:9px;border-bottom:1px solid var(--rule)}
+.posts time{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.posts a{color:var(--fg);text-decoration:none;font-family:var(--serif);font-size:19px;line-height:1.35}
+.posts a:hover{color:var(--accent)}
+.posts .tag{font-size:12.5px;color:var(--muted)}
+/* post */
+.back{font-size:14px;text-decoration:none}
+.meta{font-family:var(--mono);font-size:13px;color:var(--muted);margin:28px 0 8px}
+article h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,40px);line-height:1.15;margin:0 0 28px;text-wrap:balance}
+article h2{font-family:var(--serif);font-weight:600;font-size:24px;margin:40px 0 8px}
+.prose{font-family:var(--serif);font-size:19px;line-height:1.65}
+.prose p{margin:0 0 18px}
+.prose mjx-container[display=true]{overflow-x:auto;overflow-y:hidden;padding-block:4px}
+.fig{margin:28px 0;padding:16px;border:1px solid var(--rule);border-radius:8px;font-family:var(--sans);font-size:15px}
+.figcap{font-family:var(--sans);font-size:14px;color:var(--muted);margin-top:10px}
+pre{background:var(--code);border-radius:6px;padding:16px;overflow-x:auto;font:13.5px/1.55 var(--mono)}
+.endnote{font-size:15px;color:var(--muted);border-top:1px solid var(--rule);padding-top:20px;margin-top:40px;font-family:var(--sans)}
+@media (max-width:520px){.posts li{grid-template-columns:60px 1fr}.posts .tag{display:none}}
+</style>
+</head>
+<body>
+<div class="mock"><span>Mockup A of 3 for <b>/blog</b>: plain index. Post titles are examples; only the CT post opens a full sample.</span><a href="index.html">← All mockups</a></div>
+
+<div class="col">
+  <header>
+    <a class="name" href="#">Chris Miller</a>
+    <nav><a href="learn-1-classic.html">Tuition</a><a href="#" aria-current="page">Blog</a></nav>
+  </header>
+
+  <main id="index-view">
+    <p class="intro">Notes on maths, medical imaging, code and the history of all three.</p>
+    <div class="chips" id="chips" role="group" aria-label="Filter by topic"></div>
+    <div id="list"></div>
+  </main>
+
+  <article id="post-view" hidden>
+    <a class="back" href="#">← All posts</a>
+    <p class="meta">28 Sep 2026 · Medical imaging · 6 min</p>
+    <h1>Backprojection by hand: how a CT scanner sees inside you</h1>
+    <div class="prose">
+      <p>A CT scanner never photographs a slice of your body. It fires X-rays through you from hundreds of directions and records how much each beam is dimmed. The picture you see afterwards is a calculation. This post builds that calculation from scratch, and you can run it below.</p>
+      <h2>What the scanner measures</h2>
+      <p>Each beam loses intensity according to the Beer–Lambert law, so after taking logs the detector reading is a line integral of the attenuation $f(x,y)$ along the beam. Collect every line at angle $\theta$ and offset $s$ and you get the Radon transform:</p>
+      $$p_\theta(s) = \int_{-\infty}^{\infty} f(s\cos\theta - t\sin\theta,\; s\sin\theta + t\cos\theta)\,dt.$$
+      <p>Stack these projections for $\theta \in [0,\pi)$ and you get the <em>sinogram</em>, named for the sine curve each point of the object traces out.</p>
+      <h2>Smearing it back</h2>
+      <p>The obvious inverse is to smear each projection back across the image along the direction it came from, and add everything up:</p>
+      $$b(x,y) = \int_0^{\pi} p_\theta(x\cos\theta + y\sin\theta)\,d\theta.$$
+      <p>Try it with the filter off. The shapes are there but blurred. In fact $b = f * \tfrac{1}{r}$: the true image convolved with a $1/r$ halo.</p>
+    </div>
+    <div class="fig"><div id="ct"></div><p class="figcap">Figure 1. The Shepp–Logan phantom, its sinogram, and the reconstruction from the chosen number of angles.</p></div>
+    <div class="prose">
+      <h2>The fix is a filter</h2>
+      <p>The Fourier slice theorem says the 1-D Fourier transform of $p_\theta$ is a slice through the 2-D Fourier transform of $f$. Backprojection samples those slices densely near the origin and sparsely far out, which is exactly the $1/r$ blur. Multiplying each projection's spectrum by $|\omega|$ undoes it:</p>
+      $$f(x,y) = \int_0^{\pi} (p_\theta * h)(x\cos\theta + y\sin\theta)\,d\theta, \qquad \hat h(\omega) = |\omega|.$$
+      <p>Tick <em>Ramp filter</em> above. With 180 angles the phantom comes back almost exactly; with 12 you can see streaks, which is why scanners take so many views. In code the filter is a few lines:</p>
+    </div>
+<pre><code>import numpy as np
+
+def ramp_filter(p, ds):
+    n = np.arange(-len(p) + 1, len(p))
+    h = np.where(n == 0, 1 / (4 * ds**2),
+                 np.where(n % 2, -1 / (np.pi * n * ds)**2, 0))
+    return ds * np.convolve(p, h)[len(p) - 1 : 2 * len(p) - 1]</code></pre>
+    <p class="endnote">Next: why real scanners use fan beams, and what that does to the maths.</p>
+  </article>
+</div>
+
+<script>
+const POSTS = [
+  ['2026-09-28','Backprojection by hand: how a CT scanner sees inside you','Medical imaging'],
+  ['2026-09-12','Why every GCSE student should meet the pigeonhole principle','Teaching'],
+  ['2026-08-30','A tiny ray tracer in 200 lines of TypeScript','Code'],
+  ['2026-08-14',"Napier's bones and the invention of logarithms",'History'],
+  ['2026-07-21','Notes on the Fourier slice theorem','Maths'],
+  ['2026-06-03','A gentle route into STEP Paper 2','Teaching'],
+  ['2025-12-18','Reading list: inverse problems for the curious','Research'],
+  ['2025-11-02','Euler, Basel and the first proof of ζ(2) = π²/6','History'],
+];
+const topics = ['All', ...new Set(POSTS.map(p => p[2]))];
+let topic = 'All';
+const chips = document.getElementById('chips'), list = document.getElementById('list');
+const fmt = d => new Date(d).toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
+function renderList() {
+  chips.innerHTML = topics.map(t => `<button type="button" aria-pressed="${t === topic}">${t}</button>`).join('');
+  const shown = POSTS.filter(p => topic === 'All' || p[2] === topic);
+  const years = [...new Set(shown.map(p => p[0].slice(0, 4)))];
+  list.innerHTML = years.map(y => `<p class="year">${y}</p><ul class="posts">` +
+    shown.filter(p => p[0].startsWith(y)).map(p => `<li><time datetime="${p[0]}">${fmt(p[0])}</time><a href="#post">${p[1]}</a><span class="tag">${p[2]}</span></li>`).join('') +
+    '</ul>').join('');
+}
+chips.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { topic = b.textContent; renderList(); } });
+let mounted = false;
+function route() {
+  const post = location.hash === '#post';
+  document.getElementById('index-view').hidden = post;
+  document.getElementById('post-view').hidden = !post;
+  if (post && !mounted) { mountCT(document.getElementById('ct')); mounted = true; }
+  if (post && window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+renderList(); route();
+</script>
+</body>
+</html>

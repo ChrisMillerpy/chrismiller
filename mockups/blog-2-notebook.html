@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blog · Option B · Research notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inconsolata:wght@400;600&display=swap">
+<script>window.MathJax={tex:{inlineMath:[['$','$']],tags:'none'},svg:{fontCache:'global'}};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+<script src="assets/ct-demo.js"></script>
+<style>
+/* Layout: a research notebook in the Tufte tradition. Text column plus a wide margin for sidenotes; numbered entries with abstracts; numbered equations and figures. */
+:root{
+  --paper:#FFFFFF; --ink:#1E1B18; --muted:#6E665E; --rule:#E4DFDA; --oxblood:#8A1C1C; --code:#F6F4F2;
+  --serif:"Crimson Pro",Georgia,serif; --mono:"Inconsolata",ui-monospace,monospace;
+  --ct-fg:var(--ink); --ct-muted:var(--muted); --ct-accent:var(--oxblood); --ct-radius:0;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:21px/1.55 var(--serif)}
+a{color:var(--oxblood)}
+.mock{background:var(--ink);color:#fff;font:13px/1.5 system-ui,sans-serif;padding:8px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mock a{color:#fff}
+.page{max-width:1000px;margin:0 auto;padding-inline:20px;padding-block:48px 96px}
+.main{max-width:640px}
+header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--ink);padding-bottom:10px;margin-bottom:44px}
+header .t{font-variant:small-caps;letter-spacing:.06em;font-size:22px;color:var(--ink);text-decoration:none}
+header nav{display:flex;gap:20px;font-style:italic;font-size:18px}
+header nav a{color:var(--muted);text-decoration:none}
+.sc{font-variant:small-caps;letter-spacing:.06em}
+h1{font-weight:400;font-size:clamp(34px,5vw,46px);line-height:1.1;margin:0 0 6px;text-wrap:balance}
+.sub{font-style:italic;color:var(--muted);margin:0 0 36px;font-size:22px}
+.entries{list-style:none;margin:0;padding:0}
+.entries li{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;padding-block:18px;border-top:1px solid var(--rule)}
+.entries .no{font-family:var(--mono);font-size:15px;color:var(--muted);padding-top:6px}
+.entries a{color:var(--ink);text-decoration:none;font-size:25px;line-height:1.25}
+.entries a:hover{color:var(--oxblood)}
+.entries p{margin:4px 0 0;color:var(--muted);font-size:18px;line-height:1.45}
+.entries .m{font-family:var(--mono);font-size:13.5px;color:var(--muted);margin-top:6px}
+.yr{font-variant:small-caps;letter-spacing:.1em;color:var(--oxblood);margin:36px 0 0;font-size:18px}
+/* article */
+article{position:relative}
+.kicker{font-family:var(--mono);font-size:14px;color:var(--muted);margin:0 0 12px}
+article h2{font-weight:400;font-style:italic;font-size:28px;margin:44px 0 10px}
+.prose p{margin:0 0 20px}
+.has-notes{padding-right:0}
+.sn{float:right;clear:right;width:260px;margin-right:-320px;margin-top:4px;font-size:15.5px;line-height:1.4;color:var(--muted);position:relative}
+.sn::before,.ref::after{content:attr(data-n);font-family:var(--mono);font-size:12px;color:var(--oxblood);vertical-align:super;margin-right:3px}
+.ref::after{margin:0 0 0 1px}
+.eq{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:8px 0 20px}
+.eq>div{overflow-x:auto;overflow-y:hidden}
+.eq .n{font-family:var(--mono);font-size:15px;color:var(--muted)}
+figure.fig{margin:32px 0;width:min(900px,calc(100vw - 40px));font-size:16px}
+figure.fig figcaption{font-size:16px;color:var(--muted);margin-top:10px;max-width:640px}
+figure.fig figcaption b{font-variant:small-caps;letter-spacing:.05em;color:var(--ink);font-weight:600}
+pre{background:var(--code);padding:16px;overflow-x:auto;font:15px/1.5 var(--mono);border-left:2px solid var(--oxblood)}
+.back{font-style:italic;font-size:18px;text-decoration:none}
+@media (max-width:1040px){
+  .sn{float:none;display:block;width:auto;margin:0 0 16px;padding-left:14px;border-left:2px solid var(--rule)}
+  figure.fig{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="mock"><span>Mockup B of 3 for <b>/blog</b>: research notebook with sidenotes. Entries are examples; No. 08 opens the full sample.</span><a href="index.html">← All mockups</a></div>
+
+<div class="page">
+  <header>
+    <a class="t" href="#">Chris Miller · Notebook</a>
+    <nav><a href="learn-2-worked-example.html">tuition</a><a href="#">notebook</a></nav>
+  </header>
+
+  <main id="index-view" class="main">
+    <h1>Notebook</h1>
+    <p class="sub">Working notes on mathematics, medical imaging, programming and their history.</p>
+    <div id="list"></div>
+  </main>
+
+  <article id="post-view" class="main" hidden>
+    <a class="back" href="#">← notebook</a>
+    <p class="kicker">No. 08 · 28 September 2026 · medical imaging</p>
+    <h1>Backprojection by hand</h1>
+    <p class="sub">How a CT scanner turns shadows into slices.</p>
+    <div class="prose">
+      <p>A CT scanner never photographs a slice of your body. It fires X-rays through you from hundreds of directions and records how much each beam is dimmed.<span class="sn" data-n="1">Modern scanners use a fan or cone of rays and a rotating gantry. Parallel beams keep the maths simple, so we start there.</span><span class="ref" data-n="1"></span> The picture you see afterwards is a calculation.</p>
+      <h2>What the scanner measures</h2>
+      <p>After taking logs, each detector reading is a line integral of the attenuation $f$ along the beam.<span class="sn" data-n="2">Beer–Lambert: $I = I_0 \exp\!\left(-\int f\,dt\right)$, so $-\log(I/I_0)$ is the integral.</span><span class="ref" data-n="2"></span> Collect every line at angle $\theta$ and offset $s$ and you get the Radon transform,</p>
+      <div class="eq"><div>$$p_\theta(s) = \int_{-\infty}^{\infty} f(s\cos\theta - t\sin\theta,\; s\sin\theta + t\cos\theta)\,dt.$$</div><span class="n">(1)</span></div>
+      <p>Stacking the projections for $\theta \in [0,\pi)$ gives the <em>sinogram</em>, named for the sine curve each point of the object traces.</p>
+      <h2>Smearing it back</h2>
+      <p>The obvious inverse is to smear each projection back along the direction it came from:</p>
+      <div class="eq"><div>$$b(x,y) = \int_0^{\pi} p_\theta(x\cos\theta + y\sin\theta)\,d\theta.$$</div><span class="n">(2)</span></div>
+      <p>With the filter off in Figure 1 the shapes appear, but blurred. In fact $b = f * \tfrac{1}{r}$.<span class="sn" data-n="3">A point source projects to a spike at every angle; smearing the spikes back gives spokes whose density falls off like $1/r$.</span><span class="ref" data-n="3"></span></p>
+    </div>
+    <figure class="fig"><div id="ct"></div><figcaption><b>Figure 1.</b> Shepp–Logan phantom, its sinogram, and the reconstruction from the chosen number of equally spaced angles. Toggle the ramp filter to compare (2) and (3).</figcaption></figure>
+    <div class="prose">
+      <h2>The fix is a filter</h2>
+      <p>By the Fourier slice theorem, the 1-D transform of $p_\theta$ is a slice of the 2-D transform of $f$. Backprojection over-samples low frequencies, and weighting each slice by $|\omega|$ corrects it:</p>
+      <div class="eq"><div>$$f(x,y) = \int_0^{\pi} (p_\theta * h)(x\cos\theta + y\sin\theta)\,d\theta, \qquad \hat h(\omega) = |\omega|.$$</div><span class="n">(3)</span></div>
+      <p>With 180 angles the phantom returns almost exactly; with 12, streaks appear.<span class="sn" data-n="4">The discrete Ram-Lak kernel below is from Kak &amp; Slaney, <em>Principles of Computerized Tomographic Imaging</em>, ch. 3.</span><span class="ref" data-n="4"></span></p>
+    </div>
+<pre><code>def ramp_filter(p, ds):
+    n = np.arange(-len(p) + 1, len(p))
+    h = np.where(n == 0, 1 / (4 * ds**2),
+                 np.where(n % 2, -1 / (np.pi * n * ds)**2, 0))
+    return ds * np.convolve(p, h)[len(p) - 1 : 2 * len(p) - 1]</code></pre>
+  </article>
+</div>
+
+<script>
+const POSTS = [
+  [8,'2026-09-28','Backprojection by hand','How a CT scanner turns shadows into slices, with a reconstruction you can run.','medical imaging'],
+  [7,'2026-09-12','The pigeonhole principle for fifteen-year-olds','Five problems that need nothing but counting, and why they belong in Year 10.','teaching'],
+  [6,'2026-08-30','A tiny ray tracer','Two hundred lines of TypeScript, one sphere, and a lot of vector algebra.','code'],
+  [5,'2026-08-14',"Napier's bones",'How logarithms were invented to make multiplication bearable.','history'],
+  [4,'2026-07-21','The Fourier slice theorem','A short proof and three pictures.','mathematics'],
+  [3,'2026-06-03','A gentle route into STEP Paper 2','What changes between A-level questions and STEP ones.','teaching'],
+  [2,'2025-12-18','Inverse problems: a reading list','Books and papers for someone with A-level maths and curiosity.','research'],
+  [1,'2025-11-02','Euler and the Basel problem','The first, not entirely rigorous, proof that ζ(2) = π²/6.','history'],
+];
+const fmt = d => new Date(d).toLocaleDateString('en-GB', {day:'numeric', month:'long'});
+const years = [...new Set(POSTS.map(p => p[1].slice(0, 4)))];
+document.getElementById('list').innerHTML = years.map(y => `<p class="yr">${y}</p><ol class="entries">` +
+  POSTS.filter(p => p[1].startsWith(y)).map(p => `<li><span class="no">${String(p[0]).padStart(2, '0')}</span><div><a href="#post">${p[2]}</a><p>${p[3]}</p><div class="m">${fmt(p[1])} · ${p[4]}</div></div></li>`).join('') +
+  '</ol>').join('');
+let mounted = false;
+function route() {
+  const post = location.hash === '#post';
+  document.getElementById('index-view').hidden = post;
+  document.getElementById('post-view').hidden = !post;
+  if (post && !mounted) { mountCT(document.getElementById('ct')); mounted = true; }
+  if (post && window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

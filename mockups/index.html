@@ -1,0 +1,126 @@
+<title>Chris Miller Site Mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a contact sheet. Two rows of three options, each with a short "good for / trade-off" note, then the proposed stack. */
+:root{
+  --bg:#F5F7F8; --card:#FFFFFF; --fg:#1A1F24; --muted:#5D6670; --line:#DCE1E5; --accent:#1F5E8C;
+  --display:"Source Serif 4",Georgia,serif; --body:"Atkinson Hyperlegible",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111417;--card:#191D21;--fg:#E6E9EC;--muted:#9AA3AC;--line:#2B3137;--accent:#7DB8E3;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111417;--card:#191D21;--fg:#E6E9EC;--muted:#9AA3AC;--line:#2B3137;--accent:#7DB8E3;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body)}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:40px 72px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.5vw,44px);margin:0 0 8px;text-wrap:balance;line-height:1.1}
+.lede{color:var(--muted);max-width:64ch;margin:0 0 40px}
+h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0 0 4px}
+.route{font-family:var(--mono);font-size:13px;color:var(--accent)}
+.row{margin-bottom:48px}
+.row-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--fg);transition:border-color .15s}
+.opt:hover{border-color:var(--accent)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt .tag{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em}
+.opt h3{margin:0;font-size:19px}
+.opt p{margin:0;color:var(--muted);font-size:15px}
+.opt dl{margin:6px 0 0;display:grid;gap:6px;font-size:14px}
+.opt dt{font-weight:700;display:inline}
+.opt dd{display:inline;margin:0;color:var(--muted)}
+.opt .open{margin-top:auto;padding-top:10px;color:var(--accent);font-weight:700;font-size:15px}
+.stack{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px}
+.stack table{width:100%;border-collapse:collapse;font-size:15px}
+.stack th,.stack td{text-align:left;padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.stack th{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.stack td:first-child{font-weight:700;white-space:nowrap}
+.scroll{overflow-x:auto}
+.note{color:var(--muted);font-size:14px;margin:14px 0 0}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.opt{transition:none}}
+</style>
+
+<div class="wrap">
+  <h1>Site mockups</h1>
+  <p class="lede">Round 2 combines your feedback on the first six options into one tutoring page and one blog. Round 1 is kept below for reference. The domain shown, withchris.uk, was available when I checked but isn't registered yet.</p>
+
+  <div class="row">
+    <div class="row-head"><h2>Round 2</h2><span class="route">current direction</span></div>
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <a class="opt" href="learn-v2.html">
+        <span class="tag">/learn</span><h3>Tutoring page</h3>
+        <p>Option A's structure with Option B's typography and handwritten notes, in Option C's blue. Hero with the email button, what I teach, how we start, about, closing call to action. No rates and no FAQ.</p>
+        <span class="open">Open →</span>
+      </a>
+      <a class="opt" href="blog-v2.html">
+        <span class="tag">/blog</span><h3>Blog</h3>
+        <p>Cards with image covers from Option C, no categories, a large card for the latest post, and Option A's reading view. Light by default, with a dark reading mode in the footer.</p>
+        <span class="open">Open →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-head"><h2>Round 1 · Tutoring</h2><span class="route">/learn</span></div>
+    <div class="grid">
+      <a class="opt" href="learn-1-classic.html">
+        <span class="tag">OPTION A</span><h3>Clear and professional</h3>
+        <p>The conventional tutoring page: headline, levels taught, how it works, about, rates, FAQ.</p>
+        <dl><div><dt>Good for: </dt><dd>parents scanning for trust signals and prices.</dd></div><div><dt>Trade-off: </dt><dd>looks like many other tutors' sites.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+      <a class="opt" href="learn-2-worked-example.html">
+        <span class="tag">OPTION B</span><h3>Worked example</h3>
+        <p>Graph-paper exercise book. The hero solves one problem three ways, from GCSE to STEP.</p>
+        <dl><div><dt>Good for: </dt><dd>showing range and personality; students remember it.</dd></div><div><dt>Trade-off: </dt><dd>less room for practical details.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+      <a class="opt" href="learn-3-level-finder.html">
+        <span class="tag">OPTION C</span><h3>Level finder</h3>
+        <p>Pick level and goal; the page shows what lessons cover and pre-writes the enquiry email.</p>
+        <dl><div><dt>Good for: </dt><dd>better enquiries (you know the level before replying).</dd></div><div><dt>Trade-off: </dt><dd>more copy to write and keep current.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-head"><h2>Round 1 · Blog</h2><span class="route">/blog</span></div>
+    <div class="grid">
+      <a class="opt" href="blog-1-index.html">
+        <span class="tag">OPTION A</span><h3>Plain index</h3>
+        <p>Dated list with topic filters, single reading column, light and dark mode.</p>
+        <dl><div><dt>Good for: </dt><dd>writing often with zero friction.</dd></div><div><dt>Trade-off: </dt><dd>the least visually distinctive.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+      <a class="opt" href="blog-2-notebook.html">
+        <span class="tag">OPTION B</span><h3>Research notebook</h3>
+        <p>Tufte-style sidenotes, numbered equations and figures, numbered entries with abstracts.</p>
+        <dl><div><dt>Good for: </dt><dd>maths and research write-ups.</dd></div><div><dt>Trade-off: </dt><dd>feels formal for casual posts.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+      <a class="opt" href="blog-3-shelves.html">
+        <span class="tag">OPTION C</span><h3>Topic shelves</h3>
+        <p>Dark lab look. One shelf per subject, generated cover art per post, wide figures.</p>
+        <dl><div><dt>Good for: </dt><dd>browsing across very different interests.</dd></div><div><dt>Trade-off: </dt><dd>shelves look thin until there are a few posts each.</dd></div></dl>
+        <span class="open">Open →</span>
+      </a>
+    </div>
+    <p class="note">Every blog option opens the same sample post (CT backprojection) so you can compare how each renders text, LaTeX, code and a live interactive figure.</p>
+  </div>
+
+  <div class="row">
+    <div class="row-head"><h2>Proposed stack</h2></div>
+    <div class="stack"><div class="scroll">
+      <table>
+        <thead><tr><th>Need</th><th>Recommendation</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>Site</td><td>Astro static site; posts are MDX files in the repo (maths, images, interactive components)</td><td>Free</td></tr>
+          <tr><td>Hosting</td><td>Cloudflare Pages, deploying on every push to main. Vercel's free plan forbids commercial sites, and a tutoring page counts.</td><td>Free</td></tr>
+          <tr><td>Domain</td><td>A .uk or .co.uk, registered at Cloudflare so DNS, email and hosting share one account</td><td>About £5–10 a year</td></tr>
+          <tr><td>Email in</td><td>Cloudflare Email Routing: learn@ forwards to your Gmail</td><td>Free</td></tr>
+          <tr><td>Email out</td><td>Gmail "Send mail as" learn@ through Gmail SMTP</td><td>Free</td></tr>
+          <tr><td>Database</td><td>None needed yet. Add Supabase only if you want a CMS or comments.</td><td>n/a</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
