@@ -11,27 +11,27 @@ const photo = Object.values(photos)[0]?.default;
 const mailto = `mailto:${SITE.email}?subject=${encodeURIComponent('Tuition enquiry')}`;
 
 const levels = [
-  { name: 'GCSE Maths', detail: 'Years 10–11 · Foundation and Higher, all exam boards' },
-  { name: 'A-level Maths and Further Maths', detail: 'Years 12–13 · AQA, Edexcel, OCR, OCR MEI' },
-  { name: 'Admissions tests', detail: 'MAT, TMUA and STEP for Oxford, Cambridge, Imperial, Warwick and others' },
+  { name: 'GCSE Maths', detail: 'Years 10–11. Foundation and Higher, any exam board.' },
+  { name: 'A Level Maths and Further Maths', detail: 'Years 12–13. AQA, Edexcel, OCR and OCR MEI.' },
+  { name: 'Admissions tests', detail: 'MAT, TMUA and STEP, for students applying to Oxford, Cambridge, Imperial, Warwick and others.' },
 ];
 ---
 
 <Base
   title="Maths tuition"
-  description="One-to-one maths tuition for GCSE, A-level, Further Maths and admissions tests (MAT, TMUA, STEP). Online, or in person in central and south London."
+  description="One-to-one maths tuition through conversation, for GCSE, A Level, Further Maths and the MAT, TMUA and STEP. 60-minute lessons online, or in person in central and south London."
   background="paper"
 >
   <div class="hero-bg" slot="before" aria-hidden="true"></div>
 
   <main class="wrap">
     <div class="hero">
-      <div>
+      <div class="hero-text">
         <p class="eyebrow">Maths tuition · London and online</p>
-        <h1>Maths lessons for students who are <em>stuck</em>, and students who want <em>more</em></h1>
+        <h1>Maths tuition through <em>conversation</em></h1>
         <p class="lede">
-          One-to-one tuition for GCSE, A-level and Further Maths, and preparation for the MAT, TMUA and STEP.
-          Online, or in person in central and south London.
+          One-to-one lessons for GCSE, A Level and Further Maths, and preparation for the MAT, TMUA and STEP.
+          Lessons are 60 minutes, online or in person in central and south London.
         </p>
         <div class="ctas">
           <a class="btn" href={mailto}>Email to check availability</a>
@@ -39,41 +39,50 @@ const levels = [
         </div>
         <p class="pen">
           <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden="true"><path d="M36 28 C30 14, 18 6, 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M12 1 L5 6 L12 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-          free chat first, and the first lesson is on me
+          a quick chat first, and the first lesson is on me
         </p>
       </div>
+
       <div class="card">
         <h2>What I teach</h2>
         <ul>
           {levels.map((l) => (
-            <li><div><b>{l.name}</b><small>{l.detail}</small></div></li>
+            <li><div><b>{l.name}</b> <small>{l.detail}</small></div></li>
           ))}
         </ul>
       </div>
     </div>
 
-    <section class="intro">
-      <h2 class="big">Every student needs something different</h2>
+    <section class="approach">
+      <h2 class="big">How I teach</h2>
+      <p class="statement">
+        I teach maths through conversation. I ask questions that lead your child towards the answer, so they
+        understand why a method works rather than memorising the steps.
+      </p>
       <div class="duo">
         <div>
-          <span class="tag">finding it hard?</span>
-          <h3>We find where it went wrong</h3>
-          <p>Usually there's one step, sometimes years back, that never quite landed. We go back to it, rebuild slowly, and practise until the method feels like yours.</p>
+          <span class="tag">if it hasn’t clicked</span>
+          <p>When something hasn’t clicked, we take the time to find the gap in understanding in order to strengthen the core and build from there.</p>
         </div>
         <div>
-          <span class="tag">finding it easy?</span>
-          <h3>We go past the syllabus</h3>
-          <p>Proof, problem solving, olympiad questions and admissions-test papers. The maths school doesn't have time for, and the kind universities look for.</p>
+          <span class="tag">if it comes easily</span>
+          <p>We move on to proof and harder problems than school sets, and prepare for the MAT, TMUA or STEP if your child is sitting one.</p>
         </div>
       </div>
     </section>
 
     <section>
-      <h2 class="big steps-title">How we start</h2>
-      <div class="steps">
-        <div class="step"><span class="n">1</span><div><h3>Free 20-minute consultation</h3><p>A video call with the student and/or a parent or guardian. A parent or guardian needs to join if the student is under 18.</p></div></div>
-        <div class="step"><span class="n">2</span><div><h3>First lesson free</h3><p>A full lesson, so you can see how I teach before committing to anything.</p></div></div>
-      </div>
+      <h2 class="big">Getting started</h2>
+      <ol class="steps">
+        <li>
+          <h3>A 20-minute consultation</h3>
+          <p>A video call with the student, a parent or guardian, or both. A parent or guardian needs to join if the student is under 18.</p>
+        </li>
+        <li>
+          <h3>A free first lesson</h3>
+          <p>Your first lesson is free, so you can see how I teach before deciding.</p>
+        </li>
+      </ol>
       <p class="after">…then we carry on in whatever way works for you.</p>
     </section>
 
@@ -81,25 +90,20 @@ const levels = [
       {photo && <Image class="photo" src={photo} alt="Chris Miller" width={480} />}
       <div>
         <h2 class="big">About me</h2>
-        <p>I've loved teaching maths for as long as I can remember. At school I was the one explaining the lesson to friends afterwards, and since then I've tutored many students through GCSE and A-level.</p>
-        <p>After university I worked at a startup at the meeting point of education and AI, building tools that help teachers and students get more out of their lessons.</p>
         <ul class="creds">
-          <li>
-            <div><b>BSc Mathematical Sciences</b><span>Durham University · mainly pure maths, with statistics and mathematical physics. Dissertation on the mathematics of quantum physics.</span></div>
-            <em>top of the year</em>
-          </li>
-          <li>
-            <div><b>MPhil in Data Intensive Science</b><span>University of Cambridge, Department of Physics · dissertation on computer vision models that detect cancer in CT scans.</span></div>
-            <em>Distinction</em>
-          </li>
+          <li><div><b>BSc Mathematical Sciences</b><span>Durham University</span></div><em>top of my year</em></li>
+          <li><div><b>MPhil in Data Intensive Science</b><span>University of Cambridge, Department of Physics</span></div><em>Distinction</em></li>
         </ul>
+        <p>I studied Mathematical Sciences at Durham, where I finished top of my year, and then took an MPhil in Data Intensive Science at Cambridge, graduating with a Distinction. My undergraduate dissertation was on the pure mathematics behind quantum mechanics, and for my master’s thesis I built computer vision models to detect cancer in CT scans. In both, I greatly enjoyed the communication aspect.</p>
+        <p>Finding and clearly communicating an explanation of a concept so that it makes sense to someone else has interested me for many years, and it’s the part of teaching I love most. I have tutored both struggling and talented students in GCSE and A Level Maths and Further Maths.</p>
+        <p>After my master’s I worked for a Brisbane-based startup building AI tools for teachers, to help students get the most from their education.</p>
       </div>
     </section>
 
     <div class="closing">
       <div>
         <h2>Check availability</h2>
-        <p>Tell me the level, the exam board, and what's going on. I'll reply within a couple of days.</p>
+        <p>Tell me your child’s level and exam board, and how maths is going at the moment.</p>
       </div>
       <a class="btn" href={mailto}>Email {SITE.email}</a>
     </div>
@@ -109,27 +113,29 @@ const levels = [
 <style>
   /* Graph paper behind the top of the page only, fading out. */
   .hero-bg {
-    position: absolute; inset: 0 0 auto 0; height: 760px; z-index: -1; pointer-events: none;
+    position: absolute; inset: 0 0 auto 0; height: 820px; z-index: -1; pointer-events: none;
     background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: linear-gradient(to bottom, #000 50%, transparent);
   }
   :global(body) { position: relative; isolation: isolate; }
 
-  .hero { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 56px; align-items: center; padding-block: 40px 96px; }
+  /* Hero: the pitch on the left, an index card of levels on the right. */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; align-items: center; padding-block: 48px 104px; }
   .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--cobalt); margin: 0 0 14px; }
-  h1 { font-size: clamp(36px, 5.4vw, 58px); letter-spacing: -.01em; }
+  h1 { font-size: clamp(40px, 6vw, 66px); letter-spacing: -.015em; line-height: 1.05; }
   h1 em { color: var(--cobalt); }
-  .lede { font-size: 19px; color: var(--muted); max-width: 50ch; margin: 22px 0 30px; }
+  .lede { font-size: 19px; color: var(--muted); max-width: 48ch; margin: 22px 0 30px; }
   .ctas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .btn { display: inline-block; background: var(--cobalt); color: #fff; text-decoration: none; font-weight: 600; padding: 15px 24px; border-radius: 8px; box-shadow: 0 2px 0 #1A2F95; }
   .btn:hover { background: var(--cobalt-hover); }
   .addr { font-size: 15px; color: var(--muted); user-select: all; }
-  .pen { font-family: var(--hand); color: var(--pen); font-size: 21px; line-height: 1.2; display: flex; align-items: flex-end; gap: 6px; margin-top: 18px; }
+  .pen { font-family: var(--hand); color: var(--pen); font-size: 21px; line-height: 1.2; display: flex; align-items: flex-end; gap: 6px; margin: 18px 0 0; }
   .pen svg { flex: none; }
 
+
   .card { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 26px 28px; box-shadow: 0 18px 40px -26px rgba(24, 32, 58, .45); transform: rotate(1.2deg); }
-  .card h2 { font: 600 15px var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .card h2 { font: 600 13px var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .card ul { list-style: none; margin: 0; padding: 0; }
   .card li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding-block: 12px; border-top: 1px dashed var(--line); }
   .card li:first-child { border-top: 0; }
@@ -139,29 +145,28 @@ const levels = [
 
   section { padding-block: 72px; border-top: 1px solid var(--line); }
   .big { font-size: clamp(28px, 3.4vw, 38px); }
-  .intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; }
-  .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; }
-  .duo h3 { font-size: 22px; margin-bottom: 8px; }
-  .duo p { margin: 0; color: var(--muted); }
-  .tag { font-family: var(--hand); color: var(--pen); font-size: 19px; display: block; margin-bottom: 2px; }
+  .tag { font-family: var(--hand); color: var(--pen); font-size: 20px; display: block; margin-bottom: 4px; }
 
-  .steps-title { margin-bottom: 28px; }
-  .steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-  .step { background: var(--cobalt-soft); border-radius: 12px; padding: 26px 28px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
-  .step .n { font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1; color: var(--cobalt); }
-  .step h3 { font-size: 21px; margin-bottom: 6px; }
-  .step p { margin: 0; }
-  .after { font-family: var(--hand); color: var(--pen); font-size: 21px; margin: 22px 0 0; }
+  .statement { font-family: var(--display); font-size: clamp(22px, 2.6vw, 28px); line-height: 1.45; max-width: 36ch; margin: 18px 0 40px; }
+  .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; max-width: 900px; }
+  .duo p { margin: 0; color: var(--muted); }
+
+  .steps { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: step; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .steps li { counter-increment: step; background: var(--cobalt-soft); border-radius: 12px; padding: 20px 22px 20px 64px; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 22px; top: 16px; font-family: var(--display); font-weight: 600; font-size: 32px; line-height: 1; color: var(--cobalt); }
+  .steps h3 { font-size: 19px; margin-bottom: 4px; }
+  .steps p { margin: 0; font-size: 16px; }
+  .after { font-family: var(--hand); color: var(--pen); font-size: 20px; margin: 16px 0 0; }
 
   .about { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; align-items: start; }
   .about.no-photo { grid-template-columns: minmax(0, 1fr); }
   .about :global(.photo) { width: 100%; height: auto; border-radius: 4px; transform: rotate(-1.5deg); box-shadow: 0 14px 30px -22px rgba(24, 32, 58, .5); }
-  .about p { max-width: 62ch; margin: 14px 0 0; }
-  .creds { list-style: none; margin: 26px 0 0; padding: 0; max-width: 760px; }
-  .creds li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding-block: 14px; border-top: 1px solid var(--line); align-items: baseline; }
+  .about p { max-width: 64ch; margin: 16px 0 0; }
+  .creds { list-style: none; margin: 22px 0 8px; padding: 0; max-width: 720px; }
+  .creds li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--line); align-items: baseline; }
   .creds b { font-family: var(--display); font-weight: 600; font-size: 18px; }
   .creds span { display: block; color: var(--muted); font-size: 15px; }
-  .creds em { font-family: var(--hand); font-style: normal; color: var(--pen); font-size: 18px; white-space: nowrap; }
+  .creds em { font-family: var(--hand); font-style: normal; color: var(--pen); font-size: 19px; white-space: nowrap; }
 
   .closing {
     background: var(--cobalt); color: #fff; border-radius: 16px; padding: 52px 48px; margin-block: 24px 48px;
@@ -173,11 +178,11 @@ const levels = [
   .closing p { margin: 8px 0 0; opacity: .88; }
   .closing .btn { background: #fff; color: var(--cobalt); box-shadow: none; }
 
-  @media (max-width: 820px) {
-    .hero, .intro, .duo, .steps, .about { grid-template-columns: 1fr; }
-    .hero { gap: 40px; padding-block: 20px 64px; }
+  @media (max-width: 860px) {
+    .hero, .duo, .steps, .about { grid-template-columns: 1fr; }
     .card { transform: none; }
-    .about :global(.photo) { max-width: 220px; }
+    .hero { gap: 40px; padding-block: 24px 64px; }
+      .about :global(.photo) { max-width: 220px; }
     .closing { padding: 32px 24px; }
   }
 </style>
