@@ -6,5 +6,7 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
-  }
+  },
+  // Lets Workers Builds publish a preview of each non-main branch (deploy command: wrangler preview).
+  "previews": {}
 }
