@@ -1,0 +1,51 @@
+---
+// A soft blue glow that drifts after the mouse. Place it inside a positioned
+// background element; it fills that element and only shows while the cursor is over it.
+// Skipped on touch screens and for reduced-motion users.
+---
+
+<div class="cursor-glow" aria-hidden="true"></div>
+
+<script>
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('.cursor-glow').forEach((glow) => {
+    const area = glow.parentElement;
+    if (!area || !finePointer || reducedMotion) return;
+
+    // The glow eases towards the cursor each frame, so it trails slightly behind and drifts to a stop.
+    const EASE = 0.08;
+    let targetX = 0, targetY = 0, x = 0, y = 0;
+    let frame = 0, started = false;
+
+    const step = () => {
+      x += (targetX - x) * EASE;
+      y += (targetY - y) * EASE;
+      const box = area.getBoundingClientRect();
+      glow.style.setProperty('--x', `${x - box.left}px`);
+      glow.style.setProperty('--y', `${y - box.top}px`);
+      frame = Math.abs(targetX - x) + Math.abs(targetY - y) > 0.5 ? requestAnimationFrame(step) : 0;
+    };
+
+    window.addEventListener('pointermove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      if (!started) { x = targetX; y = targetY; started = true; }
+      const box = area.getBoundingClientRect();
+      const inside = targetX >= box.left && targetX <= box.right && targetY >= box.top && targetY <= box.bottom;
+      glow.classList.toggle('on', inside);
+      if (!frame) frame = requestAnimationFrame(step);
+    });
+    document.documentElement.addEventListener('pointerleave', () => glow.classList.remove('on'));
+  });
+</script>
+
+<style>
+  .cursor-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(240px circle at var(--x, 50%) var(--y, 50%), color-mix(in srgb, var(--cobalt) 11%, transparent), transparent 70%);
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .cursor-glow.on { opacity: 1; }
+</style>
