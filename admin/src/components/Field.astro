@@ -1,0 +1,25 @@
+---
+// A labelled input. The error sits outside the label and is linked with aria-describedby,
+// so it's announced without becoming part of the field's name.
+interface Props {
+  label: string;
+  name: string;
+  value?: string | number | null;
+  type?: 'text' | 'email' | 'tel' | 'date' | 'time';
+  hint?: string;
+  error?: string;
+  required?: boolean;
+  textarea?: boolean;
+  attrs?: Record<string, string | number | boolean>;
+}
+const { label, name, value, type = 'text', hint, error, required = false, textarea = false, attrs = {} } = Astro.props;
+const id = `f-${name}`;
+const errId = `${id}-error`;
+const common = { id, name, required, 'aria-invalid': error ? ('true' as const) : undefined, 'aria-describedby': error ? errId : undefined, ...attrs };
+---
+
+<div class="field">
+  <label for={id}>{label}{hint && <span class="hint"> · {hint}</span>}</label>
+  {textarea ? <textarea {...common}>{value ?? ''}</textarea> : <input type={type} value={value ?? ''} {...common} />}
+  {error && <span class="error" id={errId}>{error}</span>}
+</div>

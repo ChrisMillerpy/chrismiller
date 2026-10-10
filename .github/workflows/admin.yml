@@ -1,0 +1,137 @@
+name: admin
+
+on:
+  pull_request:
+    paths: ['admin/**', 'supabase/**', 'infra/**', 'src/styles/**', '.github/workflows/admin.yml']
+  push:
+    branches: [main]
+    paths: ['admin/**', 'supabase/**', 'infra/**', 'src/styles/**', '.github/workflows/admin.yml']
+  # Manual deploy of whatever is on main, e.g. the first deploy after Terraform.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer push waits rather than racing an older one.
+concurrency:
+  group: admin-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    env:
+      # Tests run against a real local Supabase, with the migrations applied by `supabase start`.
+      TEST_DB_MODE: supabase
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      E2E_WORKER_DATABASE_URL: postgresql://admin_worker:test-worker-password@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.100.1
+      - run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,realtime,storage-api
+        working-directory: .
+      - run: npm ci
+      - run: npm run check
+      - run: npm run check:bundle
+      - run: npm run test:unit
+      - run: npm run test:db
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: admin/test-results
+
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.3
+      - run: terraform fmt -check -recursive infra
+      - run: |
+          for env in account staging prod; do
+            terraform -chdir=infra/envs/$env init -backend=false -input=false
+            terraform -chdir=infra/envs/$env validate
+          done
+
+  # Deploys run only from main, after the tests pass. Each uses a GitHub environment that holds
+  # its secrets; `production` requires Chris's approval in GitHub before it starts.
+  deploy-staging:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [test, infra]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+        working-directory: admin
+      - name: Refuse to deploy an unconfigured Worker
+        run: node scripts/sync-wrangler.mjs --check staging
+        working-directory: admin
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.100.1
+      - name: Apply database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+          supabase db push
+      - name: Build and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy:staging
+        working-directory: admin
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+        working-directory: admin
+      - name: Refuse to deploy an unconfigured Worker
+        run: node scripts/sync-wrangler.mjs --check prod
+        working-directory: admin
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.100.1
+      - name: Apply database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+          supabase db push
+      - name: Build and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy
+        working-directory: admin

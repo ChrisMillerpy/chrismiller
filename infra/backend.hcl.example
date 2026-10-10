@@ -1,0 +1,12 @@
+# Copy to backend.hcl (git-ignored) and run: terraform init -backend-config=../../backend.hcl -backend-config="key=<env>/terraform.tfstate"
+# R2 credentials come from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (an R2 API token scoped to this bucket).
+bucket                      = "withchris-tfstate"
+region                      = "auto"
+endpoints                   = { s3 = "https://<cloudflare account id>.r2.cloudflarestorage.com" }
+skip_credentials_validation = true
+skip_region_validation      = true
+skip_requesting_account_id  = true
+skip_metadata_api_check     = true
+skip_s3_checksum            = true
+use_path_style              = true
+use_lockfile                = true

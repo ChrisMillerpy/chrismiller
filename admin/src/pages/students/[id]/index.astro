@@ -1,0 +1,66 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import LessonTable from '../../../components/LessonTable.astro';
+import { need, notFound, parseId } from '../../../lib/http';
+import { formatPence } from '../../../lib/money';
+import { can } from '../../../lib/permissions';
+import { getStudent, lessonsForStudent } from '../../../lib/repo';
+
+const { staff, today, db } = Astro.locals;
+const denied = need(staff, 'students.read');
+if (denied) return denied;
+
+const id = parseId(Astro.params.id);
+const data = id && (await db(async (tx) => {
+  const student = await getStudent(tx, id, today);
+  return student && { student, lessons: await lessonsForStudent(tx, id) };
+}));
+if (!data) return notFound('That student');
+
+const { student: s, lessons } = data;
+const money = can(staff, 'finance.read');
+const canPay = can(staff, 'finance.write');
+const contact: [string, string | null][] = [
+  ['Level', [s.level, s.exam_board].filter(Boolean).join(' · ') || null],
+  ['Rate', formatPence(s.rate_pence)],
+  ['Status', s.status],
+  ['Student email', s.student_email],
+  ['Parent', s.parent_name],
+  ['Parent email', s.parent_email],
+  ['Parent phone', s.parent_phone],
+  ['Notes', s.notes],
+];
+---
+
+<Admin title={s.name}>
+  <div class="head">
+    <h1>{s.name}</h1>
+    <div class="actions">
+      {canPay && <a class="btn" href={`/lessons/new?student=${s.id}`}>Log a lesson</a>}
+      {can(staff, 'students.write') && <a class="btn secondary" href={`/students/${s.id}/edit`}>Edit</a>}
+    </div>
+  </div>
+
+  <dl class="details">
+    {contact.filter(([, v]) => v).map(([k, v]) => (<><dt>{k}</dt><dd>{k.endsWith('email') ? <a href={`mailto:${v}`}>{v}</a> : v}</dd></>))}
+  </dl>
+
+  {money && (
+    <>
+      <h2>Lessons</h2>
+      <section class="cards" aria-label="Totals">
+        <div class="card"><div class="label">Lessons taught</div><div class="value">{s.lesson_count}</div></div>
+        <div class="card"><div class="label">Paid</div><div class="value">{formatPence(s.paid_pence)}</div></div>
+        <div class="card"><div class="label">Owed</div><div class="value" data-testid="student-owed">{formatPence(s.owed_pence)}</div></div>
+      </section>
+      {canPay && s.owed_pence > 0 && (
+        <form method="post" action={`/students/${s.id}/paid`} style="margin-top:12px">
+          <button type="submit" class="secondary">Mark all paid</button>
+        </form>
+      )}
+      <div style="margin-top:12px">
+        <LessonTable lessons={lessons} showStudent={false} today={today} canPay={canPay} canEdit={canPay} empty="No lessons logged yet." />
+      </div>
+    </>
+  )}
+</Admin>

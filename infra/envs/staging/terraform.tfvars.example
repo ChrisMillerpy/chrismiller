@@ -1,0 +1,5 @@
+account_id      = "<cloudflare account id>"
+supabase_org_id = "<supabase org id>"
+allowed_emails  = ["<chris's email>"]
+db_host         = "<see infra/README.md>"
+# database_password and admin_worker_password: TF_VAR_ environment variables only.
