@@ -79,10 +79,10 @@ export async function updateStudent(db: D1Database, id: number, s: StudentInput)
   return meta.changes === 1;
 }
 
-/** Deletes the student and, through the foreign key, all their lessons. */
+/** Deletes the student and, through the foreign key, all their lessons. D1 counts those in `changes`. */
 export async function deleteStudent(db: D1Database, id: number): Promise<boolean> {
   const { meta } = await db.prepare('delete from students where id = ?1').bind(id).run();
-  return meta.changes === 1;
+  return meta.changes > 0;
 }
 
 const LESSON_VIEWS: Record<LessonView, string> = {

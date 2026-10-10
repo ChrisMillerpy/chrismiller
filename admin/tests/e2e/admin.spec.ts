@@ -1,4 +1,4 @@
-// The admin end to end: the production build, a fake Access in front, the real database behind.
+// The admin end to end: the production build, a fake Access in front, a fresh local D1 behind.
 
 import { expect, test, type Page } from '@playwright/test';
 import { todayInLondon } from '../../src/lib/taxyear';
@@ -36,7 +36,7 @@ test.describe('the door', () => {
     expect(r.status()).toBe(403);
   });
 
-  test('refuses a signed-in email with no staff record', async ({ request }) => {
+  test('refuses a signed-in email that is not allowed', async ({ request }) => {
     const r = await request.get('/', { headers: { 'cf-access-jwt-assertion': await token('stranger@example.com') } });
     expect(r.status()).toBe(403);
     expect(await r.text()).toContain('no access');
@@ -78,7 +78,6 @@ test.describe('running the business as Chris', () => {
     await page.getByLabel('Exam board').fill('OCR MEI');
     await page.getByLabel('Parent name').fill('Anne');
     await page.getByLabel('Parent email').fill('anne@example.com');
-    await page.getByLabel('Notes').fill('=HYPERLINK("http://evil")');
     await page.getByRole('button', { name: 'Add student' }).click();
 
     await expect(page.getByRole('heading', { name: 'Ada Lovelace' })).toBeVisible();
@@ -107,6 +106,7 @@ test.describe('running the business as Chris', () => {
     await page.getByLabel('Student').selectOption({ label: 'Ada Lovelace' });
     await page.getByLabel('Date').fill(shiftDays(today, -2));
     await page.getByLabel('Covered').fill('Integration, by parts');
+    await page.getByLabel('Private notes').fill('Parent pays late');
     await page.getByRole('button', { name: 'Save lesson' }).click();
     await expect(page.getByRole('status')).toHaveText('Lesson saved.');
 
@@ -114,6 +114,7 @@ test.describe('running the business as Chris', () => {
     await page.getByLabel('Student').selectOption({ label: 'Ada Lovelace' });
     await page.getByLabel('Date').fill(shiftDays(today, -1));
     await page.getByLabel('Price (£)').fill('40');
+    await page.getByLabel('Covered').fill('=HYPERLINK("http://evil")');
     await page.getByLabel('Student').selectOption({ label: 'Ada Lovelace' }); // typed price is kept
     await expect(page.getByLabel('Price (£)')).toHaveValue('40');
     await page.getByRole('button', { name: 'Save lesson' }).click();
@@ -129,6 +130,13 @@ test.describe('running the business as Chris', () => {
     await page.getByLabel('Date').fill('');
     await page.getByRole('button', { name: 'Save lesson' }).click();
     await expect(page.locator('#f-date-error')).toHaveText('Required.');
+
+    // A student who doesn't exist is a form error, not a foreign key failure.
+    const r = await page.request.post('/lessons/new', {
+      form: { student_id: '999999', date: today, price: '1' },
+      headers: { origin: new URL(page.url()).origin },
+    });
+    expect(r.status()).toBe(422);
   });
 
   test('the overview adds up, and upcoming lessons are not owed', async ({ page }) => {
@@ -172,13 +180,15 @@ test.describe('running the business as Chris', () => {
     const r = await page.request.get('/export.csv');
     expect(r.status()).toBe(200);
     expect(r.headers()['content-disposition']).toContain('lessons-all.csv');
+    expect([...(await r.body()).subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]); // byte-order mark, for Excel
     const csv = await r.text();
     const lines = csv.trim().split('\r\n');
     expect(lines[0]).toBe('date,time,student,level,minutes,price,paid_on,covered,homework');
     expect(lines).toHaveLength(4);
     expect(csv).toContain('"Integration, by parts"');
     expect(csv).toContain('"Bo, ""the quick"""');
-    expect(csv).not.toContain('HYPERLINK');
+    expect(csv).toContain('"\'=HYPERLINK(""http://evil"")"');
+    expect(csv).not.toContain('Parent pays late');
 
     const bad = await page.request.get('/export.csv?from=2026-10-10&to=2026-01-01');
     expect(bad.status()).toBe(400);
@@ -188,6 +198,7 @@ test.describe('running the business as Chris', () => {
     await signIn(page);
     await page.goto('/students');
     await page.getByRole('link', { name: 'Bo, "the quick"' }).click();
+    const lessonEdit = await page.getByRole('link', { name: /Edit lesson/ }).getAttribute('href');
     await page.getByRole('link', { name: 'Edit', exact: true }).click();
     await page.getByLabel('Status').selectOption('finished');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -202,6 +213,31 @@ test.describe('running the business as Chris', () => {
 
     const csv = await (await page.request.get('/export.csv')).text();
     expect(csv).not.toContain('the quick');
+
+    // The lesson row itself is gone, not just hidden by a join: marking it paid changes nothing.
+    const paid = await page.request.post(lessonEdit!.replace('/edit', '/paid'), {
+      form: { back: '/' },
+      headers: { origin: new URL(page.url()).origin },
+      maxRedirects: 0,
+    });
+    expect(paid.headers().location).toContain('notice=nothing-to-pay');
+  });
+
+  test('the tax year runs 6 April to 5 April', async ({ page }) => {
+    await signIn(page);
+    for (const date of ['2025-04-05', '2025-04-06']) {
+      await page.goto('/lessons/new');
+      await page.getByLabel('Student').selectOption({ label: 'Ada Lovelace' });
+      await page.getByLabel('Date').fill(date);
+      await page.getByRole('button', { name: 'Save lesson' }).click();
+      await expect(page.getByRole('status')).toHaveText('Lesson saved.');
+    }
+    const dates = async (year: number) =>
+      (await (await page.request.get(`/export.csv?tax_year=${year}`)).text()).split('\r\n').map((line) => line.slice(0, 10));
+    expect(await dates(2024)).toContain('2025-04-05');
+    expect(await dates(2024)).not.toContain('2025-04-06');
+    expect(await dates(2025)).toContain('2025-04-06');
+    expect(await dates(2025)).not.toContain('2025-04-05');
   });
 
   test('a missing student is a 404', async ({ page }) => {
@@ -218,21 +254,5 @@ test.describe('running the business as Chris', () => {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, path).toBeLessThanOrEqual(0);
     }
-  });
-});
-
-test.describe('a staff member with students.read only', () => {
-  test('sees students but no money, and cannot change anything', async ({ page }) => {
-    await signIn(page, 'reader@example.com');
-    await page.goto('/');
-    await expect(page).toHaveURL(/\/students$/);
-    await expect(page.getByRole('link', { name: 'Ada Lovelace' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Lessons' })).toHaveCount(0);
-    await expect(page.getByRole('columnheader', { name: 'Owed' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Add a student' })).toHaveCount(0);
-
-    expect((await page.goto('/lessons'))?.status()).toBe(403);
-    expect((await page.goto('/students/new'))?.status()).toBe(403);
-    expect((await page.request.get('/export.csv')).status()).toBe(403);
   });
 });
