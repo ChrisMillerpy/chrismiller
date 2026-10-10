@@ -1,0 +1,2 @@
+account_id = "<cloudflare account id>"
+team_name  = "<team>" # from <team>.cloudflareaccess.com
