@@ -1,13 +1,9 @@
 ---
 import Admin from '../../layouts/Admin.astro';
 import StudentForm from '../../components/StudentForm.astro';
-import { need, seeOther } from '../../lib/http';
+import { seeOther } from '../../lib/http';
 import { createStudent } from '../../lib/repo';
 import { parseStudentForm } from '../../lib/validate';
-
-const { staff, db } = Astro.locals;
-const denied = need(staff, 'students.write');
-if (denied) return denied;
 
 let values: Record<string, string> = { status: 'active' };
 let errors: Record<string, string> = {};
@@ -15,7 +11,7 @@ let errors: Record<string, string> = {};
 if (Astro.request.method === 'POST') {
   const parsed = parseStudentForm(await Astro.request.formData());
   if (parsed.ok) {
-    const id = await db((tx) => createStudent(tx, parsed.value));
+    const id = await createStudent(Astro.locals.db, parsed.value);
     return seeOther(`/students/${id}`, 'student-saved');
   }
   ({ values, errors } = parsed);

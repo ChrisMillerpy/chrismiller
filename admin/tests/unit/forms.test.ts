@@ -23,7 +23,7 @@ describe('form values round-trip through the parsers', () => {
       student_id: 7, date: '2026-10-01', time: '09:15', minutes: 45, price_pence: 3000,
       covered: 'c', homework: null, notes: null, paid_on: '2026-10-02',
     };
-    const r = parseLessonForm(toForm(lessonToValues(l)));
+    const r = parseLessonForm(toForm(lessonToValues(l)), [7]);
     expect(r.ok && r.value).toEqual(l);
   });
 });

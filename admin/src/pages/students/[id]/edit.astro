@@ -2,13 +2,11 @@
 import Admin from '../../../layouts/Admin.astro';
 import StudentForm from '../../../components/StudentForm.astro';
 import { studentToValues } from '../../../lib/forms';
-import { need, notFound, parseId, seeOther } from '../../../lib/http';
+import { notFound, parseId, seeOther } from '../../../lib/http';
 import { deleteStudent, getStudent, updateStudent } from '../../../lib/repo';
 import { parseStudentForm } from '../../../lib/validate';
 
-const { staff, today, db } = Astro.locals;
-const denied = need(staff, 'students.write');
-if (denied) return denied;
+const { today, db } = Astro.locals;
 
 const id = parseId(Astro.params.id);
 if (!id) return notFound('That student');
@@ -19,17 +17,17 @@ let values: Record<string, string> | undefined;
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
   if (form.get('action') === 'delete') {
-    return (await db((tx) => deleteStudent(tx, id))) ? seeOther('/students', 'student-deleted') : notFound('That student');
+    return (await deleteStudent(db, id)) ? seeOther('/students', 'student-deleted') : notFound('That student');
   }
   const parsed = parseStudentForm(form);
   if (parsed.ok) {
-    return (await db((tx) => updateStudent(tx, id, parsed.value))) ? seeOther(`/students/${id}`, 'student-saved') : notFound('That student');
+    return (await updateStudent(db, id, parsed.value)) ? seeOther(`/students/${id}`, 'student-saved') : notFound('That student');
   }
   ({ values, errors } = parsed);
   Astro.response.status = 422;
 }
 
-const student = await db((tx) => getStudent(tx, id, today));
+const student = await getStudent(db, id, today);
 if (!student) return notFound('That student');
 values ??= studentToValues(student);
 ---

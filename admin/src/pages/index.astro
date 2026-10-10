@@ -1,27 +1,19 @@
 ---
 import Admin from '../layouts/Admin.astro';
 import LessonTable from '../components/LessonTable.astro';
-import { need } from '../lib/http';
 import { formatPence } from '../lib/money';
-import { can } from '../lib/permissions';
 import { overview } from '../lib/repo';
 import { taxYearLabel, taxYearOf } from '../lib/taxyear';
 
-const { staff, today, db } = Astro.locals;
-if (!can(staff, 'finance.read')) {
-  if (can(staff, 'students.read')) return Astro.redirect('/students');
-  return need(staff, 'finance.read');
-}
-
-const o = await db((tx) => overview(tx, today));
-const canPay = can(staff, 'finance.write');
+const { today, db } = Astro.locals;
+const o = await overview(db, today);
 const year = taxYearLabel(taxYearOf(today));
 ---
 
 <Admin title="Overview">
   <div class="head">
     <h1>Overview</h1>
-    {canPay && <a class="btn" href="/lessons/new">Log a lesson</a>}
+    <a class="btn" href="/lessons/new">Log a lesson</a>
   </div>
 
   <section class="cards" aria-label="Totals">
@@ -32,8 +24,8 @@ const year = taxYearLabel(taxYearOf(today));
   </section>
 
   <h2>Upcoming</h2>
-  <LessonTable lessons={o.upcoming} today={today} canEdit={canPay} empty="No upcoming lessons logged." />
+  <LessonTable lessons={o.upcoming} today={today} empty="No upcoming lessons logged." />
 
   <h2>Unpaid</h2>
-  <LessonTable lessons={o.unpaid} today={today} canPay={canPay} canEdit={canPay} empty="Nothing owed." />
+  <LessonTable lessons={o.unpaid} today={today} empty="Nothing owed." />
 </Admin>

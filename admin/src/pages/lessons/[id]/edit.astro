@@ -2,37 +2,34 @@
 import Admin from '../../../layouts/Admin.astro';
 import LessonForm from '../../../components/LessonForm.astro';
 import { lessonToValues } from '../../../lib/forms';
-import { need, notFound, parseId, seeOther } from '../../../lib/http';
+import { notFound, parseId, seeOther } from '../../../lib/http';
 import { deleteLesson, getLesson, studentOptions, updateLesson } from '../../../lib/repo';
 import { parseLessonForm } from '../../../lib/validate';
 
-const { staff, db } = Astro.locals;
-const denied = need(staff, 'finance.write');
-if (denied) return denied;
+const { db } = Astro.locals;
 
 const id = parseId(Astro.params.id);
-const lesson = id && (await db((tx) => getLesson(tx, id)));
+const lesson = id && (await getLesson(db, id));
 if (!id || !lesson) return notFound('That lesson');
 
+const students = await studentOptions(db);
 let errors: Record<string, string> = {};
 let values = lessonToValues(lesson);
 
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
   if (form.get('action') === 'delete') {
-    await db((tx) => deleteLesson(tx, id));
+    await deleteLesson(db, id);
     return seeOther(`/students/${lesson.student_id}`, 'lesson-deleted');
   }
-  const parsed = parseLessonForm(form);
+  const parsed = parseLessonForm(form, students.map((s) => s.id));
   if (parsed.ok) {
-    await db((tx) => updateLesson(tx, id, parsed.value));
+    await updateLesson(db, id, parsed.value);
     return seeOther(`/students/${parsed.value.student_id}`, 'lesson-saved');
   }
   ({ values, errors } = parsed);
   Astro.response.status = 422;
 }
-
-const students = await db((tx) => studentOptions(tx));
 ---
 
 <Admin title="Edit lesson">

@@ -137,10 +137,13 @@ export function parseStudentForm(form: FormData): Parsed<StudentInput> {
   });
 }
 
-export function parseLessonForm(form: FormData): Parsed<LessonInput> {
+/** `studentIds` are the students offered in the form; any other id would fail the foreign key. */
+export function parseLessonForm(form: FormData, studentIds: number[]): Parsed<LessonInput> {
   const r = new Reader(form);
+  const student_id = r.int('student_id', 1, Number.MAX_SAFE_INTEGER);
+  if (!studentIds.includes(student_id)) r.errors.student_id = 'Pick a student.';
   return r.result({
-    student_id: r.int('student_id', 1, Number.MAX_SAFE_INTEGER),
+    student_id,
     date: r.date('date', true) ?? '',
     time: r.time('time'),
     minutes: r.int('minutes', 5, 600, 60),

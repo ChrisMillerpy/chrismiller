@@ -4,22 +4,21 @@ import '@fontsource-variable/public-sans';
 import '../../../src/styles/global.css';
 import '../styles/admin.css';
 import { NOTICES } from '../lib/http';
-import { can } from '../lib/permissions';
 
 interface Props {
   title: string;
 }
 
 const { title } = Astro.props;
-const { staff, email } = Astro.locals;
+const { email } = Astro.locals;
 const path = Astro.url.pathname;
 const notice = NOTICES[Astro.url.searchParams.get('notice') ?? ''];
 
 const nav = [
-  { href: '/', label: 'Overview', show: can(staff, 'finance.read'), current: path === '/' },
-  { href: '/students', label: 'Students', show: can(staff, 'students.read'), current: path.startsWith('/students') },
-  { href: '/lessons', label: 'Lessons', show: can(staff, 'finance.read'), current: path.startsWith('/lessons') },
-].filter((n) => n.show);
+  { href: '/', label: 'Overview', current: path === '/' },
+  { href: '/students', label: 'Students', current: path.startsWith('/students') },
+  { href: '/lessons', label: 'Lessons', current: path.startsWith('/lessons') },
+];
 ---
 
 <!doctype html>

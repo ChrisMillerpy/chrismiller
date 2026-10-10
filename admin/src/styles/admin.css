@@ -58,6 +58,5 @@ dl.details { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16p
 dl.details dt { color: var(--muted); }
 dl.details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .badge { font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--panel); color: var(--muted); }
-.badge.unpaid { background: #FCEAE8; color: var(--pen); }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

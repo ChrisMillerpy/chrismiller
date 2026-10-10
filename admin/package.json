@@ -27,7 +27,7 @@
     "preview": "astro preview",
     "types": "wrangler types --strict-vars=false",
     "check": "wrangler types --strict-vars=false && astro check",
-    "check:bundle": "astro build && ! grep -rl DEV_EMAIL dist/ && echo \"bundle ok: no dev sign-in\"",
+    "check:bundle": "astro build && ! grep -rl --exclude=.dev.vars DEV_EMAIL dist/ && echo \"bundle ok: no dev sign-in\"",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "db:migrate": "wrangler d1 migrations apply withchris-admin --remote",

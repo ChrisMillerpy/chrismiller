@@ -1,13 +1,9 @@
 ---
 import Admin from '../../layouts/Admin.astro';
-import { need } from '../../lib/http';
 import { formatPence } from '../../lib/money';
-import { can } from '../../lib/permissions';
 import { listStudents, type StudentFilter } from '../../lib/repo';
 
-const { staff, today, db } = Astro.locals;
-const denied = need(staff, 'students.read');
-if (denied) return denied;
+const { today, db } = Astro.locals;
 
 const FILTERS: { key: StudentFilter; label: string }[] = [
   { key: 'active', label: 'Active' },
@@ -17,14 +13,13 @@ const FILTERS: { key: StudentFilter; label: string }[] = [
 ];
 const asked = Astro.url.searchParams.get('status');
 const filter = FILTERS.find((f) => f.key === asked)?.key ?? 'active';
-const students = await db((tx) => listStudents(tx, filter, today));
-const money = can(staff, 'finance.read');
+const students = await listStudents(db, filter, today);
 ---
 
 <Admin title="Students">
   <div class="head">
     <h1>Students</h1>
-    {can(staff, 'students.write') && <a class="btn" href="/students/new">Add a student</a>}
+    <a class="btn" href="/students/new">Add a student</a>
   </div>
 
   <nav class="tabs" aria-label="Filter students">
@@ -40,8 +35,8 @@ const money = can(staff, 'finance.read');
           <tr>
             <th>Name</th><th>Level</th><th>Parent</th>
             {filter === 'all' && <th>Status</th>}
-            {money && <th>Last lesson</th>}
-            {money && <th class="num">Owed</th>}
+            <th>Last lesson</th>
+            <th class="num">Owed</th>
           </tr>
         </thead>
         <tbody>
@@ -51,8 +46,8 @@ const money = can(staff, 'finance.read');
               <td>{s.level}</td>
               <td>{s.parent_name}</td>
               {filter === 'all' && <td>{s.status}</td>}
-              {money && <td class="date">{s.last_lesson ?? '—'}</td>}
-              {money && <td class="num">{s.owed_pence ? formatPence(s.owed_pence) : '—'}</td>}
+              <td class="date">{s.last_lesson ?? '—'}</td>
+              <td class="num">{s.owed_pence ? formatPence(s.owed_pence) : '—'}</td>
             </tr>
           ))}
         </tbody>

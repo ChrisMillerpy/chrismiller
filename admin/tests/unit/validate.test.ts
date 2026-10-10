@@ -83,7 +83,7 @@ describe('parseLessonForm', () => {
   };
 
   it('accepts a full form', () => {
-    const r = parseLessonForm(form(good));
+    const r = parseLessonForm(form(good), [3]);
     expect(r.ok && r.value).toEqual({
       student_id: 3,
       date: '2026-10-09',
@@ -98,13 +98,14 @@ describe('parseLessonForm', () => {
   });
 
   it('defaults minutes to 60 and time to null', () => {
-    const r = parseLessonForm(form({ ...good, minutes: '', time: '' }));
+    const r = parseLessonForm(form({ ...good, minutes: '', time: '' }), [3]);
     expect(r.ok && r.value).toMatchObject({ minutes: 60, time: null });
   });
 
   it.each([
     ['student_id', '0'],
     ['student_id', 'x'],
+    ['student_id', '4'],
     ['date', '2026-02-30'],
     ['date', '09/10/2026'],
     ['time', '25:00'],
@@ -113,7 +114,7 @@ describe('parseLessonForm', () => {
     ['price', ''],
     ['paid_on', 'yesterday'],
   ])('rejects %s = %j', (field, value) => {
-    const r = parseLessonForm(form({ ...good, [field]: value }));
+    const r = parseLessonForm(form({ ...good, [field]: value }), [3]);
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.errors[field]).toBeTruthy();

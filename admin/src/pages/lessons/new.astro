@@ -1,23 +1,21 @@
 ---
 import Admin from '../../layouts/Admin.astro';
 import LessonForm from '../../components/LessonForm.astro';
-import { need, seeOther } from '../../lib/http';
+import { seeOther } from '../../lib/http';
 import { penceToInput } from '../../lib/money';
 import { createLesson, studentOptions } from '../../lib/repo';
 import { parseLessonForm } from '../../lib/validate';
 
-const { staff, today, db } = Astro.locals;
-const denied = need(staff, 'finance.write');
-if (denied) return denied;
+const { today, db } = Astro.locals;
 
-const students = await db((tx) => studentOptions(tx));
+const students = await studentOptions(db);
 let errors: Record<string, string> = {};
 let values: Record<string, string>;
 
 if (Astro.request.method === 'POST') {
-  const parsed = parseLessonForm(await Astro.request.formData());
+  const parsed = parseLessonForm(await Astro.request.formData(), students.map((s) => s.id));
   if (parsed.ok) {
-    await db((tx) => createLesson(tx, parsed.value));
+    await createLesson(db, parsed.value);
     return seeOther(`/students/${parsed.value.student_id}`, 'lesson-saved');
   }
   ({ values, errors } = parsed);

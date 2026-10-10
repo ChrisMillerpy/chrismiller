@@ -1,14 +1,10 @@
 ---
 import Admin from '../../layouts/Admin.astro';
 import LessonTable from '../../components/LessonTable.astro';
-import { need } from '../../lib/http';
-import { can } from '../../lib/permissions';
 import { listLessons, type LessonView } from '../../lib/repo';
 import { recentTaxYears, taxYearLabel } from '../../lib/taxyear';
 
-const { staff, today, db } = Astro.locals;
-const denied = need(staff, 'finance.read');
-if (denied) return denied;
+const { today, db } = Astro.locals;
 
 const VIEWS: { key: LessonView; label: string; empty: string }[] = [
   { key: 'taught', label: 'Taught', empty: 'No lessons taught yet.' },
@@ -17,21 +13,20 @@ const VIEWS: { key: LessonView; label: string; empty: string }[] = [
 ];
 const asked = Astro.url.searchParams.get('view');
 const view = VIEWS.find((v) => v.key === asked) ?? VIEWS[0];
-const lessons = await db((tx) => listLessons(tx, view.key, today));
-const canWrite = can(staff, 'finance.write');
+const lessons = await listLessons(db, view.key, today);
 ---
 
 <Admin title="Lessons">
   <div class="head">
     <h1>Lessons</h1>
-    {canWrite && <a class="btn" href="/lessons/new">Log a lesson</a>}
+    <a class="btn" href="/lessons/new">Log a lesson</a>
   </div>
 
   <nav class="tabs" aria-label="Filter lessons">
     {VIEWS.map((v) => <a href={`/lessons?view=${v.key}`} aria-current={v.key === view.key ? 'true' : undefined}>{v.label}</a>)}
   </nav>
 
-  <LessonTable lessons={lessons} today={today} canPay={canWrite} canEdit={canWrite} empty={view.empty} />
+  <LessonTable lessons={lessons} today={today} empty={view.empty} />
   {lessons.length === 500 && <p class="muted">Showing the first 500. Use the CSV export for everything.</p>}
 
   <h2>Export</h2>
