@@ -17,5 +17,8 @@ export default defineConfig({
   vite: {
     // Shares src/styles/global.css with the public site, one level up.
     server: { fs: { allow: ['..'] } },
+    // Use this tsconfig for every file. Otherwise Vite reads the root one for global.css, and that
+    // extends a package that only the site installs.
+    tsconfig: './tsconfig.json',
   },
 });
