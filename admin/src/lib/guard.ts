@@ -1,30 +1,21 @@
 // Who is this request from, and may they in? Runs before any page.
-// Order: same-origin check, Access token, staff record. Any failure refuses the request.
+// Order: same-origin check, Access token, the ALLOWED_EMAILS list. Any failure refuses the request.
 
 import { isAllowedRequest } from './security';
 import type { AccessVerifier } from './access';
-import type { StaffMember } from './db';
 
-export type GuardResult =
-  | { ok: true; staff: StaffMember; email: string }
-  | { ok: false; status: 403 | 503; message: string };
+export type GuardResult = { ok: true; email: string } | { ok: false; status: 403; message: string };
 
-export async function guard(
-  request: Request,
-  deps: { verify: AccessVerifier; lookup: (email: string) => Promise<StaffMember | null> },
-): Promise<GuardResult> {
+export async function guard(request: Request, verify: AccessVerifier, allowedEmails: string): Promise<GuardResult> {
   if (!isAllowedRequest(request)) return { ok: false, status: 403, message: 'Cross-site request refused.' };
 
-  const identity = await deps.verify(request);
+  const identity = await verify(request);
   if (!identity) return { ok: false, status: 403, message: 'Not signed in through Cloudflare Access.' };
 
-  let staff: StaffMember | null;
-  try {
-    staff = await deps.lookup(identity.email);
-  } catch {
-    return { ok: false, status: 503, message: 'The database is unavailable. Try again shortly.' };
-  }
-  if (!staff) return { ok: false, status: 403, message: 'This account has no access to the admin.' };
+  // An empty list lets nobody in.
+  const allowed = allowedEmails.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const email = identity.email.toLowerCase();
+  if (!allowed.includes(email)) return { ok: false, status: 403, message: 'This account has no access to the admin.' };
 
-  return { ok: true, staff, email: identity.email };
+  return { ok: true, email };
 }

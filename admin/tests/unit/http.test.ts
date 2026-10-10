@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorResponse, need, NOTICES, parseId, seeOther } from '../../src/lib/http';
+import { errorResponse, NOTICES, parseId, safeBack, seeOther } from '../../src/lib/http';
 
 describe('parseId', () => {
   it.each([['1', 1], ['42', 42]])('accepts %j', (s, n) => expect(parseId(s)).toBe(n));
@@ -22,13 +22,6 @@ describe('seeOther', () => {
   });
 });
 
-describe('need', () => {
-  it('returns null when allowed and 403 when not', () => {
-    expect(need({ id: 1, name: 'C', permissions: ['*'] }, 'finance.write')).toBeNull();
-    expect(need({ id: 1, name: 'C', permissions: [] }, 'finance.write')?.status).toBe(403);
-  });
-});
-
 describe('errorResponse', () => {
   it('escapes the message', async () => {
     const r = errorResponse(403, '<script>');
@@ -37,13 +30,11 @@ describe('errorResponse', () => {
   });
 });
 
-import { safeBack } from '../../src/lib/http';
-
 describe('safeBack', () => {
   it('keeps local paths', () => {
     expect(safeBack('/lessons?view=unpaid', '/')).toBe('/lessons?view=unpaid');
   });
-  it.each([null, '', 'https://evil.example', '//evil.example', '/\\evil.example', 'javascript:alert(1)'])(
+  it.each([null, '', 'https://evil.example', '//evil.example', '/\\evil.example', '/\t/evil.example', '/x\\y', '/a\nb', 'javascript:alert(1)'])(
     'falls back for %j',
     (v) => expect(safeBack(v, '/')).toBe('/'),
   );

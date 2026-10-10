@@ -1,23 +1,15 @@
 // Small response helpers for pages and endpoints.
 
-import { can, type Permission } from './permissions';
-import type { StaffMember } from './db';
-
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export function errorResponse(status: number, message: string): Response {
-  const title = { 403: 'No access', 404: 'Not found', 503: 'Unavailable' }[status] ?? 'Error';
+  const title = { 403: 'No access', 404: 'Not found' }[status] ?? 'Error';
   return new Response(
     `<!doctype html><html lang="en-GB"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>` +
       `<body style="font:17px/1.6 system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 16px;color:#18203A">` +
       `<h1 style="font-size:1.6rem">${title}</h1><p>${escape(message)}</p>`,
     { status, headers: { 'content-type': 'text/html; charset=utf-8' } },
   );
-}
-
-/** A 403 response if the staff member lacks the permission, else null. */
-export function need(staff: StaffMember, permission: Permission): Response | null {
-  return can(staff, permission) ? null : errorResponse(403, `You need the ${permission} permission for this page.`);
 }
 
 export function notFound(what = 'That page'): Response {
@@ -45,7 +37,10 @@ export const NOTICES: Record<string, string> = {
   'nothing-to-pay': 'Nothing was unpaid.',
 };
 
-/** A redirect target from a form field, only if it's a path on this site. */
+/**
+ * A redirect target from a form field, only if it's a path on this site. Control characters and
+ * backslashes are refused: browsers strip tabs from URLs, so `/\t/evil.com` would leave the site.
+ */
 export function safeBack(value: FormDataEntryValue | null, fallback: string): string {
-  return typeof value === 'string' && /^\/(?![/\\])/.test(value) ? value : fallback;
+  return typeof value === 'string' && /^\/(?!\/)[^\x00-\x1f\\]*$/.test(value) ? value : fallback;
 }
