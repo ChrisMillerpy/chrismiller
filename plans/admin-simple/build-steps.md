@@ -48,7 +48,7 @@ admin/src/lib/security.ts     unchanged, but re-read it
 admin/src/lib/http.ts         remove need(); fix safeBack (app.md fix 8)
 admin/src/pages/**            step 4
 admin/tests/unit/guard.test.ts, http.test.ts, security.test.ts   step 5
-admin/tests/e2e/admin.spec.ts, global-setup.ts   step 5
+admin/tests/e2e/admin.spec.ts   step 5 (global-setup.ts is taken, then deleted)
 admin/playwright.config.ts, admin/scripts/e2e-server.sh          step 5
 admin/vitest.config.ts        drop the db project
 ```
@@ -89,8 +89,8 @@ Unit: drop the permissions and sync-wrangler tests. Simplify `guard.test.ts` for
 
 End to end, following `app.md`:
 
-- `global-setup.ts`: remove the persisted local state directory and apply the migrations locally. No Postgres, no staff rows.
-- `e2e-server.sh`: build, write `dist/server/.dev.vars` with the fake Access settings and `ALLOWED_EMAILS=chris@example.com`, and serve with the same `--persist-to` directory the global setup used. Settle the gotcha at the end of `app.md` before anything else in this step.
+- `e2e-server.sh`: build, remove the persisted local state directory, apply the migrations locally, and serve the build with `wrangler dev` on the same `--persist-to` directory, with the fake Access settings and `ALLOWED_EMAILS=chris@example.com` as `--var`s. See the end of `app.md` for why.
+- `global-setup.ts`: delete it. Playwright starts web servers first, so the reset lives in `e2e-server.sh`.
 - `admin.spec.ts`: replace the "no staff record" test with "not in the allow-list" (use `stranger@example.com`), delete the read-only member test, fix the CSV formula test, add the tax-year boundary test. Keep the rest.
 
 **Done when:** `npm run test:unit` and `npm run test:e2e` pass locally, twice in a row, from a clean `dist/` and a clean persisted state directory.
@@ -105,7 +105,7 @@ build          astro build
 preview        astro preview
 types          wrangler types --strict-vars=false
 check          wrangler types --strict-vars=false && astro check
-check:bundle   astro build && ! grep -rl DEV_EMAIL dist/ && echo "bundle ok: no dev sign-in"
+check:bundle   astro build && ! grep -rl --exclude=.dev.vars DEV_EMAIL dist/ && echo "bundle ok: no dev sign-in"
 test:unit      vitest run
 test:e2e       playwright test
 db:migrate     wrangler d1 migrations apply withchris-admin --remote

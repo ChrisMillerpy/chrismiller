@@ -80,7 +80,8 @@ Notes:
 - Reads use `.all<Row>()` for lists and `.first<Row>()` for one row.
 - Writes use `.run()` and read `meta.changes` or `meta.last_row_id`.
 - Inserts and updates list their columns explicitly. The dynamic column helper from postgres.js has no equivalent and isn't missed; the input types have fixed keys.
-- Postgres idioms translate as follows. `sum(x) filter (where c)` becomes `sum(case when c then x end)`. `::int` casts go. `to_char(time, 'HH24:MI')` goes, since time is already text. Price formatting for the CSV moves to JavaScript using `money.ts`. Enum casts go.
+- Postgres idioms translate as follows. `filter (where c)` on an aggregate stays: D1's SQLite supports it. `::int` casts go. `to_char(time, 'HH24:MI')` goes, since time is already text. Price formatting for the CSV moves to JavaScript using `money.ts`. Enum casts go.
+- D1 counts rows removed by `on delete cascade` in `meta.changes`, so `deleteStudent` checks for any change, not exactly one.
 - No transactions. Nothing in the app needs more than one statement to be atomic. If that changes, `db.batch([...])` is atomic.
 - The middleware sets `locals.db = env.DB`. `App.Locals` becomes `{ email: string; today: string; db: D1Database }`.
 
@@ -104,7 +105,7 @@ Not carried over, on purpose: concurrent-edit protection, thousands-separator st
 
 ## Local sign-in
 
-A browser can't add the Access header, so `astro dev` needs a way in. Keep PR #11's mechanism: if `import.meta.env.DEV` is true and `DEV_EMAIL` is set in `admin/.dev.vars`, the verifier returns that email. `import.meta.env.DEV` is false at build time, so the branch is removed from every build. `npm run check:bundle` greps the build for `DEV_EMAIL` and fails if it's there.
+A browser can't add the Access header, so `astro dev` needs a way in. Keep PR #11's mechanism: if `import.meta.env.DEV` is true and `DEV_EMAIL` is set in `admin/.dev.vars`, the verifier returns that email. The allow-list still applies, so `.dev.vars` sets `ALLOWED_EMAILS` to the same email. `import.meta.env.DEV` is false at build time, so the branch is removed from every build. `npm run check:bundle` greps the build for `DEV_EMAIL` and fails if it's there. It skips `dist/server/.dev.vars`, a copy of the developer's file that the build makes and that is never deployed.
 
 ## Tests
 
@@ -119,7 +120,7 @@ The unit tests come from PR #11 with the permissions and wrangler-sync tests rem
 
 The end-to-end suite comes from PR #11 with these changes:
 
-- Global setup resets the local D1 (delete the persisted state directory, then apply migrations locally) instead of resetting Postgres and seeding staff rows.
+- `scripts/e2e-server.sh` resets the local D1 (delete the persisted state directory, then apply migrations locally) instead of a global setup resetting Postgres and seeding staff rows. There is no global setup: Playwright starts its web servers before global setup runs, so a reset there would pull the database out from under a running server.
 - "Refuses a signed-in email with no staff record" becomes "refuses a signed-in email that isn't allowed", using an email not in `ALLOWED_EMAILS`.
 - The read-only staff member test goes.
 - The CSV formula test is fixed (above).
@@ -127,4 +128,4 @@ The end-to-end suite comes from PR #11 with these changes:
 
 The fake Access server (`tests/e2e/fake-access.mjs`) stays as it is. It mints a fresh RS256 key per run on `127.0.0.1`, so nothing in production could ever trust it.
 
-**One gotcha to settle first.** The migrate command and the server under test must share one local D1. Wrangler persists local state under `.wrangler/state` relative to the config file it was given, and the Astro adapter copies the config into `dist/server/`. Pass the same `--persist-to` directory to `wrangler d1 migrations apply --local` and to the preview server, and confirm with a quick manual run before writing the rest of the suite.
+**Settled: one local D1 for the migration and the server.** `scripts/e2e-server.sh` builds, deletes `.wrangler/e2e`, applies the migrations with `--persist-to .wrangler/e2e`, and serves the build with `wrangler dev --persist-to .wrangler/e2e`, passing the fake Access settings and `ALLOWED_EMAILS` as `--var`s. The tests get a database of their own and the dev database in `.wrangler/state` is never touched. `wrangler dev` on the build is also closer to production than `astro preview`.

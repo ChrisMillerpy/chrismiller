@@ -74,13 +74,14 @@ Also set the public site's build watch paths to leave `admin/*` out, so a change
 
 ## Local development
 
-Needs Node 22 or newer. Nothing else.
+Needs Node 22.12 or newer. Nothing else.
 
 ```sh
+npm install                                                 # the site's packages: astro dev reads the root tsconfig
 cd admin
 npm install
 npx wrangler d1 migrations apply withchris-admin --local   # a local SQLite under .wrangler/
-echo 'DEV_EMAIL=learn@withchris.uk' > .dev.vars              # dev-only sign-in, git-ignored
+printf 'DEV_EMAIL=learn@withchris.uk\nALLOWED_EMAILS=learn@withchris.uk\n' > .dev.vars   # dev-only sign-in, git-ignored
 npm run dev                                                 # http://localhost:4321
 ```
 

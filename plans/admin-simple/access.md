@@ -26,7 +26,7 @@ Why keep the token check when Access already guards the hostname? Because it's 3
 
 ## The dev sign-in
 
-Under `astro dev` only, with `DEV_EMAIL` set in `admin/.dev.vars`, the verifier returns that email without a token. It's gated on `import.meta.env.DEV`, which is a compile-time constant, so it's absent from every build. `npm run check:bundle` proves that on every CI run. The e2e suite doesn't use it; it runs the production build behind the fake Access server.
+Under `astro dev` only, with `DEV_EMAIL` set in `admin/.dev.vars`, the verifier returns that email without a token. The allow-list still applies, so `.dev.vars` also sets `ALLOWED_EMAILS`. It's gated on `import.meta.env.DEV`, which is a compile-time constant, so it's absent from every build. `npm run check:bundle` proves that on every CI run. The e2e suite doesn't use it; it runs the production build behind the fake Access server.
 
 ## Threat model, in five lines
 
