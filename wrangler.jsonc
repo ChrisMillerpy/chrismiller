@@ -7,6 +7,6 @@
     "directory": "./dist",
     "not_found_handling": "404-page"
   },
-  // Lets Workers Builds publish a preview of each non-main branch (deploy command: wrangler preview).
+  // Lets .github/workflows/site.yml publish a preview of each pull request (wrangler preview).
   "previews": {}
 }
