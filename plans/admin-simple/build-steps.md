@@ -67,7 +67,7 @@ Write `admin/src/lib/repo.ts` for D1 following `app.md`. Same exported names, pa
 
 Port each query faithfully. Check especially: `listStudents` ordering and the per-filter where clause; `getStudent` totals; `overview` totals and the two capped lists; `listLessons` ordering per view; `markPaid` returning whether a row changed; `markAllPaid` leaving upcoming lessons; `exportLessons` ordering and date filters, with price formatting moved to JavaScript.
 
-**Done when:** `npm run check` passes with the pages still unported (they'll fail; that's fine until step 4) and the file is under 180 lines.
+**Done when:** `astro check` reports no errors in `repo.ts` itself (the pages still use the old data layer and will fail until step 4) and the file is under 180 lines.
 
 ## 3. The door
 
@@ -75,13 +75,13 @@ Port each query faithfully. Check especially: `listStudents` ordering and the pe
 
 `src/middleware.ts`: build the verifier as PR #11 did (cached per config, with the `DEV_EMAIL` branch under `import.meta.env.DEV`); run the guard; on refusal return `errorResponse` with security headers; otherwise set `locals.email`, `locals.today` and `locals.db = env.DB`, run the page, and add the security headers. Wrap the page in try/catch: on an error, `console.error` it and return a 500 through `errorResponse` with headers (app.md fix 3). No `sql.end()`, no `waitUntil`.
 
-**Done when:** with empty vars, every route returns 403 with the hardening headers, including `/export.csv` and the `paid` endpoints.
+**Done when:** the guard's unit tests pass (step 5 lists the cases). The routes can't be served until the pages are ported, so the route check moves to step 4: with empty vars, every route returns 403 with the hardening headers, including `/export.csv` and the `paid` endpoints.
 
 ## 4. The pages
 
 Port every file under `src/pages/`. Remove every `need(...)` and `can(...)` call and every permission-conditional in templates and the layout's nav. Replace `locals.db((tx) => fn(tx, ...))` with `fn(locals.db, ...)`. Fold in fixes 4, 5 and 6 from `app.md`. Keep everything else, including the inline scripts, the notices, the 404s for bad ids, the confirm on delete, and the phone-width styles.
 
-**Done when:** `npm run check` and `npm run build` pass, `npm run check:bundle` passes, and clicking through every page under `npm run dev` with `DEV_EMAIL` set works against the local D1.
+**Done when:** `npm run check` and `npm run build` pass, `npm run check:bundle` passes, clicking through every page under `npm run dev` with `DEV_EMAIL` set works against the local D1, and with empty vars every route returns 403 with the hardening headers (step 3's check).
 
 ## 5. Tests
 

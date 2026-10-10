@@ -142,4 +142,4 @@ Keep:
 
 - Change the admin in a pull request. CI runs the tests. Merge. Workers Builds deploys.
 - A new migration is a new file in `admin/migrations/`, applied locally for dev and tests, and on deploy for production.
-- Nothing is managed in two places. The dashboard holds four settings and the repo holds everything else.
+- Nothing is managed in two places. The dashboard holds the settings above and the repo holds everything else.
