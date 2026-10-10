@@ -1,0 +1,58 @@
+---
+import { formatPence } from '../lib/money';
+import type { LessonRow } from '../lib/repo';
+
+interface Props {
+  lessons: LessonRow[];
+  showStudent?: boolean;
+  today: string;
+  empty: string;
+}
+
+const { lessons, showStudent = true, today, empty } = Astro.props;
+const back = Astro.url.pathname + Astro.url.search.replace(/[?&]notice=[^&]*/, '');
+---
+
+{lessons.length === 0 ? (
+  <div class="table"><p class="empty">{empty}</p></div>
+) : (
+  <div class="table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          {showStudent && <th>Student</th>}
+          <th>Covered</th>
+          <th class="num">Mins</th>
+          <th class="num">Price</th>
+          <th>Paid</th>
+          <th><span class="visually-hidden">Edit</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {lessons.map((l) => (
+          <tr>
+            <td class="date">{l.date}{l.time && <span class="muted"> {l.time}</span>}</td>
+            {showStudent && <td><a href={`/students/${l.student_id}`}>{l.student_name}</a></td>}
+            <td>{l.covered}</td>
+            <td class="num">{l.minutes}</td>
+            <td class="num">{formatPence(l.price_pence)}</td>
+            <td class="date">
+              {l.paid_on ? (
+                l.paid_on
+              ) : l.date > today ? (
+                <span class="badge">upcoming</span>
+              ) : (
+                <form class="inline" method="post" action={`/lessons/${l.id}/paid`}>
+                  <input type="hidden" name="back" value={back} />
+                  <button class="small secondary" type="submit">Mark paid</button>
+                </form>
+              )}
+            </td>
+            <td><a href={`/lessons/${l.id}/edit`} aria-label={`Edit lesson on ${l.date}`}>Edit</a></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}

@@ -1,0 +1,57 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { formatPence } from '../../lib/money';
+import { listStudents, type StudentFilter } from '../../lib/repo';
+
+const { today, db } = Astro.locals;
+
+const FILTERS: { key: StudentFilter; label: string }[] = [
+  { key: 'active', label: 'Active' },
+  { key: 'paused', label: 'Paused' },
+  { key: 'finished', label: 'Finished' },
+  { key: 'all', label: 'All' },
+];
+const asked = Astro.url.searchParams.get('status');
+const filter = FILTERS.find((f) => f.key === asked)?.key ?? 'active';
+const students = await listStudents(db, filter, today);
+---
+
+<Admin title="Students">
+  <div class="head">
+    <h1>Students</h1>
+    <a class="btn" href="/students/new">Add a student</a>
+  </div>
+
+  <nav class="tabs" aria-label="Filter students">
+    {FILTERS.map((f) => <a href={`/students?status=${f.key}`} aria-current={f.key === filter ? 'true' : undefined}>{f.label}</a>)}
+  </nav>
+
+  {students.length === 0 ? (
+    <div class="table"><p class="empty">No {filter === 'all' ? '' : filter} students yet.</p></div>
+  ) : (
+    <div class="table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Level</th><th>Parent</th>
+            {filter === 'all' && <th>Status</th>}
+            <th>Last lesson</th>
+            <th class="num">Owed</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map((s) => (
+            <tr>
+              <td><a href={`/students/${s.id}`}>{s.name}</a></td>
+              <td>{s.level}</td>
+              <td>{s.parent_name}</td>
+              {filter === 'all' && <td>{s.status}</td>}
+              <td class="date">{s.last_lesson ?? '—'}</td>
+              <td class="num">{s.owed_pence ? formatPence(s.owed_pence) : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Admin>

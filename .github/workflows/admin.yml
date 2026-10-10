@@ -1,0 +1,24 @@
+# Tests the admin. No secrets and no deploys: Workers Builds deploys on push to main.
+name: admin
+on:
+  pull_request:
+    paths: ['admin/**', 'src/styles/**', '.github/workflows/admin.yml']
+  push:
+    branches: [main]
+    paths: ['admin/**', 'src/styles/**', '.github/workflows/admin.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: admin } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm, cache-dependency-path: admin/package-lock.json }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run check:bundle
+      - run: npm run test:unit
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

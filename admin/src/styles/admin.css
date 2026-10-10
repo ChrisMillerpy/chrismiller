@@ -1,0 +1,62 @@
+/* Admin styles, on top of the public site's tokens in src/styles/global.css. */
+body { background: var(--paper); font-size: 16px; }
+main { padding-block: 24px 64px; }
+
+.top { background: var(--bg); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; padding-block: 12px; }
+.brand { font: 600 1.1rem var(--display); color: var(--ink); text-decoration: none; }
+.top nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.top nav a { padding: 6px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+.top nav a[aria-current='page'] { background: var(--cobalt-soft); color: var(--cobalt); font-weight: 600; }
+.who { margin-left: auto; color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+
+h1 { font-size: 1.75rem; margin-bottom: 16px; }
+h2 { font-size: 1.25rem; margin: 32px 0 12px; }
+.head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+.head h1 { margin-bottom: 8px; }
+.muted { color: var(--muted); }
+.notice { background: var(--cobalt-soft); border-left: 3px solid var(--cobalt); padding: 10px 14px; margin-bottom: 20px; border-radius: 4px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.card { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.card .label { color: var(--muted); font-size: 0.85rem; }
+.card .value { font: 600 1.5rem var(--display); font-variant-numeric: tabular-nums; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.tabs a { padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: var(--muted); background: var(--bg); }
+.tabs a[aria-current='true'] { border-color: var(--cobalt); color: var(--cobalt); font-weight: 600; }
+
+/* Tables scroll inside their own box, never the page. */
+.table { position: relative; overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.date { white-space: nowrap; }
+.empty { padding: 16px; color: var(--muted); }
+
+.btn, button { font: inherit; font-size: 0.9rem; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--cobalt); background: var(--cobalt); color: #fff; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn.secondary, button.secondary { background: var(--bg); color: var(--cobalt); }
+button.danger { background: var(--bg); color: var(--pen); border-color: var(--pen); }
+button.small { padding: 2px 10px; font-size: 0.8rem; }
+form.inline { display: inline; }
+
+.form { display: grid; gap: 14px; max-width: 640px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+.row { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+label { font-weight: 600; font-size: 0.9rem; }
+.field, label:has(input) { display: grid; gap: 4px; align-content: start; }
+label .hint { font-weight: 400; color: var(--muted); }
+input, select, textarea { font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); width: 100%; min-width: 0; }
+textarea { min-height: 5em; resize: vertical; }
+.error { color: var(--pen); font-weight: 400; font-size: 0.85rem; }
+[aria-invalid='true'] { border-color: var(--pen); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.danger-zone { margin-top: 32px; max-width: 640px; }
+
+dl.details { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin: 0; }
+dl.details dt { color: var(--muted); }
+dl.details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.badge { font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--panel); color: var(--muted); }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

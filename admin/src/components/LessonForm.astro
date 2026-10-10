@@ -1,0 +1,60 @@
+---
+import Field from './Field.astro';
+import { penceToInput } from '../lib/money';
+
+interface Props {
+  values: Record<string, string>;
+  errors?: Record<string, string>;
+  students: { id: number; name: string; rate_pence: number; status: string }[];
+  submit: string;
+  cancel: string;
+}
+const { values, errors = {}, students, submit, cancel } = Astro.props;
+const v = (k: string) => values[k] ?? '';
+---
+
+<form class="form" method="post" novalidate>
+  <div class="field">
+    <label for="f-student_id">Student</label>
+    <select id="f-student_id" name="student_id" required aria-invalid={errors.student_id ? 'true' : undefined} aria-describedby={errors.student_id ? 'f-student_id-error' : undefined}>
+      <option value="">Choose…</option>
+      {students.map((s) => (
+        <option value={s.id} data-rate={penceToInput(s.rate_pence)} selected={v('student_id') === String(s.id)}>
+          {s.name}{s.status !== 'active' ? ` (${s.status})` : ''}
+        </option>
+      ))}
+    </select>
+    {errors.student_id && <span class="error" id="f-student_id-error">{errors.student_id}</span>}
+  </div>
+  <div class="row">
+    <Field label="Date" name="date" type="date" value={v('date')} error={errors.date} required />
+    <Field label="Time" name="time" type="time" value={v('time')} hint="optional" error={errors.time} />
+  </div>
+  <div class="row">
+    <Field label="Minutes" name="minutes" value={v('minutes') || '60'} error={errors.minutes} attrs={{ inputmode: 'numeric' }} />
+    <Field label="Price (£)" name="price" value={v('price')} hint="defaults to their rate" error={errors.price} required attrs={{ inputmode: 'decimal' }} />
+  </div>
+  <Field label="Covered" name="covered" textarea value={v('covered')} error={errors.covered} />
+  <Field label="Homework" name="homework" textarea value={v('homework')} error={errors.homework} />
+  <Field label="Private notes" name="notes" textarea value={v('notes')} error={errors.notes} />
+  <Field label="Paid on" name="paid_on" type="date" value={v('paid_on')} hint="leave empty while unpaid" error={errors.paid_on} />
+  <div class="actions">
+    <button type="submit">{submit}</button>
+    <a href={cancel}>Cancel</a>
+  </div>
+</form>
+
+<!-- Picking a student fills in their rate, unless a price has been typed. Plain inline JS: see the plan's gotchas. -->
+<script is:inline>
+  (() => {
+    const student = document.getElementById('f-student_id');
+    const price = document.getElementById('f-price');
+    if (!student || !price) return;
+    let typed = price.value !== '';
+    price.addEventListener('input', () => { typed = price.value !== ''; });
+    student.addEventListener('change', () => {
+      const rate = student.selectedOptions[0]?.dataset.rate;
+      if (rate && !typed) price.value = rate;
+    });
+  })();
+</script>

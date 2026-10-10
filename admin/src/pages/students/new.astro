@@ -1,0 +1,25 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import StudentForm from '../../components/StudentForm.astro';
+import { seeOther } from '../../lib/http';
+import { createStudent } from '../../lib/repo';
+import { parseStudentForm } from '../../lib/validate';
+
+let values: Record<string, string> = { status: 'active' };
+let errors: Record<string, string> = {};
+
+if (Astro.request.method === 'POST') {
+  const parsed = parseStudentForm(await Astro.request.formData());
+  if (parsed.ok) {
+    const id = await createStudent(Astro.locals.db, parsed.value);
+    return seeOther(`/students/${id}`, 'student-saved');
+  }
+  ({ values, errors } = parsed);
+  Astro.response.status = 422;
+}
+---
+
+<Admin title="Add a student">
+  <h1>Add a student</h1>
+  <StudentForm values={values} errors={errors} submit="Add student" cancel="/students" />
+</Admin>

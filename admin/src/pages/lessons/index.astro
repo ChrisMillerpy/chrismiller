@@ -1,0 +1,43 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import LessonTable from '../../components/LessonTable.astro';
+import { listLessons, type LessonView } from '../../lib/repo';
+import { recentTaxYears, taxYearLabel } from '../../lib/taxyear';
+
+const { today, db } = Astro.locals;
+
+const VIEWS: { key: LessonView; label: string; empty: string }[] = [
+  { key: 'taught', label: 'Taught', empty: 'No lessons taught yet.' },
+  { key: 'upcoming', label: 'Upcoming', empty: 'No upcoming lessons logged.' },
+  { key: 'unpaid', label: 'Unpaid', empty: 'Nothing owed.' },
+];
+const asked = Astro.url.searchParams.get('view');
+const view = VIEWS.find((v) => v.key === asked) ?? VIEWS[0];
+const lessons = await listLessons(db, view.key, today);
+---
+
+<Admin title="Lessons">
+  <div class="head">
+    <h1>Lessons</h1>
+    <a class="btn" href="/lessons/new">Log a lesson</a>
+  </div>
+
+  <nav class="tabs" aria-label="Filter lessons">
+    {VIEWS.map((v) => <a href={`/lessons?view=${v.key}`} aria-current={v.key === view.key ? 'true' : undefined}>{v.label}</a>)}
+  </nav>
+
+  <LessonTable lessons={lessons} today={today} empty={view.empty} />
+  {lessons.length === 500 && <p class="muted">Showing the first 500. Use the CSV export for everything.</p>}
+
+  <h2>Export</h2>
+  <p>
+    CSV for the tax return (6 April to 5 April):
+    {recentTaxYears(today).map((y, i) => <>{i > 0 && ' · '}<a href={`/export.csv?tax_year=${y}`} download>{taxYearLabel(y)}</a></>)}
+    · <a href="/export.csv" download>everything</a>
+  </p>
+  <form class="row" method="get" action="/export.csv" style="max-width:640px;align-items:end">
+    <label>From<input type="date" name="from" required /></label>
+    <label>To<input type="date" name="to" required /></label>
+    <div><button type="submit" class="secondary">Download CSV</button></div>
+  </form>
+</Admin>

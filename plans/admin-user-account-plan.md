@@ -1,5 +1,7 @@
 # Plan: private admin at admin.withchris.uk
 
+> **Superseded (2026-10-10).** The admin is being built from [`admin-simple/README.md`](admin-simple/README.md) instead: Workers, D1 and Access only. This file is kept as history. Revision 2 of it, on the `admin` branch and PR #11, is not being merged.
+
 A private area, only for Chris, to run the tutoring business: students, the lessons taught to them, and who has paid.
 
 **Status:** the first version is built and tested on the `admin-account-users` branch. The production database exists in Cloudflare and has its tables. The admin isn't deployed yet: that needs the dashboard steps under [Setup](#setup).

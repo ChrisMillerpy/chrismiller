@@ -1,0 +1,51 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import LessonForm from '../../../components/LessonForm.astro';
+import { lessonToValues } from '../../../lib/forms';
+import { notFound, parseId, seeOther } from '../../../lib/http';
+import { deleteLesson, getLesson, studentOptions, updateLesson } from '../../../lib/repo';
+import { parseLessonForm } from '../../../lib/validate';
+
+const { db } = Astro.locals;
+
+const id = parseId(Astro.params.id);
+const lesson = id && (await getLesson(db, id));
+if (!id || !lesson) return notFound('That lesson');
+
+const students = await studentOptions(db);
+let errors: Record<string, string> = {};
+let values = lessonToValues(lesson);
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  if (form.get('action') === 'delete') {
+    await deleteLesson(db, id);
+    return seeOther(`/students/${lesson.student_id}`, 'lesson-deleted');
+  }
+  const parsed = parseLessonForm(form, students.map((s) => s.id));
+  if (parsed.ok) {
+    await updateLesson(db, id, parsed.value);
+    return seeOther(`/students/${parsed.value.student_id}`, 'lesson-saved');
+  }
+  ({ values, errors } = parsed);
+  Astro.response.status = 422;
+}
+---
+
+<Admin title="Edit lesson">
+  <h1>Edit lesson</h1>
+  <p class="muted">{lesson.student_name}, {lesson.date}</p>
+  <LessonForm values={values} errors={errors} students={students} submit="Save" cancel={`/students/${lesson.student_id}`} />
+
+  <section class="danger-zone">
+    <form method="post" id="delete-lesson">
+      <input type="hidden" name="action" value="delete" />
+      <button type="submit" class="danger">Delete lesson</button>
+    </form>
+  </section>
+  <script is:inline>
+    document.getElementById('delete-lesson')?.addEventListener('submit', (e) => {
+      if (!confirm('Delete this lesson?')) e.preventDefault();
+    });
+  </script>
+</Admin>

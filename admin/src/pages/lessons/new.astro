@@ -1,0 +1,36 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import LessonForm from '../../components/LessonForm.astro';
+import { seeOther } from '../../lib/http';
+import { penceToInput } from '../../lib/money';
+import { createLesson, studentOptions } from '../../lib/repo';
+import { parseLessonForm } from '../../lib/validate';
+
+const { today, db } = Astro.locals;
+
+const students = await studentOptions(db);
+let errors: Record<string, string> = {};
+let values: Record<string, string>;
+
+if (Astro.request.method === 'POST') {
+  const parsed = parseLessonForm(await Astro.request.formData(), students.map((s) => s.id));
+  if (parsed.ok) {
+    await createLesson(db, parsed.value);
+    return seeOther(`/students/${parsed.value.student_id}`, 'lesson-saved');
+  }
+  ({ values, errors } = parsed);
+  Astro.response.status = 422;
+} else {
+  const pre = students.find((s) => String(s.id) === Astro.url.searchParams.get('student'));
+  values = { date: today, minutes: '60', student_id: pre ? String(pre.id) : '', price: pre ? penceToInput(pre.rate_pence) : '' };
+}
+---
+
+<Admin title="Log a lesson">
+  <h1>Log a lesson</h1>
+  {students.length === 0 ? (
+    <p>Add a student first. <a href="/students/new">Add a student</a></p>
+  ) : (
+    <LessonForm values={values} errors={errors} students={students} submit="Save lesson" cancel="/lessons" />
+  )}
+</Admin>

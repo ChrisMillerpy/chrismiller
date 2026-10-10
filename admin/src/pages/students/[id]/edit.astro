@@ -1,0 +1,53 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import StudentForm from '../../../components/StudentForm.astro';
+import { studentToValues } from '../../../lib/forms';
+import { notFound, parseId, seeOther } from '../../../lib/http';
+import { deleteStudent, getStudent, updateStudent } from '../../../lib/repo';
+import { parseStudentForm } from '../../../lib/validate';
+
+const { today, db } = Astro.locals;
+
+const id = parseId(Astro.params.id);
+if (!id) return notFound('That student');
+
+let errors: Record<string, string> = {};
+let values: Record<string, string> | undefined;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  if (form.get('action') === 'delete') {
+    return (await deleteStudent(db, id)) ? seeOther('/students', 'student-deleted') : notFound('That student');
+  }
+  const parsed = parseStudentForm(form);
+  if (parsed.ok) {
+    return (await updateStudent(db, id, parsed.value)) ? seeOther(`/students/${id}`, 'student-saved') : notFound('That student');
+  }
+  ({ values, errors } = parsed);
+  Astro.response.status = 422;
+}
+
+const student = await getStudent(db, id, today);
+if (!student) return notFound('That student');
+values ??= studentToValues(student);
+---
+
+<Admin title={`Edit ${student.name}`}>
+  <h1>Edit {student.name}</h1>
+  <StudentForm values={values} errors={errors} submit="Save" cancel={`/students/${id}`} />
+
+  <section class="danger-zone">
+    <h2>Delete</h2>
+    <p class="muted">Deletes {student.name} and every lesson logged for them. This can't be undone.</p>
+    <form method="post" id="delete-student">
+      <input type="hidden" name="action" value="delete" />
+      <button type="submit" class="danger">Delete student and lessons</button>
+    </form>
+  </section>
+
+  <script is:inline>
+    document.getElementById('delete-student')?.addEventListener('submit', (e) => {
+      if (!confirm('Delete this student and all their lessons? This cannot be undone.')) e.preventDefault();
+    });
+  </script>
+</Admin>

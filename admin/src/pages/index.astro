@@ -1,0 +1,31 @@
+---
+import Admin from '../layouts/Admin.astro';
+import LessonTable from '../components/LessonTable.astro';
+import { formatPence } from '../lib/money';
+import { overview } from '../lib/repo';
+import { taxYearLabel, taxYearOf } from '../lib/taxyear';
+
+const { today, db } = Astro.locals;
+const o = await overview(db, today);
+const year = taxYearLabel(taxYearOf(today));
+---
+
+<Admin title="Overview">
+  <div class="head">
+    <h1>Overview</h1>
+    <a class="btn" href="/lessons/new">Log a lesson</a>
+  </div>
+
+  <section class="cards" aria-label="Totals">
+    <div class="card"><div class="label">Taught this month</div><div class="value" data-testid="taught-month">{formatPence(o.taught_month_pence)}</div></div>
+    <div class="card"><div class="label">Owed</div><div class="value" data-testid="owed">{formatPence(o.owed_pence)}</div></div>
+    <div class="card"><div class="label">Taught in {year}</div><div class="value" data-testid="taught-year">{formatPence(o.taught_tax_year_pence)}</div></div>
+    <div class="card"><div class="label">Received in {year}</div><div class="value" data-testid="received-year">{formatPence(o.received_tax_year_pence)}</div></div>
+  </section>
+
+  <h2>Upcoming</h2>
+  <LessonTable lessons={o.upcoming} today={today} empty="No upcoming lessons logged." />
+
+  <h2>Unpaid</h2>
+  <LessonTable lessons={o.unpaid} today={today} empty="Nothing owed." />
+</Admin>
