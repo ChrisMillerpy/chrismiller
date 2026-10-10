@@ -1,0 +1,48 @@
+---
+import '@fontsource-variable/literata';
+import '@fontsource-variable/public-sans';
+import '../../../src/styles/global.css';
+import '../styles/admin.css';
+import { NOTICES } from '../lib/http';
+import { can } from '../lib/permissions';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const { staff, email } = Astro.locals;
+const path = Astro.url.pathname;
+const notice = NOTICES[Astro.url.searchParams.get('notice') ?? ''];
+
+const nav = [
+  { href: '/', label: 'Overview', show: can(staff, 'finance.read'), current: path === '/' },
+  { href: '/students', label: 'Students', show: can(staff, 'students.read'), current: path.startsWith('/students') },
+  { href: '/lessons', label: 'Lessons', show: can(staff, 'finance.read'), current: path.startsWith('/lessons') },
+].filter((n) => n.show);
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · Admin</title>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="/">withchris admin</a>
+        <nav aria-label="Main">
+          {nav.map((n) => <a href={n.href} aria-current={n.current ? 'page' : undefined}>{n.label}</a>)}
+        </nav>
+        <span class="who">{email}</span>
+      </div>
+    </header>
+    <main class="wrap">
+      {notice && <p class="notice" role="status">{notice}</p>}
+      <slot />
+    </main>
+  </body>
+</html>

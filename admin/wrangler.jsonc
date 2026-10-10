@@ -1,0 +1,38 @@
+// The admin Worker. Production by default; build with CLOUDFLARE_ENV=staging for admin-staging.withchris.uk
+// (the Astro adapter bakes the environment into dist/server/wrangler.json at build time).
+// ACCESS_TEAM_DOMAIN, ACCESS_AUD and the Hyperdrive ids are Terraform outputs
+// (`infra/scripts/sync-wrangler.mjs` writes them here). Until they're set, every request is refused.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "withchris-admin",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-10-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  // The custom domain behind Access must be the only way in.
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  },
+  "hyperdrive": [
+    // Local dev and tests: set CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE (see README).
+    { "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }
+  ],
+  "env": {
+    "staging": {
+      "name": "withchris-admin-staging",
+      // Staging lives on its workers.dev address, behind its own Access app, until withchris.uk has
+      // moved into this account. Then: false, and admin-staging.withchris.uk.
+      "workers_dev": true,
+      "preview_urls": false,
+      "vars": {
+        "ACCESS_TEAM_DOMAIN": "https://withchris-team.cloudflareaccess.com",
+        "ACCESS_AUD": "b8771c83ead456ac7afa67a4ec8fbf38fba24414c55b1078427409598698e996"
+      },
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "a9c38b0441054d9384775a31fd920c11" }]
+    }
+  }
+}

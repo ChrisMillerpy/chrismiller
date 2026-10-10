@@ -1,0 +1,49 @@
+---
+import Field from './Field.astro';
+import { LEVELS, STATUSES } from '../lib/validate';
+
+interface Props {
+  values: Record<string, string>;
+  errors?: Record<string, string>;
+  submit: string;
+  cancel: string;
+}
+const { values, errors = {}, submit, cancel } = Astro.props;
+const v = (k: string) => values[k] ?? '';
+---
+
+<form class="form" method="post" novalidate>
+  <Field label="Name" name="name" value={v('name')} error={errors.name} required attrs={{ maxlength: 200, autocomplete: 'off' }} />
+  <div class="row">
+    <div class="field">
+      <label for="f-level">Level</label>
+      <select id="f-level" name="level" aria-invalid={errors.level ? 'true' : undefined} aria-describedby={errors.level ? 'f-level-error' : undefined}>
+        <option value="">—</option>
+        {LEVELS.map((l) => <option selected={v('level') === l}>{l}</option>)}
+      </select>
+      {errors.level && <span class="error" id="f-level-error">{errors.level}</span>}
+    </div>
+    <Field label="Exam board" name="exam_board" value={v('exam_board')} hint="AQA, Edexcel, OCR…" error={errors.exam_board} attrs={{ maxlength: 50 }} />
+  </div>
+  <div class="row">
+    <Field label="Rate per lesson (£)" name="rate" value={v('rate')} error={errors.rate} required attrs={{ inputmode: 'decimal' }} />
+    <div class="field">
+      <label for="f-status">Status</label>
+      <select id="f-status" name="status" aria-describedby={errors.status ? 'f-status-error' : undefined}>
+        {STATUSES.map((s) => <option value={s} selected={(v('status') || 'active') === s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+      </select>
+      {errors.status && <span class="error" id="f-status-error">{errors.status}</span>}
+    </div>
+  </div>
+  <Field label="Student email" name="student_email" type="email" value={v('student_email')} error={errors.student_email} />
+  <div class="row">
+    <Field label="Parent name" name="parent_name" value={v('parent_name')} error={errors.parent_name} />
+    <Field label="Parent phone" name="parent_phone" type="tel" value={v('parent_phone')} error={errors.parent_phone} />
+  </div>
+  <Field label="Parent email" name="parent_email" type="email" value={v('parent_email')} error={errors.parent_email} />
+  <Field label="Notes" name="notes" textarea value={v('notes')} hint="Goals, target grade, what they find hard" error={errors.notes} />
+  <div class="actions">
+    <button type="submit">{submit}</button>
+    <a href={cancel}>Cancel</a>
+  </div>
+</form>
