@@ -5,10 +5,10 @@
 import { chromium, type Page } from 'playwright';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:8787';
-const OUT = process.env.OUT ?? 'e2e-out';
+const OUT = resolve(process.env.OUT ?? 'e2e-out'); // absolute, so ffmpeg's frame list works from any folder
 const REAL = process.env.REAL === '1';
 const REPLY_TIMEOUT = REAL ? 180_000 : 20_000;
 mkdirSync(OUT, { recursive: true });
