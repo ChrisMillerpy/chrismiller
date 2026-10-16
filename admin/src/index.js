@@ -39,7 +39,7 @@ function authorised(request, env) {
 // One card per feature. Add new features here.
 const CARDS = [
   { id: 'cathy', title: 'Cathy', sub: 'Sessions with your tutor agent', icon: 'chat' },
-  { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code' },
+  { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code', href: 'https://github.dev/ChrisMillerpy/chrismiller' },
 ];
 
 const ICONS = {
@@ -59,11 +59,12 @@ const MANIFEST = {
   icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
 };
 
+// Cards with an href are links (opened in a new tab); the rest are no-op buttons for now.
 const cardHtml = (c) => `
-  <button class="card" type="button" data-id="${c.id}">
+  ${c.href ? `<a class="card" href="${c.href}" target="_blank" rel="noopener" data-id="${c.id}">` : `<button class="card" type="button" data-id="${c.id}">`}
     <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[c.icon]}</svg></span>
     <span class="txt"><span class="t">${c.title}</span><span class="s">${c.sub}</span></span>
-  </button>`;
+  ${c.href ? '</a>' : '</button>'}`;
 
 const PAGE = `<!doctype html>
 <html lang="en">
@@ -121,7 +122,7 @@ const PAGE = `<!doctype html>
 </main>
 <script>
   // No-ops for now; each card gets wired up as its feature is built.
-  document.querySelectorAll('.card').forEach((c) => c.addEventListener('click', () => {}));
+  document.querySelectorAll('button.card').forEach((c) => c.addEventListener('click', () => {}));
 </script>
 </body>
 </html>`;
