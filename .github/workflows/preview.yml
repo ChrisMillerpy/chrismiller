@@ -90,6 +90,7 @@ jobs:
           E2E_PR: ${{ secrets.CATHY_GITHUB_TOKEN != '' && '1' || '0' }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
+          set -o pipefail  # without this, tee's exit code hid test failures
           sudo apt-get install -y -qq ffmpeg >/dev/null
           npx playwright install --with-deps chromium >/dev/null
           sleep 10
@@ -163,6 +164,6 @@ jobs:
           for id in $(npx wrangler containers list --json 2>/dev/null | jq -r --arg n "$box" '.[] | select(.name == $n) | .id'); do
             npx wrangler containers delete "$id" 2>&1 | tail -2 | tee -a teardown.log
           done
-          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" --delete "evidence/$slug" 2>&1 | tee -a teardown.log
+          # The evidence/<slug> branch is kept: Evidence Packs are built from it after merging.
           { echo "### Preview clone torn down"; echo '```'; sed 's/\x1b\[[0-9;]*m//g' teardown.log; echo '```'; } > report.md
           jq -n --rawfile body report.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/comments" --input - >/dev/null

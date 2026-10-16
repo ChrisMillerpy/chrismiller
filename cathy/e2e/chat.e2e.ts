@@ -128,6 +128,9 @@ try {
     const tools = await page.getByTestId('msg-tool').allTextContents();
     const reply = (await page.getByTestId('msg-assistant').first().textContent())!.trim();
     if (!tools.length) throw new Error('no tool use shown');
+    // With real Claude she was asked for her branch: the answer must name it.
+    const branch = (await page.locator('#branch').textContent())?.trim();
+    if (REAL && branch && !reply.includes(branch)) throw new Error(`reply doesn't name her branch ${branch}: "${reply.slice(0, 200)}"`);
     return `reply ${replyMs} ms after sending; tools: ${tools.join(' | ')}; reply: "${reply.slice(0, 160)}"`;
   });
 
