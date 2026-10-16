@@ -1,5 +1,5 @@
 /* Colours and fonts live in shared/theme.css, so every site uses the same theme. */
-@import '../../shared/theme.css';
+@import './theme.css';
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }

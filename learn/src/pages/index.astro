@@ -1,11 +1,11 @@
 ---
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import Base from '../layouts/Base.astro';
-import CursorGlow from '../components/CursorGlow.astro';
-import { SITE } from '../site';
+import Base from '../../../shared/Base.astro';
+import CursorGlow from '../../../shared/CursorGlow.astro';
+import { SITE } from '../../../shared/site';
 
-// Drop a photo at src/assets/me.jpg (or .png/.webp) and it appears in the About section.
+// Drop a photo at learn/src/assets/me.jpg (or .png/.webp) and it appears in the About section.
 const photos = import.meta.glob<{ default: ImageMetadata }>('../assets/me.{jpg,jpeg,png,webp}', { eager: true });
 const photo = Object.values(photos)[0]?.default;
 

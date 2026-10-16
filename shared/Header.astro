@@ -1,18 +1,19 @@
 ---
-import { SITE } from '../site';
+import { SITE, URLS } from './site';
 
-const path = Astro.url.pathname;
+// Each link is a different site, so "current" means this page is on that site.
+const here = Astro.site?.origin;
 const links = [
-  { href: '/learn', label: 'Tuition' },
-  { href: '/blog', label: 'Blog' },
+  { href: URLS.learn, label: 'Tuition' },
+  { href: URLS.blog, label: 'Blog' },
 ];
 ---
 
 <header>
-  <a class="brand" href="/learn">{SITE.name}</a>
+  <a class="brand" href={URLS.home}>{SITE.name}</a>
   <nav>
     {links.map(({ href, label }) => (
-      <a href={href} aria-current={path.startsWith(href) ? 'page' : undefined}>{label}</a>
+      <a href={href} aria-current={new URL(href).origin === here ? 'page' : undefined}>{label}</a>
     ))}
   </nav>
 </header>

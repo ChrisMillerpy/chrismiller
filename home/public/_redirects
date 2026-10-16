@@ -1,0 +1,6 @@
+# Old withchris.uk addresses, now on their own subdomains. Only matter once the domain is live.
+/learn       https://learn.withchris.uk/        301
+/learn/      https://learn.withchris.uk/        301
+/blog        https://blog.withchris.uk/         301
+/blog/*      https://blog.withchris.uk/:splat   301
+/rss.xml     https://blog.withchris.uk/rss.xml  301

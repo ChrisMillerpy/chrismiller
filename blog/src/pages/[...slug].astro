@@ -1,9 +1,9 @@
 ---
 import 'katex/dist/katex.min.css';
 import { render } from 'astro:content';
-import Base from '../../layouts/Base.astro';
-import PostCover from '../../components/PostCover.astro';
-import { getPosts, formatDate, type Post } from '../../lib/posts';
+import Base from '../../../shared/Base.astro';
+import PostCover from '../components/PostCover.astro';
+import { getPosts, formatDate, type Post } from '../lib/posts';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -18,7 +18,7 @@ const { Content } = await render(post);
   <article class="wrap">
     <PostCover post={post} tall class="post-cover" />
     <div class="reading">
-      <a class="back" href="/blog">← All posts</a>
+      <a class="back" href="/">← All posts</a>
       <h1>{post.data.title}</h1>
       <p class="meta">
         <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
