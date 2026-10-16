@@ -131,8 +131,8 @@ const levels = [
 
   /* Small photo pinned to the corner of the "What I teach" card. */
   .card :global(.avatar) { position: absolute; border-radius: 50%; object-fit: cover; top: -22px; right: -18px; width: 80px; height: 80px; border: 3px solid var(--bg); box-shadow: 0 8px 20px -10px rgba(24, 32, 58, .5); transform: rotate(-4deg); }
-  .btn { display: inline-block; background: var(--cobalt); color: #fff; text-decoration: none; font-weight: 600; padding: 15px 24px; border-radius: 8px; box-shadow: 0 2px 0 #1A2F95; }
-  .btn:hover { background: var(--cobalt-hover); }
+  .btn { display: inline-block; background: var(--fill); color: #fff; text-decoration: none; font-weight: 600; padding: 15px 24px; border-radius: 8px; box-shadow: 0 2px 0 var(--fill-shadow); }
+  .btn:hover { background: var(--fill-hover); }
   .addr { font-size: 15px; color: var(--muted); user-select: all; }
   .pen { font-family: var(--hand); color: var(--pen); font-size: 21px; line-height: 1.2; display: flex; align-items: flex-end; gap: 6px; margin: 18px 0 0; }
   .pen svg { flex: none; }
@@ -173,14 +173,14 @@ const levels = [
   .creds em { font-family: var(--hand); font-style: normal; color: var(--pen); font-size: 19px; white-space: nowrap; }
 
   .closing {
-    background: var(--cobalt); color: #fff; border-radius: 16px; padding: 52px 48px; margin-block: 24px 48px;
+    background: var(--fill); color: #fff; border-radius: 16px; padding: 52px 48px; margin-block: 24px 48px;
     display: flex; justify-content: space-between; align-items: center; gap: 28px; flex-wrap: wrap;
     background-image: linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
     background-size: 28px 28px;
   }
   .closing h2 { color: #fff; font-size: clamp(28px, 3.4vw, 38px); }
   .closing p { margin: 8px 0 0; opacity: .88; }
-  .closing .btn { background: #fff; color: var(--cobalt); box-shadow: none; }
+  .closing .btn { background: #fff; color: var(--fill); box-shadow: none; }
 
   @media (max-width: 860px) {
     .hero, .duo, .steps, .about { grid-template-columns: 1fr; }

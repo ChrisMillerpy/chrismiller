@@ -19,14 +19,13 @@ const { themeable = false } = Astro.props;
 <script>
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]');
   const sync = () => {
-    const current = document.documentElement.dataset.theme ?? 'light';
+    const current = document.documentElement.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === current)));
   };
   buttons.forEach((b) =>
     b.addEventListener('click', () => {
       const choice = b.dataset.themeChoice ?? 'light';
-      if (choice === 'dark') document.documentElement.dataset.theme = 'dark';
-      else delete document.documentElement.dataset.theme;
+      document.documentElement.dataset.theme = choice;
       try { localStorage.setItem('theme', choice); } catch {}
       sync();
     }),

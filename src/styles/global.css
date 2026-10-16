@@ -1,4 +1,5 @@
-/* Design tokens shared by every page. Blog pages also support a dark reading mode. */
+/* Design tokens shared by every page.
+   Dark mode follows the system; blog readers can override it with the footer switch (data-theme). */
 :root {
   --paper: #FAFBFD;
   --bg: #FFFFFF;
@@ -10,6 +11,9 @@
   --cobalt: #2443C9;
   --cobalt-hover: #1E39B0;
   --cobalt-soft: #E6EBFC;
+  --fill: #2443C9;          /* solid blue behind white text (buttons, banners) */
+  --fill-hover: #1E39B0;
+  --fill-shadow: #1A2F95;
   --pen: #C2362B;
   --mark: #2443C9;
   --cover: #F0F3FA;
@@ -22,18 +26,46 @@
   color-scheme: light;
 }
 
+/* Dark: deep navy paper with a faint blue grid, so it still reads as blue and white. */
 :root[data-theme='dark'] {
-  --paper: #12161D;
-  --bg: #12161D;
-  --panel: #1A2029;
-  --ink: #E7EAF0;
-  --muted: #99A3B5;
-  --line: #29303B;
+  --paper: #0B1222;
+  --bg: #0F1729;
+  --panel: #16203A;
+  --ink: #E8EDF8;
+  --muted: #9BA7C4;
+  --line: #24304D;
+  --grid: #18233F;
   --cobalt: #8EA6FF;
   --cobalt-hover: #A9BBFF;
+  --cobalt-soft: #17234A;
+  --fill: #3553E0;
+  --fill-hover: #4462EE;
+  --fill-shadow: #1E33A0;
+  --pen: #FF8A7D;
   --mark: #8EA6FF;
-  --cover: #181E28;
+  --cover: #131D35;
   color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #0B1222;
+    --bg: #0F1729;
+    --panel: #16203A;
+    --ink: #E8EDF8;
+    --muted: #9BA7C4;
+    --line: #24304D;
+    --grid: #18233F;
+    --cobalt: #8EA6FF;
+    --cobalt-hover: #A9BBFF;
+    --cobalt-soft: #17234A;
+    --fill: #3553E0;
+    --fill-hover: #4462EE;
+    --fill-shadow: #1E33A0;
+    --pen: #FF8A7D;
+    --mark: #8EA6FF;
+    --cover: #131D35;
+    color-scheme: dark;
+  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
