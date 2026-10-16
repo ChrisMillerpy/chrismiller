@@ -1,0 +1,11 @@
+// Private admin Worker, served only at admin.withchris.uk (behind Cloudflare Access).
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "withchris-admin",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-09",
+  "routes": [{ "pattern": "admin.withchris.uk", "custom_domain": true }],
+  // No public workers.dev or preview URLs, so the Access-protected domain is the only way in.
+  "workers_dev": false,
+  "preview_urls": false
+}
