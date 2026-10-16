@@ -23,23 +23,22 @@ Chris merges PRs himself. That's the approval step; nothing else leaves the syst
 
 ## Architecture
 
+Everything Cathy lives in `cathy/` as its own Worker. The admin Worker only serves pages and forwards API calls to it through a **service binding**.
+
 ```
-Phone ──▶ Admin Worker (admin/) ─────────────┐
-            │  /cathy        explorer page   │
-            │  /cathy/:id    chat page       │
-            │  /api/...      JSON + WebSocket │
-            ▼                                 ▼
-         D1: sessions table            Session Durable Object (one per chat)
-         (the registry)                 ├─ SQLite: this chat's messages
-                                        ├─ WebSockets to open chat pages
-                                        └─ Container (one per chat, sleeps when idle)
-                                             └─ Node: Mastra agent "Cathy"
-                                                 ├─ Workspace: /workspace = repo on cathy/<id>
-                                                 ├─ tools: read/write/edit/grep/execute_command
-                                                 └─ tools: open_pr, tell_chris, message_cathy, list_cathys
+Phone ──▶ Admin Worker (admin/)            Cathy Worker (cathy/)
+            /cathy       explorer page      ├─ D1: sessions table (the registry)
+            /cathy/:id   chat page          └─ Session Durable Object (one per chat)
+            /api/cathy/* ── service ──────▶     ├─ SQLite: this chat's messages
+                            binding             ├─ WebSockets to open chat pages
+                                                └─ Container (one per chat, sleeps when idle)
+                                                     └─ Node: Mastra agent "Cathy"
+                                                         ├─ /workspace = repo on cathy/<id>
+                                                         ├─ tools: read/write/edit/grep/execute_command
+                                                         └─ tools: open_pr, tell_chris, message_cathy, list_cathys
 ```
 
-- **One database (D1)** registers sessions. It only answers "which chats exist?". It never holds messages.
+- **One database (D1)** registers sessions. It only answers "which chats exist?". It never holds messages. Its schema lives in the root `d1/` folder so other Workers can share it later; the Cathy Worker is the one that binds it today.
 - **Each session is its own object**: a Durable Object that owns the chat history (in its built-in SQLite), the live WebSocket connections, and its container. With Cloudflare Containers, the container *is* addressed through that Durable Object, so one id = one chat = one Cathy = one box.
 - **The container runs Mastra.** The box is both where the agent lives and its sandbox, so Mastra's Workspace uses the local disk and shell. No separate sandbox service.
 - **The agent is stateless.** Each turn, the Durable Object sends the chat history to the container and streams the reply back. A box that slept and woke up loses nothing but its checkout, which it re-clones.
@@ -72,17 +71,19 @@ CREATE TABLE messages (
 );
 ```
 
-## API (admin Worker)
+## API
+
+Admin Worker serves `GET /cathy` (explorer) and `GET /cathy/:id` (chat), and forwards `/api/cathy/*` to the Cathy Worker. Cathy Worker routes:
 
 | Route | Does |
 | --- | --- |
-| `GET /cathy` | Explorer page |
-| `GET /cathy/:id` | Chat page |
 | `GET /api/sessions` | Active sessions from D1 |
 | `POST /api/sessions` | New session: id, D1 row, branch name. Returns id |
 | `POST /api/sessions/:id/archive` | Hide from the explorer |
 | `GET /api/sessions/:id/ws` | WebSocket to that session's Durable Object: history on connect, then live events |
-| `POST /internal/sessions/:id/messages` | Container → Worker: `message_cathy` and `tell_chris`. Needs `INTERNAL_TOKEN` |
+| `POST /internal/sessions/:id/messages` | Container → Worker: `message_cathy` and `tell_chris` |
+
+Every request to the Cathy Worker needs `INTERNAL_TOKEN` (admin adds it when forwarding; the container sends it). So its workers.dev URL is useless to anyone else.
 
 WebSocket events (server → page): `history`, `delta` (streaming text), `tool` (name + short summary), `message` (finished message), `status` (`thinking` / `idle` / `waking`).
 Page → server: `{ type: "send", text }`.
@@ -116,7 +117,7 @@ Worker secrets, copied from GitHub repo secrets by the deploy workflow (as now),
 | --- | --- |
 | `ANTHROPIC_API_KEY` | A **workspace-scoped** key, so no workspace-id header is needed |
 | `GITHUB_TOKEN` | Fine-grained PAT, `chrismiller` repo only: Contents and Pull requests read/write |
-| `INTERNAL_TOKEN` | Random string; container → Worker calls |
+| `INTERNAL_TOKEN` | Random string; admin → Cathy Worker and container → Cathy Worker. Set on both Workers |
 | `ADMIN_PASSWORD` | Optional; page login |
 
 Cathy's shell can read these. Keep them narrow.
@@ -124,18 +125,23 @@ Cathy's shell can read these. Keep them narrow.
 ## Files
 
 ```
-admin/
-  src/index.js          routes, explorer and chat pages
-  src/session.js        Session Durable Object (extends Container)
+d1/                       the registry database (schema only)
   migrations/0001_sessions.sql
-  cathy/                the container
-    Dockerfile          node:22 + git + gh
-    package.json        mastra, @ai-sdk/anthropic
-    src/agent.ts        the Cathy agent, workspace, our tools
-    src/server.ts       POST /turn: history in, event stream out
+cathy/                    the Cathy Worker: session objects and containers
+  wrangler.jsonc          D1 binding (migrations_dir ../d1/migrations), Session Durable Object, container (sleepAfter 10m)
+  src/worker.ts           /api and /internal routes, INTERNAL_TOKEN check
+  src/session.ts          Session Durable Object (extends Container)
+  agent/                  the container: the Mastra agent
+    Dockerfile            node:22 + git + gh
+    package.json          mastra, @ai-sdk/anthropic
+    src/agent.ts          the Cathy agent, workspace, our tools
+    src/server.ts         POST /turn: history in, event stream out
+admin/                    the interface: our own pages (not Mastra's Studio)
+  src/index.js            pages; forwards /api/cathy/* to the CATHY service binding
+  wrangler.jsonc          + services: [{ binding: "CATHY", service: "withchris-cathy" }]
 ```
 
-`wrangler.jsonc` gains: `d1_databases`, `durable_objects` (Session), `containers` (image `./cathy/Dockerfile`, `sleepAfter` 10m), and a `migrations` entry for the new class.
+A `deploy-cathy.yml` workflow deploys `cathy/` on changes, the same way `deploy-admin.yml` does.
 
 ## Phases
 
@@ -154,6 +160,7 @@ Each phase is one PR.
 - **Mastra in a container:** expected fine (plain Node), but Workspace tool names and `LocalSandbox` behaviour in a container are unverified.
 - **Deploying containers from GitHub Actions:** `wrangler deploy` builds the image with Docker on the runner. Should work on `ubuntu-latest`.
 - **Cold starts:** a sleeping box takes seconds to wake, plus a clone. The page shows `waking`.
+- **WebSockets through a service binding:** expected to pass through; checked in phase 1.
 - **Basic auth on WebSockets:** browsers usually resend cached credentials on same-origin WebSockets. If not, fall back to a token in the query string.
 - **Cost:** one container per active chat. Ten idle chats cost nothing; ten busy ones cost ten containers. Archive old chats.
 
