@@ -62,6 +62,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
+          set +e
           cf() { curl -s "https://api.cloudflare.com/client/v4/$1" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"; }
           acct=$(cf accounts | jq -r '.result[0].id // empty')
           {
@@ -84,7 +85,8 @@ jobs:
           RESULT: ${{ steps.smoke.outputs.result }}
           DEPLOY: ${{ steps.deploy.outcome }}
         run: |
-          if [ "$DEPLOY" = success ]; then state=success; desc="$RESULT"
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log 2>/dev/null | head -1)
+          if [ "$DEPLOY" = success ]; then state=success; desc="${url:-no workers.dev url} | $RESULT"
           else state=failure
             desc=$(grep -E 'ERROR|✘|error' deploy.log 2>/dev/null | head -3 | tr -d '\033' | sed 's/\[[0-9;]*m//g' | tr '\n' ' ')
             desc=${desc:-deploy failed}
