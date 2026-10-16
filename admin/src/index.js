@@ -39,7 +39,7 @@ function authorised(request, env) {
 // One card per feature. Add new features here.
 const CARDS = [
   { id: 'cathy', title: 'Cathy', sub: 'Sessions with your tutor agent', icon: 'chat' },
-  { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code', href: 'https://github.dev/ChrisMillerpy/chrismiller' },
+  { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code', href: 'https://github.com/ChrisMillerpy/chrismiller' },
 ];
 
 const ICONS = {
