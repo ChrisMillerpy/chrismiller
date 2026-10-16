@@ -3,6 +3,7 @@
 // Styled to match learn: same blue-and-white tokens and graph paper, navy in dark mode.
 
 import { ICON_SVG, ICON_PNGS } from './icons.js';
+import THEME from '../../shared/theme.css';
 
 export default {
   async fetch(request, env) {
@@ -94,22 +95,11 @@ const PAGE = `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500..600&family=Public+Sans:wght@400..600&display=swap">
 <title>Admin</title>
+<style>${THEME}</style>
 <style>
-  /* Same tokens as the learn site (src/styles/global.css). */
-  :root {
-    --paper:#FAFBFD; --bg:#FFFFFF; --ink:#18203A; --muted:#5A6480; --line:#DDE3EE; --grid:#DCE4F4;
-    --cobalt:#2443C9; --cobalt-soft:#E6EBFC; --pen:#C2362B;
-    --shadow: 0 1px 0 rgba(24,32,58,.04), 0 10px 24px -18px rgba(24,32,58,.35);
-    --display:'Literata', Georgia, serif; --ui:'Public Sans', -apple-system, system-ui, sans-serif;
-    color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --paper:#0B1222; --bg:#0F1729; --ink:#E8EDF8; --muted:#9BA7C4; --line:#24304D; --grid:#18233F;
-      --cobalt:#8EA6FF; --cobalt-soft:#17234A; --pen:#FF8A7D; --shadow:none;
-      color-scheme: dark;
-    }
-  }
+  /* Admin-only extras; colours and fonts come from shared/theme.css above. */
+  :root { --shadow: 0 1px 0 rgba(24,32,58,.04), 0 10px 24px -18px rgba(24,32,58,.35); }
+  @media (prefers-color-scheme: dark) { :root { --shadow: none; } }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 var(--ui); -webkit-text-size-adjust:100%; -webkit-font-smoothing:antialiased; }
   body { position:relative; isolation:isolate; min-height:100dvh; padding: calc(env(safe-area-inset-top) + 24px) max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left)); }

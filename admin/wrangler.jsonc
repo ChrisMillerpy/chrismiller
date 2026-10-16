@@ -7,5 +7,7 @@
   "routes": [{ "pattern": "admin.withchris.uk", "custom_domain": true }],
   // workers.dev on for now: withchris.uk is still in the old Cloudflare account.
   "workers_dev": true,
-  "preview_urls": false
+  "preview_urls": false,
+  // Lets src/index.js import shared/theme.css as text.
+  "rules": [{ "type": "Text", "globs": ["**/*.css"], "fallthrough": true }]
 }
