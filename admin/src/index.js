@@ -1,5 +1,9 @@
 // Admin Worker: Chris's home screen for the tools we build.
 // Deliberately simple: optional password (basic auth), no database.
+// Styled to match learn: same blue-and-white tokens and graph paper, navy in dark mode.
+
+import { ICON_SVG, ICON_PNGS } from './icons.js';
+import THEME from '../../shared/theme.css';
 
 export default {
   async fetch(request, env) {
@@ -15,7 +19,11 @@ export default {
       return new Response(JSON.stringify(MANIFEST), { headers: { 'content-type': 'application/manifest+json' } });
     }
     if (pathname === '/icon.svg') {
-      return new Response(ICON, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' } });
+      return new Response(ICON_SVG, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' } });
+    }
+    if (ICON_PNGS[pathname]) {
+      const bytes = Uint8Array.from(atob(ICON_PNGS[pathname]), (c) => c.charCodeAt(0));
+      return new Response(bytes, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } });
     }
     return new Response(PAGE, {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
@@ -47,16 +55,18 @@ const ICONS = {
   code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>',
 };
 
-const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1a1a1a"/><text x="256" y="330" font-family="system-ui,sans-serif" font-size="260" font-weight="700" fill="#fafaf7" text-anchor="middle">C</text></svg>`;
-
 const MANIFEST = {
   name: 'Chris Admin',
   short_name: 'Admin',
   start_url: '/',
   display: 'standalone',
-  background_color: '#fafaf7',
-  theme_color: '#fafaf7',
-  icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+  background_color: '#FAFBFD',
+  theme_color: '#FAFBFD',
+  icons: [
+    { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+  ],
 };
 
 // Cards with an href are links (opened in a new tab); the rest are no-op buttons for now.
@@ -76,47 +86,56 @@ const PAGE = `<!doctype html>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Admin">
-<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FAFBFD" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1222" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500..600&family=Public+Sans:wght@400..600&display=swap">
 <title>Admin</title>
+<style>${THEME}</style>
 <style>
-  :root {
-    --bg:#fafaf7; --fg:#1a1a1a; --muted:#6b6b66; --card:#fff; --line:#e6e5df; --ic:#f1f0ea;
-    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#121212; --fg:#ededed; --muted:#9a9a95; --card:#1c1c1c; --line:#2a2a2a; --ic:#262626; --shadow:none; }
-  }
+  /* Admin-only extras; colours and fonts come from shared/theme.css above. */
+  :root { --shadow: 0 1px 0 rgba(24,32,58,.04), 0 10px 24px -18px rgba(24,32,58,.35); }
+  @media (prefers-color-scheme: dark) { :root { --shadow: none; } }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; -webkit-text-size-adjust:100%; }
-  body { min-height:100dvh; padding: calc(env(safe-area-inset-top) + 20px) max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left)); }
+  html, body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 var(--ui); -webkit-text-size-adjust:100%; -webkit-font-smoothing:antialiased; }
+  body { position:relative; isolation:isolate; min-height:100dvh; padding: calc(env(safe-area-inset-top) + 24px) max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left)); }
+  /* Graph paper behind the top of the page, fading out, as on learn. */
+  body::before {
+    content:''; position:absolute; inset:0 0 auto 0; height:520px; z-index:-1; pointer-events:none;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent); mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  }
   main { max-width:960px; margin:0 auto; }
-  h1 { font-size:32px; font-weight:700; letter-spacing:-.02em; margin:8px 4px 20px; }
+  .eyebrow { font-size:13px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--cobalt); margin:8px 4px 6px; }
+  h1 { font-family:var(--display); font-weight:600; font-size:36px; line-height:1.1; letter-spacing:-.015em; margin:0 4px 24px; }
   .grid { display:grid; gap:12px; grid-template-columns:repeat(2, minmax(0,1fr)); }
-  @media (min-width:700px) { .grid { grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px; } h1 { font-size:36px; margin-bottom:28px; } }
+  @media (min-width:700px) { .grid { grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px; } h1 { font-size:44px; margin-bottom:32px; } }
   .card {
     all:unset; box-sizing:border-box; cursor:pointer; user-select:none; -webkit-user-select:none;
     display:flex; flex-direction:column; justify-content:space-between; gap:20px;
-    min-height:140px; padding:16px; border-radius:20px;
-    background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow);
-    transition: transform .12s ease, background-color .12s ease;
+    min-height:140px; padding:16px; border-radius:14px;
+    background:var(--bg); border:1px solid var(--line); box-shadow:var(--shadow);
+    transition: transform .12s ease, border-color .12s ease;
   }
   @media (min-width:700px) { .card { min-height:160px; padding:20px; } }
   .card:active { transform:scale(.97); }
-  @media (hover:hover) { .card:hover { background:var(--ic); } }
-  .card:focus-visible { outline:2px solid var(--fg); outline-offset:2px; }
-  .ic { width:44px; height:44px; border-radius:12px; background:var(--ic); display:grid; place-items:center; }
+  @media (hover:hover) { .card:hover { border-color:var(--cobalt); } }
+  .card:focus-visible { outline:2px solid var(--cobalt); outline-offset:3px; }
+  .ic { width:44px; height:44px; border-radius:10px; background:var(--cobalt-soft); color:var(--cobalt); display:grid; place-items:center; }
   .ic svg { width:22px; height:22px; }
   .txt { display:flex; flex-direction:column; gap:2px; }
-  .t { font-size:17px; font-weight:600; }
+  .t { font-family:var(--display); font-size:19px; font-weight:600; }
   .s { font-size:14px; color:var(--muted); }
 </style>
 </head>
 <body>
 <main>
+  <p class="eyebrow">Admin</p>
   <h1>Hi Chris</h1>
   <div class="grid">${CARDS.map(cardHtml).join('')}</div>
 </main>

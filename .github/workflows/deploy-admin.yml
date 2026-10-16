@@ -6,7 +6,7 @@ name: Deploy admin
 on:
   push:
     branches: [main, cathy-chat]
-    paths: ['admin/**', '.github/workflows/deploy-admin.yml']
+    paths: ['admin/**', 'shared/**', '.github/workflows/deploy-admin.yml']
   workflow_dispatch:
 
 permissions:
