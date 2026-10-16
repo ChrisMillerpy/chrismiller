@@ -4,9 +4,9 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { RunResult } from '../agent/box.ts';
 import { singleFlight } from './single-flight.ts';
+import { gitAuthEnv } from './git-auth.ts';
 
 const IDLE_MS = 10 * 60 * 1000;
-const REPO = 'ChrisMillerpy/chrismiller';
 const decode = (b: ArrayBuffer) => new TextDecoder().decode(b);
 
 interface SandboxEnv {
@@ -17,7 +17,6 @@ interface SandboxEnv {
 // so uncommitted work is never thrown away.
 const PREPARE = `set -e
 cd /workspace
-if [ -n "$GH_TOKEN" ]; then git remote set-url origin "https://x-access-token:$GH_TOKEN@github.com/${REPO}.git"; fi
 [ "$(git rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] && exit 0
 git fetch -q --depth 50 origin "+refs/heads/main:refs/remotes/origin/main"
 if git fetch -q --depth 50 origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null; then
@@ -35,8 +34,7 @@ export class Sandbox extends DurableObject<SandboxEnv> {
     const c = this.ctx.container;
     if (!c) throw new Error('This Worker has no container configured.');
     if (!c.running) {
-      const token = this.env.CATHY_GITHUB_TOKEN;
-      c.start({ image: c.images.workspace, instance: 'standard-1', enableInternet: true, env: token ? { GH_TOKEN: token } : {} });
+      c.start({ image: c.images.workspace, instance: 'standard-1', enableInternet: true });
       this.preparedFor = null;
       this.timeoutSet = false;
       // start() returns before the box is ready; wait until it can run a command.
@@ -97,7 +95,8 @@ export class Sandbox extends DurableObject<SandboxEnv> {
 
   private async exec(argv: string[], env: Record<string, string> = {}, timeoutMs = 120_000): Promise<RunResult> {
     const c = await this.box();
-    const p = await c.exec(argv, { cwd: '/workspace', env, signal: AbortSignal.timeout(timeoutMs) });
+    // The token goes with every command: commands don't inherit env from when the box started.
+    const p = await c.exec(argv, { cwd: '/workspace', env: { ...gitAuthEnv(this.env.CATHY_GITHUB_TOKEN), ...env }, signal: AbortSignal.timeout(timeoutMs) });
     const out = await p.output();
     return { exitCode: out.exitCode, stdout: decode(out.stdout), stderr: decode(out.stderr) };
   }
