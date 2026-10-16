@@ -67,79 +67,129 @@ export const explorerPage = () =>
   });
 
 const CHAT_CSS = `
-  body { padding:0; display:flex; flex-direction:column; height:100dvh; min-height:0; }
-  body::before { height:300px; }
-  header { padding: calc(env(safe-area-inset-top) + 12px) 16px 10px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(8px); }
-  header .back { margin:0; }
+  /* Laid out like a messaging app: header, scrolling messages, composer pinned above the keyboard. */
+  html, body { height:var(--app-h, 100dvh); overflow:hidden; }
+  body { padding:0; display:flex; flex-direction:column; min-height:0; }
+  body::before { display:none; }
+  header { flex:none; padding: calc(env(safe-area-inset-top) + 10px) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); background:var(--paper); }
+  header .back { margin:0; font-size:22px; line-height:1; padding:4px 8px 4px 2px; }
   header .who { flex:1; min-width:0; }
-  header .name { font-family:var(--display); font-weight:600; font-size:18px; line-height:1.2; }
+  header .name { font-family:var(--display); font-weight:600; font-size:17px; line-height:1.2; }
   header .branch { font:12px ui-monospace, monospace; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .pill { font-size:12px; font-weight:600; border-radius:999px; padding:3px 10px; background:var(--cobalt-soft); color:var(--cobalt); }
-  .pill.offline { background:transparent; color:var(--pen); border:1px solid currentColor; }
-  #log { flex:1; overflow-y:auto; padding:16px max(16px, env(safe-area-inset-left)); display:flex; flex-direction:column; gap:10px; max-width:820px; width:100%; margin:0 auto; }
-  .m { max-width:86%; padding:10px 14px; border-radius:16px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.45; }
-  .user { align-self:flex-end; background:var(--fill); color:#fff; border-bottom-right-radius:5px; }
-  .assistant { align-self:flex-start; background:var(--bg); border:1px solid var(--line); border-bottom-left-radius:5px; }
-  .cathy { align-self:flex-start; background:var(--cobalt-soft); border-bottom-left-radius:5px; }
+  .archive { flex:none; background:none; border:0; color:var(--muted); font-size:14px; cursor:pointer; padding:6px; }
+  #log { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  .thread { max-width:760px; margin:0 auto; padding:20px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); display:flex; flex-direction:column; gap:14px; }
+  .m { overflow-wrap:anywhere; line-height:1.55; font-size:16px; min-width:0; }
+  .user { align-self:flex-end; max-width:85%; background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:10px 15px; white-space:pre-wrap; }
+  .assistant { align-self:stretch; }
+  .assistant p { margin:0 0 10px; } .assistant p:last-child { margin-bottom:0; }
+  .assistant code { font:14px ui-monospace, monospace; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:1px 5px; }
+  .assistant pre { margin:0 0 10px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .assistant pre code { border:0; padding:0; background:none; font-size:13px; }
+  .assistant a { color:var(--cobalt); }
+  .cathy { align-self:flex-start; max-width:85%; background:var(--cobalt-soft); border-radius:16px; padding:10px 14px; white-space:pre-wrap; }
   .cathy::before { content:attr(data-from); display:block; font-size:12px; font-weight:600; color:var(--cobalt); margin-bottom:2px; }
-  .update { align-self:flex-start; font-family:var(--hand, cursive); color:var(--pen); font-size:18px; padding:2px 6px; }
-  .tool { align-self:flex-start; font:13px ui-monospace, monospace; color:var(--muted); padding:0 6px; }
+  .update { align-self:flex-start; color:var(--pen); font-family:var(--hand, cursive); font-size:17px; }
+  .tool { align-self:flex-start; max-width:100%; font:13px/1.4 ui-monospace, monospace; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .tool::before { content:'› '; color:var(--cobalt); }
   .notice { align-self:center; font-size:13px; color:var(--pen); text-align:center; }
-  .hint { align-self:center; color:var(--muted); font-size:15px; margin-top:20vh; text-align:center; }
-  form { display:flex; gap:8px; padding:10px 12px calc(env(safe-area-inset-bottom) + 10px); border-top:1px solid var(--line); background:var(--paper); max-width:820px; width:100%; margin:0 auto; }
-  textarea { flex:1; resize:none; font:inherit; padding:10px 14px; border-radius:20px; border:1px solid var(--line); background:var(--bg); color:var(--ink); max-height:160px; outline:none; }
-  textarea:focus { border-color:var(--cobalt); }
-  form button { border:0; border-radius:20px; padding:0 18px; background:var(--fill); color:#fff; font-weight:600; cursor:pointer; }
-  form button:disabled { opacity:.4; }
-  .archive { background:none; border:0; color:var(--muted); font-size:14px; cursor:pointer; padding:4px; }
+  .hint { color:var(--muted); font-size:15px; text-align:center; margin-top:18vh; line-height:1.5; }
+  .hint b { display:block; font-family:var(--display); color:var(--ink); font-size:22px; margin-bottom:6px; }
+  .working { display:none; align-items:center; gap:8px; color:var(--muted); font-size:14px; }
+  .working[data-status=thinking] { display:flex; }
+  .working[data-status=offline] { display:flex; color:var(--pen); }
+  .dots { display:inline-flex; gap:4px; }
+  .dots i { width:6px; height:6px; border-radius:50%; background:var(--cobalt); opacity:.35; animation:blink 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay:.2s; } .dots i:nth-child(3) { animation-delay:.4s; }
+  @keyframes blink { 40% { opacity:1; } }
+  @media (prefers-reduced-motion: reduce) { .dots i { animation:none; opacity:.8; } }
+  .composer { flex:none; padding:8px max(10px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 8px) max(10px, env(safe-area-inset-left)); background:var(--paper); }
+  .box { max-width:760px; margin:0 auto; background:var(--bg); border:1px solid var(--line); border-radius:24px; padding:12px 12px 10px 16px; box-shadow:var(--shadow); }
+  .box:focus-within { border-color:color-mix(in srgb, var(--cobalt) 45%, var(--line)); }
+  textarea { display:block; width:100%; min-width:0; resize:none; border:0; outline:none; background:transparent; color:var(--ink); font:16px/1.45 var(--ui); padding:2px 0; max-height:36vh; }
+  textarea::placeholder { color:var(--muted); }
+  .row { display:flex; justify-content:flex-end; align-items:center; margin-top:6px; }
+  .send { flex:none; width:38px; height:38px; border-radius:50%; border:0; display:grid; place-items:center; background:var(--fill); color:#fff; cursor:pointer; transition:opacity .15s, transform .1s; }
+  .send:active { transform:scale(.94); }
+  .send:disabled { opacity:.3; cursor:default; }
+  .send svg { width:20px; height:20px; }
 `;
 
 const CHAT_JS = `
   const id = location.pathname.split('/').pop();
-  const log = document.getElementById('log'), t = document.getElementById('t'), send = document.getElementById('send'), pill = document.getElementById('pill');
-  let ws, live = null, retry = 0;
+  const log = document.getElementById('log'), thread = document.getElementById('thread'), t = document.getElementById('t'), send = document.getElementById('send'), working = document.getElementById('working');
+  let ws, live = null, retry = 0, connected = false;
+
+  // Fit the page to the visible area so the composer sits just above the keyboard (iOS doesn't resize for it).
+  const fit = () => { document.documentElement.style.setProperty('--app-h', (visualViewport?.height || innerHeight) + 'px'); scrollTo(0, 0); };
+  visualViewport?.addEventListener('resize', fit); visualViewport?.addEventListener('scroll', () => scrollTo(0, 0)); fit();
+
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  // Just enough Markdown for Cathy's replies: code blocks, inline code, bold, links, paragraphs.
+  function md(text) {
+    return esc(text).split(/\`\`\`/).map((part, i) => {
+      if (i % 2) return '<pre><code>' + part.replace(/^[a-z]*\\n/, '') + '</code></pre>';
+      return part.split(/\\n{2,}/).filter((p) => p.trim()).map((p) => '<p>' + p
+        .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
+        .replace(/\\*\\*([^*]+)\\*\\*/g, '<b>$1</b>')
+        .replace(/(https:\\/\\/[^\\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+        .replace(/\\n/g, '<br>') + '</p>').join('');
+    }).join('');
+  }
+  const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  const toBottom = () => { log.scrollTop = log.scrollHeight; };
 
   function add(m) {
-    log.querySelector('.hint')?.remove();
+    thread.querySelector('.hint')?.remove();
     const d = document.createElement('div');
-    d.className = 'm ' + m.role; d.dataset.testid = 'msg-' + m.role; d.textContent = m.content;
+    d.className = 'm ' + m.role; d.dataset.testid = 'msg-' + m.role;
+    if (m.role === 'assistant') d.innerHTML = md(m.content); else d.textContent = m.content;
     if (m.role === 'cathy') d.dataset.from = 'From Cathy ' + m.sender;
-    log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+    const stick = atBottom(); thread.insertBefore(d, working); if (stick) toBottom(); return d;
   }
-  function status(s) { pill.textContent = s; pill.className = 'pill' + (s === 'offline' ? ' offline' : ''); pill.dataset.status = s; }
+  function status(s) {
+    working.dataset.status = s;
+    working.querySelector('span:last-child').textContent = s === 'offline' ? 'Reconnecting…' : 'Cathy is working…';
+    if (s === 'thinking') toBottom();
+  }
+  const sync = () => { send.disabled = !connected || !t.value.trim(); };
 
   function connect() {
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/cathy/sessions/' + id + '/ws');
-    ws.onopen = () => { retry = 0; send.disabled = false; };
+    ws.onopen = () => { retry = 0; connected = true; sync(); };
     ws.onmessage = (e) => {
       const ev = JSON.parse(e.data);
       if (ev.type === 'history') {
-        log.replaceChildren(); live = null;
-        if (!ev.messages.length) log.innerHTML = '<div class="hint">Ask Cathy anything, or give her a coding task.<br>She works on her own branch and opens PRs for you.</div>';
-        ev.messages.forEach(add); status(ev.status);
+        thread.querySelectorAll('.m, .hint').forEach((n) => n.remove()); live = null;
+        if (!ev.messages.length) thread.insertAdjacentHTML('afterbegin', '<div class="hint"><b>Hi Chris</b>Ask Cathy anything, or give her a coding task.<br>She works on her own branch and opens PRs for you.</div>');
+        ev.messages.forEach(add); status(ev.status); toBottom();
       }
-      if (ev.type === 'status') { status(ev.status); if (ev.status === 'idle') { log.querySelectorAll('[data-streaming]').forEach((n) => n.remove()); live = null; } }
-      // Streamed text shows in temporary bubbles; the finished reply replaces them all.
-      if (ev.type === 'delta') { if (!live) { live = add({ role: 'assistant', content: '' }); live.dataset.testid = 'msg-streaming'; live.dataset.streaming = '1'; } live.textContent += ev.text; log.scrollTop = log.scrollHeight; }
+      if (ev.type === 'status') { status(ev.status); if (ev.status === 'idle') { thread.querySelectorAll('[data-streaming]').forEach((n) => n.remove()); live = null; } }
+      // Streamed text shows in a temporary block; the finished reply replaces it.
+      if (ev.type === 'delta') {
+        if (!live) { live = add({ role: 'assistant', content: '' }); live.dataset.testid = 'msg-streaming'; live.dataset.streaming = '1'; live.raw = ''; }
+        const stick = atBottom(); live.raw += ev.text; live.innerHTML = md(live.raw); if (stick) toBottom();
+      }
       if (ev.type === 'message') {
-        if (ev.message.role === 'assistant') log.querySelectorAll('[data-streaming]').forEach((n) => n.remove());
-        live = null;
-        add(ev.message);
+        if (ev.message.role === 'assistant') thread.querySelectorAll('[data-streaming]').forEach((n) => n.remove());
+        live = null; add(ev.message);
       }
     };
-    ws.onclose = () => { send.disabled = true; status('offline'); setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000)); };
+    ws.onclose = () => { connected = false; sync(); status('offline'); setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000)); };
   }
 
-  document.getElementById('f').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const text = t.value.trim(); if (!text || ws.readyState !== 1) return;
-    ws.send(JSON.stringify({ type: 'send', text })); t.value = ''; t.style.height = 'auto';
-  });
-  t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; });
-  t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) { e.preventDefault(); document.getElementById('f').requestSubmit(); } });
-  document.getElementById('archive').addEventListener('click', async () => {
-    if (!confirm('Archive this chat? It leaves the list; the branch stays on GitHub.')) return;
+  function submit() {
+    const text = t.value.trim(); if (!text || !connected) return;
+    ws.send(JSON.stringify({ type: 'send', text })); t.value = ''; grow(); sync(); toBottom();
+  }
+  const grow = () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+  document.getElementById('f').addEventListener('submit', (e) => { e.preventDefault(); submit(); });
+  t.addEventListener('input', () => { grow(); sync(); });
+  t.addEventListener('focus', () => setTimeout(() => { fit(); toBottom(); }, 300));
+  t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) { e.preventDefault(); submit(); } });
+  document.getElementById('archive').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'Tap again to archive'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'Archive'; }, 3000); return; }
     await fetch('/api/cathy/sessions/' + id + '/archive', { method: 'POST' }); location.href = '/cathy';
   });
   fetch('/api/cathy/sessions/' + id).then((r) => r.ok ? r.json() : null).then((s) => { if (s) { document.getElementById('branch').textContent = s.branch; document.title = (s.title || 'New chat') + ' · Cathy'; } });
@@ -151,12 +201,16 @@ export const chatPage = () =>
     title: 'Cathy',
     css: CHAT_CSS,
     body: `<header>
-  <a class="back" href="/cathy">‹ Chats</a>
+  <a class="back" href="/cathy" aria-label="Back to chats">‹</a>
   <div class="who"><div class="name">Cathy</div><div class="branch" id="branch"></div></div>
-  <span class="pill" id="pill" data-testid="status">connecting</span>
-  <button class="archive" id="archive" title="Archive this chat">Archive</button>
+  <button class="archive" id="archive" type="button">Archive</button>
 </header>
-<div id="log"></div>
-<form id="f"><textarea id="t" rows="1" placeholder="Message Cathy" data-testid="composer"></textarea><button id="send" disabled data-testid="send">Send</button></form>`,
+<div id="log"><div class="thread" id="thread">
+  <div class="working" id="working" data-testid="status" data-status="connecting"><span class="dots"><i></i><i></i><i></i></span><span>Cathy is working…</span></div>
+</div></div>
+<form class="composer" id="f"><div class="box">
+  <textarea id="t" rows="1" placeholder="Message Cathy" data-testid="composer" enterkeyhint="send"></textarea>
+  <div class="row"><button class="send" id="send" type="submit" disabled aria-label="Send" data-testid="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+</div></form>`,
     script: CHAT_JS,
   });
