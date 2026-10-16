@@ -38,7 +38,7 @@ Phone ──▶ Admin Worker (admin/)            Cathy Worker (cathy/)
                                                          └─ tools: open_pr, tell_chris, message_cathy, list_cathys
 ```
 
-- **One database (D1)** registers sessions. It only answers "which chats exist?". It never holds messages. Owned by the Cathy Worker.
+- **One database (D1)** registers sessions. It only answers "which chats exist?". It never holds messages. Its schema lives in the root `d1/` folder so other Workers can share it later; the Cathy Worker is the one that binds it today.
 - **Each session is its own object**: a Durable Object that owns the chat history (in its built-in SQLite), the live WebSocket connections, and its container. With Cloudflare Containers, the container *is* addressed through that Durable Object, so one id = one chat = one Cathy = one box.
 - **The container runs Mastra.** The box is both where the agent lives and its sandbox, so Mastra's Workspace uses the local disk and shell. No separate sandbox service.
 - **The agent is stateless.** Each turn, the Durable Object sends the chat history to the container and streams the reply back. A box that slept and woke up loses nothing but its checkout, which it re-clones.
@@ -125,17 +125,18 @@ Cathy's shell can read these. Keep them narrow.
 ## Files
 
 ```
-cathy/                    the Cathy Worker
-  wrangler.jsonc          D1, Session Durable Object, container (sleepAfter 10m)
+d1/                       the registry database (schema only)
+  migrations/0001_sessions.sql
+cathy/                    the Cathy Worker: session objects and containers
+  wrangler.jsonc          D1 binding (migrations_dir ../d1/migrations), Session Durable Object, container (sleepAfter 10m)
   src/worker.ts           /api and /internal routes, INTERNAL_TOKEN check
   src/session.ts          Session Durable Object (extends Container)
-  migrations/0001_sessions.sql
   agent/                  the container: the Mastra agent
     Dockerfile            node:22 + git + gh
     package.json          mastra, @ai-sdk/anthropic
     src/agent.ts          the Cathy agent, workspace, our tools
     src/server.ts         POST /turn: history in, event stream out
-admin/
+admin/                    the interface: our own pages (not Mastra's Studio)
   src/index.js            pages; forwards /api/cathy/* to the CATHY service binding
   wrangler.jsonc          + services: [{ binding: "CATHY", service: "withchris-cathy" }]
 ```
