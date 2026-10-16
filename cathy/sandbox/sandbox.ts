@@ -5,6 +5,7 @@ import { DurableObject } from 'cloudflare:workers';
 import type { RunResult } from '../agent/box.ts';
 import { singleFlight } from './single-flight.ts';
 import { gitAuthEnv } from './git-auth.ts';
+import { PREPARE } from './prepare.ts';
 
 const IDLE_MS = 10 * 60 * 1000;
 const decode = (b: ArrayBuffer) => new TextDecoder().decode(b);
@@ -12,19 +13,6 @@ const decode = (b: ArrayBuffer) => new TextDecoder().decode(b);
 interface SandboxEnv {
   CATHY_GITHUB_TOKEN?: string;
 }
-
-// Puts the box on the chat's branch: switches only if it isn't already there,
-// so uncommitted work is never thrown away.
-const PREPARE = `set -e
-cd /workspace
-[ "$(git rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] && exit 0
-git fetch -q --depth 50 origin "+refs/heads/main:refs/remotes/origin/main"
-if git fetch -q --depth 50 origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null; then
-  git checkout -q -B "$BRANCH" "origin/$BRANCH"
-else
-  git checkout -q -B "$BRANCH" origin/main
-  [ -z "$GH_TOKEN" ] || git push -q -u origin "$BRANCH"
-fi`;
 
 export class Sandbox extends DurableObject<SandboxEnv> {
   private preparedFor: string | null = null;
