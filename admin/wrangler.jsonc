@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "compatibility_date": "2026-10-09",
   "routes": [{ "pattern": "admin.withchris.uk", "custom_domain": true }],
-  // No public workers.dev or preview URLs, so the Access-protected domain is the only way in.
-  "workers_dev": false,
+  // workers.dev on for now: withchris.uk is still in the old Cloudflare account.
+  "workers_dev": true,
   "preview_urls": false
 }

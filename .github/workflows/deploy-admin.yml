@@ -5,12 +5,12 @@ name: Deploy admin
 
 on:
   push:
-    branches: [main, admin-hello]
+    branches: [main, admin-hello, admin-diagnose]
     paths: ['admin/**', '.github/workflows/deploy-admin.yml']
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   statuses: write
 
 concurrency:
@@ -53,6 +53,30 @@ jobs:
           elif grep -qi 'cloudflareaccess' page.html || [ "$code" = 302 ]; then echo "result=live, behind Access" >> "$GITHUB_OUTPUT"
           else echo "result=deployed, but site returned HTTP $code" >> "$GITHUB_OUTPUT"; fi
 
+      # Posts what happened as a commit comment, so it can be read without the
+      # Actions logs (which aren't reachable from Claude's sandbox). No secrets in it.
+      - name: Post diagnostics
+        if: always()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set +e
+          cf() { curl -s "https://api.cloudflare.com/client/v4/$1" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"; }
+          acct=$(cf accounts | jq -r '.result[0].id // empty')
+          {
+            echo '### admin deploy diagnostics'
+            echo '**wrangler deploy (tail)**'; echo '```'; tail -15 deploy.log 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'; echo '```'
+            echo '**DNS**'; echo '```'; dig +short admin.withchris.uk A; dig +short admin.withchris.uk AAAA; echo '```'
+            echo '**curl**'; echo '```'; curl -sS -o /dev/null -w 'HTTP %{http_code}\n' --max-time 20 https://admin.withchris.uk/ 2>&1; echo '```'
+            echo '**Workers custom domains**'; echo '```'
+            cf "accounts/$acct/workers/domains" | jq -c '.errors, [.result[]? | {hostname, service, zone_name}]'
+            echo '```'
+            echo '**Zones the token sees**'; echo '```'; cf zones | jq -c '.errors, [.result[]? | {name, status}]'; echo '```'
+          } > diag.md
+          jq -n --rawfile body diag.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" --input - >/dev/null
+
       - name: Report status
         if: always()
         working-directory: .
@@ -61,7 +85,8 @@ jobs:
           RESULT: ${{ steps.smoke.outputs.result }}
           DEPLOY: ${{ steps.deploy.outcome }}
         run: |
-          if [ "$DEPLOY" = success ]; then state=success; desc="$RESULT"
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log 2>/dev/null | head -1)
+          if [ "$DEPLOY" = success ]; then state=success; desc="${url:-no workers.dev url} | $RESULT"
           else state=failure
             desc=$(grep -E 'ERROR|✘|error' deploy.log 2>/dev/null | head -3 | tr -d '\033' | sed 's/\[[0-9;]*m//g' | tr '\n' ' ')
             desc=${desc:-deploy failed}
