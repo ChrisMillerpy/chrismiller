@@ -60,7 +60,7 @@ export class Registry {
   async list(): Promise<Session[]> {
     await this.init();
     const { results } = await this.db.prepare("SELECT * FROM sessions WHERE status = 'active' ORDER BY updated_at DESC LIMIT 200").bind().all();
-    return results.map((r) => ({ ...r }));
+    return results.map((r: Session) => ({ ...r }));
   }
 
   /** Record activity: newest message preview, and a title if the chat has none yet. */
