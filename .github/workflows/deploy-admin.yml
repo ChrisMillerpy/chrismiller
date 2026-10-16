@@ -1,0 +1,70 @@
+# Deploys the admin Worker (admin/) to Cloudflare whenever it changes.
+# Uses the CLOUDFLARE_API_TOKEN repo secret. Posts a short commit status
+# ("admin-deploy") so the result is visible without opening the logs.
+name: Deploy admin
+
+on:
+  push:
+    branches: [main, admin-hello]
+    paths: ['admin/**', '.github/workflows/deploy-admin.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: deploy-admin
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Deploy
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -o pipefail
+          npx --yes wrangler@4 deploy 2>&1 | tee ../deploy.log
+
+      - name: Check the site answers
+        id: smoke
+        run: |
+          # A brand-new custom domain can take a minute or two to start answering.
+          code=000
+          for i in $(seq 1 18); do
+            code=$(curl -s -o page.html -w '%{http_code}' https://admin.withchris.uk/ || true)
+            [ "$code" != 000 ] && break
+            sleep 10
+          done
+          echo "HTTP $code"; touch page.html
+          if grep -q 'Hi Chris' page.html; then echo "result=live, public (no Access yet)" >> "$GITHUB_OUTPUT"
+          elif grep -qi 'cloudflareaccess' page.html || [ "$code" = 302 ]; then echo "result=live, behind Access" >> "$GITHUB_OUTPUT"
+          else echo "result=deployed, but site returned HTTP $code" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Report status
+        if: always()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ steps.smoke.outputs.result }}
+          DEPLOY: ${{ steps.deploy.outcome }}
+        run: |
+          if [ "$DEPLOY" = success ]; then state=success; desc="$RESULT"
+          else state=failure
+            desc=$(grep -E 'ERROR|✘|error' deploy.log 2>/dev/null | head -3 | tr -d '\033' | sed 's/\[[0-9;]*m//g' | tr '\n' ' ')
+            desc=${desc:-deploy failed}
+          fi
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="$state" -f context=admin-deploy -f description="${desc:0:138}" >/dev/null
