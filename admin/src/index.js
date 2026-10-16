@@ -26,9 +26,9 @@ export default {
   },
 };
 
-// Any username; the password must match ADMIN_PASSWORD. Locked if it isn't set.
+// Any username; the password must match ADMIN_PASSWORD. Open if it isn't set.
 function authorised(request, env) {
-  if (!env.ADMIN_PASSWORD) return false;
+  if (!env.ADMIN_PASSWORD) return true;
   const header = request.headers.get('authorization') || '';
   if (!header.startsWith('Basic ')) return false;
   try {

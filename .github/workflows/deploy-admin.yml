@@ -57,7 +57,7 @@ jobs:
           echo "HTTP $code"
           case "$code" in
             401) echo "result=live, password protected" >> "$GITHUB_OUTPUT" ;;
-            200) echo "result=live but NOT password protected" >> "$GITHUB_OUTPUT" ;;
+            200) echo "result=live, open (no password set)" >> "$GITHUB_OUTPUT" ;;
             *)   echo "result=site returned HTTP $code" >> "$GITHUB_OUTPUT" ;;
           esac
 
