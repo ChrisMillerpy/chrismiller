@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
   statuses: write
+  pull-requests: write
 
 concurrency:
   group: preview-${{ github.head_ref || github.ref_name }}
@@ -86,12 +87,21 @@ jobs:
           BASE_URL: ${{ steps.admin.outputs.url }}
           OUT: e2e-out
           REAL: '1'
+          E2E_PR: ${{ secrets.CATHY_GITHUB_TOKEN != '' && '1' || '0' }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
           sudo apt-get install -y -qq ffmpeg >/dev/null
           npx playwright install --with-deps chromium >/dev/null
           sleep 10
           node cathy/e2e/chat.e2e.ts 2>&1 | tee e2e.log
+
+      - name: Close the test PR Cathy opened
+        if: always() && steps.e2e.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(jq -r '.pr // empty' e2e-out/results.json 2>/dev/null)
+          [ -z "$pr" ] || gh pr close "$pr" --delete-branch --comment "Closed by the preview test: Cathy opened this to prove she can." 2>&1 | tail -2
 
       - name: Publish evidence to evidence/${{ steps.names.outputs.slug }}
         if: always() && steps.names.outcome == 'success'
