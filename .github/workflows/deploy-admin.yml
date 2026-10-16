@@ -5,7 +5,7 @@ name: Deploy admin
 
 on:
   push:
-    branches: [main, admin-hello, admin-diagnose]
+    branches: [main, cathy-chat]
     paths: ['admin/**', '.github/workflows/deploy-admin.yml']
   workflow_dispatch:
 
@@ -38,20 +38,28 @@ jobs:
           set -o pipefail
           npx --yes wrangler@4 deploy 2>&1 | tee ../deploy.log
 
+      # Copies the Worker's secrets from GitHub repo secrets. Skips any that aren't set.
+      - name: Set Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          jq -n 'env | {ANTHROPIC_API_KEY, ADMIN_PASSWORD} | with_entries(select(.value != null and .value != ""))' > secrets.json
+          if [ "$(jq length secrets.json)" -gt 0 ]; then npx --yes wrangler@4 secret bulk secrets.json 2>&1 | tail -3; fi
+          rm -f secrets.json
+
       - name: Check the site answers
         id: smoke
         run: |
-          # A brand-new custom domain can take a minute or two to start answering.
-          code=000
-          for i in $(seq 1 18); do
-            code=$(curl -s -o page.html -w '%{http_code}' https://admin.withchris.uk/ || true)
-            [ "$code" != 000 ] && break
-            sleep 10
-          done
-          echo "HTTP $code"; touch page.html
-          if grep -q 'Hi Chris' page.html; then echo "result=live, public (no Access yet)" >> "$GITHUB_OUTPUT"
-          elif grep -qi 'cloudflareaccess' page.html || [ "$code" = 302 ]; then echo "result=live, behind Access" >> "$GITHUB_OUTPUT"
-          else echo "result=deployed, but site returned HTTP $code" >> "$GITHUB_OUTPUT"; fi
+          sleep 5
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://withchris-admin.withchris.workers.dev/ || true)
+          echo "HTTP $code"
+          case "$code" in
+            401) echo "result=live, password protected" >> "$GITHUB_OUTPUT" ;;
+            200) echo "result=live but NOT password protected" >> "$GITHUB_OUTPUT" ;;
+            *)   echo "result=site returned HTTP $code" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       # Posts what happened as a commit comment, so it can be read without the
       # Actions logs (which aren't reachable from Claude's sandbox). No secrets in it.
@@ -68,8 +76,7 @@ jobs:
           {
             echo '### admin deploy diagnostics'
             echo '**wrangler deploy (tail)**'; echo '```'; tail -15 deploy.log 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'; echo '```'
-            echo '**DNS**'; echo '```'; dig +short admin.withchris.uk A; dig +short admin.withchris.uk AAAA; echo '```'
-            echo '**curl**'; echo '```'; curl -sS -o /dev/null -w 'HTTP %{http_code}\n' --max-time 20 https://admin.withchris.uk/ 2>&1; echo '```'
+            echo '**curl**'; echo '```'; curl -sS -o /dev/null -w 'HTTP %{http_code}\n' --max-time 20 https://withchris-admin.withchris.workers.dev/ 2>&1; echo '```'
             echo '**Workers custom domains**'; echo '```'
             cf "accounts/$acct/workers/domains" | jq -c '.errors, [.result[]? | {hostname, service, zone_name}]'
             echo '```'
