@@ -11,5 +11,7 @@
   // Lets src/layout.ts import shared/theme.css as text.
   "rules": [{ "type": "Text", "globs": ["**/*.css"], "fallthrough": true }],
   // The Cathy Worker (cathy/worker), reached privately. Admin forwards /api/cathy/* to it.
-  "services": [{ "binding": "CATHY", "service": "withchris-cathy" }]
+  "services": [{ "binding": "CATHY", "service": "withchris-cathy" }],
+  // Evidence packs (packs/), served at /packs/ behind the same login as the rest of admin.
+  "assets": { "directory": "../packs", "binding": "PACKS", "run_worker_first": true }
 }

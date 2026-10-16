@@ -13,11 +13,13 @@ interface Card {
 const CARDS: Card[] = [
   { id: 'cathy', title: 'Cathy', sub: 'Sessions with your tutor agent', icon: 'chat', href: '/cathy' },
   { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code', href: 'https://github.com/ChrisMillerpy/chrismiller' },
+  { id: 'packs', title: 'Evidence packs', sub: 'Proof that each change works', icon: 'pack', href: '/packs/' },
 ];
 
 const ICONS: Record<string, string> = {
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
   code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>',
+  pack: '<path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/>',
 };
 
 const cardHtml = (c: Card) => {

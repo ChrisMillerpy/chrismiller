@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Cathy v1 Evidence Pack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500..600&family=Public+Sans:wght@400..600&family=JetBrains+Mono:wght@400;500&family=Kalam:wght@400&display=swap">
+<style>
+/* The one theme for every site (learn, blog, admin).
+   Dark mode follows the system; a page can force a mode with data-theme="light" | "dark". */
+:root {
+  --paper: #FAFBFD;
+  --bg: #FFFFFF;
+  --panel: #F4F6FB;
+  --ink: #18203A;
+  --muted: #5A6480;
+  --line: #DDE3EE;
+  --grid: #DCE4F4;
+  --cobalt: #2443C9;
+  --cobalt-hover: #1E39B0;
+  --cobalt-soft: #E6EBFC;
+  --fill: #2443C9;          /* solid blue behind white text (buttons, banners) */
+  --fill-hover: #1E39B0;
+  --fill-shadow: #1A2F95;
+  --pen: #C2362B;
+  --mark: #2443C9;
+  --cover: #F0F3FA;
+
+  --display: 'Literata Variable', 'Literata', Georgia, serif;
+  --ui: 'Public Sans Variable', 'Public Sans', -apple-system, system-ui, sans-serif;
+  --hand: 'Kalam', 'Comic Sans MS', cursive;
+  --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  color-scheme: light;
+}
+
+/* Dark: deep navy paper with a faint blue grid, so it still reads as blue and white. */
+:root[data-theme='dark'] {
+  --paper: #0B1222;
+  --bg: #0F1729;
+  --panel: #16203A;
+  --ink: #E8EDF8;
+  --muted: #9BA7C4;
+  --line: #24304D;
+  --grid: #18233F;
+  --cobalt: #8EA6FF;
+  --cobalt-hover: #A9BBFF;
+  --cobalt-soft: #17234A;
+  --fill: #3553E0;
+  --fill-hover: #4462EE;
+  --fill-shadow: #1E33A0;
+  --pen: #FF8A7D;
+  --mark: #8EA6FF;
+  --cover: #131D35;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #0B1222;
+    --bg: #0F1729;
+    --panel: #16203A;
+    --ink: #E8EDF8;
+    --muted: #9BA7C4;
+    --line: #24304D;
+    --grid: #18233F;
+    --cobalt: #8EA6FF;
+    --cobalt-hover: #A9BBFF;
+    --cobalt-soft: #17234A;
+    --fill: #3553E0;
+    --fill-hover: #4462EE;
+    --fill-shadow: #1E33A0;
+    --pen: #FF8A7D;
+    --mark: #8EA6FF;
+    --cover: #131D35;
+    color-scheme: dark;
+  }
+}
+
+:root { --mono-face: 'JetBrains Mono', ui-monospace, Menlo, monospace; --ok: #1F7A4D; --bad: var(--pen); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --ok: #5FD39A; } }
+:root[data-theme='dark'] { --ok: #5FD39A; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--ui); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 920px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+.band { position: relative; isolation: isolate; }
+.band::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 28px 28px; mask-image: linear-gradient(to bottom, #000 40%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(32px, 6vw, 48px); letter-spacing: -.015em; }
+h2 { font-size: clamp(24px, 4vw, 30px); margin-bottom: 14px; }
+h3 { font-size: 19px; }
+.eyebrow { font-size: 12.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--cobalt); margin: 0 0 8px; }
+.lede { font-size: 18px; color: var(--muted); max-width: 60ch; margin: 12px 0 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; font: 13px var(--mono-face); }
+.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
+.chip.pass { border-color: var(--ok); color: var(--ok); font-weight: 600; }
+section { padding-block: 34px 6px; border-top: 1px solid var(--line); margin-top: 30px; }
+.verdict { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+.verdict > div { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+.verdict h3 { margin-bottom: 8px; }
+.verdict ul { margin: 0; padding-left: 18px; }
+.verdict li { margin: 4px 0; }
+.verdict .yes h3 { color: var(--ok); }
+.verdict .not h3 { color: var(--pen); }
+video { display: block; width: 100%; max-width: 393px; aspect-ratio: 393 / 852; border-radius: 22px; border: 1px solid var(--line); background: var(--bg); margin: 6px 0 0; }
+.videorow { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.videorow p { flex: 1; min-width: 220px; margin: 0; color: var(--muted); }
+.steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+.step { margin: 0; min-width: 0; }
+.step img { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); display: block; }
+.step figcaption { font-size: 14px; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+.step.ok b { color: var(--ok); }
+.step.bad b { color: var(--bad); }
+.step .ms { font: 12px var(--mono-face); color: var(--muted); font-variant-numeric: tabular-nums; }
+.step small { width: 100%; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.tests { columns: 2 300px; column-gap: 28px; list-style: none; padding: 0; margin: 0; font-size: 14.5px; }
+.tests li { break-inside: avoid; padding: 3px 0; }
+.tests .ok { color: var(--ink); }
+.tests .ok::first-letter { color: var(--ok); }
+.tests .bad { color: var(--bad); }
+.bug { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 20px; align-items: start; }
+.bug img { width: 100%; border-radius: 14px; border: 2px solid var(--pen); }
+.pen { font-family: var(--hand); color: var(--pen); font-size: 20px; }
+.snip { margin: 22px 0 0; }
+.snip h3 { margin-bottom: 2px; }
+.snip .file { font: 12.5px var(--mono-face); color: var(--cobalt); }
+.snip p { margin: 6px 0 8px; color: var(--muted); max-width: 70ch; }
+.code { margin: 0; overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 12.5px/1.55 var(--mono-face); }
+.code .ln { display: inline-block; width: 3ch; margin-right: 12px; color: var(--muted); opacity: .6; text-align: right; user-select: none; }
+code { font-family: var(--mono-face); font-size: .92em; }
+.links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 6px 0 12px; }
+.link { display: block; background: var(--fill); color: #fff; text-decoration: none; border-radius: 12px; padding: 14px 16px; font-weight: 600; }
+.link span { display: block; font: 12px var(--mono-face); font-weight: 400; opacity: .85; margin-top: 2px; overflow-wrap: anywhere; }
+.note { color: var(--muted); font-size: 15px; max-width: 70ch; }
+.todo { margin: 0; padding-left: 20px; }
+.todo li { margin: 6px 0; }
+pre.cmd { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 13px/1.6 var(--mono-face); }
+@media (max-width: 640px) { .verdict, .bug { grid-template-columns: 1fr; } .bug img { max-width: 220px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="band"><div class="wrap">
+  <p class="eyebrow">Evidence Pack · Cathy v1</p>
+  <h1>Cathy works, end to end</h1>
+  <p class="lede">Admin → Cathy → new chat → message → she uses her box → streamed reply → saved and listed. Proven on a full local clone of the stack, with a real Cloudflare clone below.</p>
+  <div class="meta">
+    <span class="chip pass">Browser test passed</span>
+    <span class="chip pass">25/25 unit tests</span>
+    <span class="chip pass">Types check</span>
+    <span class="chip">branch cathy-v1</span>
+    <span class="chip">commit 7348167</span>
+    <span class="chip">2026-10-16 22:52 UTC</span>
+  </div>
+</div></header>
+
+<main class="wrap" style="padding-top:0">
+  <div class="verdict">
+    <div class="yes"><h3>Proven here</h3><ul>
+      <li>The admin pages, chat list and chat screen work on an iPhone-sized screen, light and dark.</li>
+      <li>Admin reaches the private Cathy Worker; the registry database records each chat.</li>
+      <li>Each chat is its own object: history survives a reload; replies stream in live.</li>
+      <li>Cathy runs as a real Mastra agent: she calls a tool, gets the result, then answers.</li>
+      <li>Turn order, errors, progress updates and the Cathy-to-Cathy loop guard (unit tests).</li>
+    </ul></div>
+    <div class="not"><h3>Not proven by the local clone</h3><ul>
+      <li>Real Claude: locally a scripted stand-in plays Cathy.</li>
+      <li>The real Linux sandbox: locally a fake box answers <code>git status</code>.</li>
+      <li>Opening PRs: needs the <code>CATHY_GITHUB_TOKEN</code> secret.</li>
+      <li>These are what the preview clone below tests.</li>
+    </ul></div>
+  </div>
+
+  <section id="video">
+    <p class="eyebrow">Layer 1 · Local clone</p>
+    <h2>Walkthrough</h2>
+    <div class="videorow">
+      <video src="media/walkthrough.mp4" poster="media/05-cathy-uses-a-tool-and-replies.png" controls playsinline muted preload="metadata"></video>
+      <p>Recorded by Playwright driving the real pages on a 393×852 screen (iPhone 15 Pro), against admin and Cathy running on Cloudflare's local runtime with their database and session objects. Cathy's brain and box are stand-ins here so the run is repeatable and free.</p>
+    </div>
+  </section>
+
+  <section id="steps">
+    <h2>Step by step</h2>
+    <div class="steps">
+  <figure class="step ok">
+    <img src="media/01-admin-home.png" alt="Admin home" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Admin home</b><span class="ms">1108 ms</span></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/02-open-cathy.png" alt="Open Cathy" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Open Cathy</b><span class="ms">1196 ms</span></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/03-start-a-new-chat.png" alt="Start a new chat" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Start a new chat</b><span class="ms">1164 ms</span><small>chat 2zf7nv, branch cathy/2zf7nv</small></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/04-send-a-message.png" alt="Send a message" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Send a message</b><span class="ms">972 ms</span></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/05-cathy-uses-a-tool-and-replies.png" alt="Cathy uses a tool and replies" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Cathy uses a tool and replies</b><span class="ms">849 ms</span><small>reply 934 ms after sending; tools: run_command git status --short --branch; reply: &quot;Demo Cathy here. You said: &quot;Hello Cathy, what branch are you on?&quot;. I checked my box: ## cathy/2zf7nv
+nothing to commit, working tree cle</small></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/06-chat-survives-a-reload.png" alt="Chat survives a reload" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Chat survives a reload</b><span class="ms">1182 ms</span><small>3 messages restored</small></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/07-chat-is-listed-with-a-preview.png" alt="Chat is listed with a preview" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Chat is listed with a preview</b><span class="ms">1193 ms</span><small>Hello Cathy, what branch are you on?nowDemo Cathy here. You said: &quot;Hello Cathy, what branch are you on?&quot;. I checked my box: ## cathy/2zf7nv nothing to commit, w</small></figcaption>
+  </figure>
+  <figure class="step ok">
+    <img src="media/08-dark-mode.png" alt="Dark mode" loading="lazy" width="393" height="852">
+    <figcaption><b>✓ Dark mode</b><span class="ms">1142 ms</span></figcaption>
+  </figure></div>
+  </section>
+
+  <section id="bug">
+    <h2>Bug found and fixed</h2>
+    <div class="bug">
+      <img src="media/bug-overflow-before.png" alt="Chat list before the fix, with cards running off the right edge" loading="lazy">
+      <div>
+        <p class="pen">Long previews pushed the chat cards off the right edge of the phone.</p>
+        <p>Fixed by letting the list column shrink (<code>grid-template-columns: minmax(0,1fr)</code>). The browser test now measures the widest card against the real screen width. I put the bug back on purpose and the test failed with “page is 688px wider than the screen”, then passed again with the fix.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="preview">
+  <p class="eyebrow">Layer 2 · Real Cloudflare clone</p>
+  <h2>Preview clone: deploying</h2>
+  <p class="note">The real copy (real Claude, real sandbox) is being deployed and tested by GitHub Actions. This section fills in when it finishes.</p>
+</section>
+
+  <section id="tests">
+    <h2>Unit tests</h2>
+    <p class="note">Plain Node, no Cloudflare needed: <code>npm test</code>. A scripted model plays Claude so whole turns, tool calls and errors are tested.</p>
+    <ul class="tests"><li class="ok">✓ read_file numbers lines and respects offset/limit</li><li class="ok">✓ edit_file replaces a unique match</li><li class="ok">✓ edit_file refuses ambiguous and missing matches without writing</li><li class="ok">✓ edit_file replace_all replaces every match</li><li class="ok">✓ edit_file keeps $ signs in the replacement literally</li><li class="ok">✓ grep passes the pattern through env, not the command string</li><li class="ok">✓ open_pr pushes the session branch and returns the PR link</li><li class="ok">✓ run_command shows exit code and stderr</li><li class="ok">✓ Cathy has the box tools plus any extra tools</li><li class="ok">✓ her instructions name her session and branch</li><li class="ok">✓ a turn can call a tool on the box and then answer</li><li class="ok">✓ a message from Chris gets a streamed reply that is stored</li><li class="ok">✓ the next turn sees the earlier conversation</li><li class="ok">✓ tool use shows up as a tool message</li><li class="ok">✓ messages sent while Cathy is busy are answered in order</li><li class="ok">✓ a model error becomes a notice and the chat carries on</li><li class="ok">✓ tell_chris posts an update to the chat</li><li class="ok">✓ message_cathy sends with one more hop; a message from Chris resets the count</li><li class="ok">✓ a chain of Cathy-to-Cathy messages stops after 3 hops</li><li class="ok">✓ demo Cathy checks her box, then answers quoting what Chris said</li><li class="ok">✓ create makes an active session with a cathy/&lt;id&gt; branch</li><li class="ok">✓ list shows active sessions, most recently used first</li><li class="ok">✓ archived sessions leave the list</li><li class="ok">✓ touch trims long previews and sets a title on untitled chats</li><li class="ok">✓ the schema is applied once, even with many calls</li></ul>
+  </section>
+
+  <section id="code">
+    <h2>Load-bearing code</h2>
+    <p class="note">The few places where a mistake would hurt most.</p>
+    <div class="snip"><h3>One turn at a time, in order</h3><div class="file">cathy/worker/src/conversation.ts:80–94</div><p>Messages that arrive while Cathy is busy wait in a queue instead of starting a second, overlapping turn. Test 15 sends two at once and checks both are answered in order.</p><pre class="code"><code><span class="ln">80</span>  private enqueue(p: Pending) {
+<span class="ln">81</span>    this.queue.push(p);
+<span class="ln">82</span>    if (!this.running) {
+<span class="ln">83</span>      this.running = this.drain().finally(() =&gt; {
+<span class="ln">84</span>        this.running = null;
+<span class="ln">85</span>        this.deps.broadcast({ type: 'status', status: 'idle' });
+<span class="ln">86</span>      });
+<span class="ln">87</span>    }
+<span class="ln">88</span>    return this.running;
+<span class="ln">89</span>  }
+<span class="ln">90</span> 
+<span class="ln">91</span>  private async drain() {
+<span class="ln">92</span>    this.deps.broadcast({ type: 'status', status: 'thinking' });
+<span class="ln">93</span>    while (this.queue.length) await this.turn(this.queue.shift()!);
+<span class="ln">94</span>  }</code></pre></div><div class="snip"><h3>The Cathy-to-Cathy loop guard</h3><div class="file">cathy/worker/src/conversation.ts:114–124</div><p>Each hop between Cathys is counted; a message from Chris resets it. The fourth hop is refused, so two Cathys can never ping-pong forever. Tests 18 and 19.</p><pre class="code"><code><span class="ln">114</span>      message_cathy: createTool({
+<span class="ln">115</span>        id: 'message_cathy',
+<span class="ln">116</span>        description: 'Send a message to another Cathy session by id. She will reply in her own chat.',
+<span class="ln">117</span>        inputSchema: z.object({ to: z.string(), text: z.string() }),
+<span class="ln">118</span>        execute: async ({ to, text }) =&gt; {
+<span class="ln">119</span>          const hops = store.getNumber('hops') + 1;
+<span class="ln">120</span>          if (hops &gt; MAX_HOPS) return `Not sent (loop guard): ${MAX_HOPS} Cathy-to-Cathy messages in a row without Chris. Wait for Chris.`;
+<span class="ln">121</span>          await sendToCathy(to, text, hops);
+<span class="ln">122</span>          return `Sent to ${to}.`;
+<span class="ln">123</span>        },
+<span class="ln">124</span>      }),</code></pre></div><div class="snip"><h3>Never throw away her work</h3><div class="file">cathy/sandbox/sandbox.ts:15–27</div><p>When the box wakes it switches to the chat’s branch only if it isn’t already on it, so uncommitted edits survive. A new branch starts from the latest main.</p><pre class="code"><code><span class="ln">15</span>// Puts the box on the chat's branch: switches only if it isn't already there,
+<span class="ln">16</span>// so uncommitted work is never thrown away.
+<span class="ln">17</span>const PREPARE = `set -e
+<span class="ln">18</span>cd /workspace
+<span class="ln">19</span>if [ -n &quot;$GH_TOKEN&quot; ]; then git remote set-url origin &quot;https://x-access-token:$GH_TOKEN@github.com/${REPO}.git&quot;; fi
+<span class="ln">20</span>[ &quot;$(git rev-parse --abbrev-ref HEAD)&quot; = &quot;$BRANCH&quot; ] &amp;&amp; exit 0
+<span class="ln">21</span>git fetch -q --depth 50 origin &quot;+refs/heads/main:refs/remotes/origin/main&quot;
+<span class="ln">22</span>if git fetch -q --depth 50 origin &quot;+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH&quot; 2&gt;/dev/null; then
+<span class="ln">23</span>  git checkout -q -B &quot;$BRANCH&quot; &quot;origin/$BRANCH&quot;
+<span class="ln">24</span>else
+<span class="ln">25</span>  git checkout -q -B &quot;$BRANCH&quot; origin/main
+<span class="ln">26</span>  [ -z &quot;$GH_TOKEN&quot; ] || git push -q -u origin &quot;$BRANCH&quot;
+<span class="ln">27</span>fi`;</code></pre></div><div class="snip"><h3>The box stays warm</h3><div class="file">cathy/sandbox/sandbox.ts:33–57</div><p>Starts the container, waits until it can run a command, and sets a 10-minute idle timer. Every command resets it, so only the first command after a quiet spell is slow.</p><pre class="code"><code><span class="ln">33</span>  private async box() {
+<span class="ln">34</span>    const c = this.ctx.container;
+<span class="ln">35</span>    if (!c) throw new Error('This Worker has no container configured.');
+<span class="ln">36</span>    if (!c.running) {
+<span class="ln">37</span>      const token = this.env.CATHY_GITHUB_TOKEN;
+<span class="ln">38</span>      c.start({ image: c.images.workspace, instance: 'standard-1', enableInternet: true, env: token ? { GH_TOKEN: token } : {} });
+<span class="ln">39</span>      this.preparedFor = null;
+<span class="ln">40</span>      this.timeoutSet = false;
+<span class="ln">41</span>      // start() returns before the box is ready; wait until it can run a command.
+<span class="ln">42</span>      for (let i = 0; ; i++) {
+<span class="ln">43</span>        try {
+<span class="ln">44</span>          await (await c.exec(['true'])).output();
+<span class="ln">45</span>          break;
+<span class="ln">46</span>        } catch (err) {
+<span class="ln">47</span>          if (i &gt; 60) throw err;
+<span class="ln">48</span>          await new Promise((r) =&gt; setTimeout(r, 500));
+<span class="ln">49</span>        }
+<span class="ln">50</span>      }
+<span class="ln">51</span>    }
+<span class="ln">52</span>    if (!this.timeoutSet) {
+<span class="ln">53</span>      await c.setInactivityTimeout(IDLE_MS);
+<span class="ln">54</span>      this.timeoutSet = true;
+<span class="ln">55</span>    }
+<span class="ln">56</span>    return c;
+<span class="ln">57</span>  }</code></pre></div><div class="snip"><h3>Talking is instant; doing wakes the box</h3><div class="file">cathy/worker/src/session.ts:56–74</div><p>The agent runs in the session object. Only file and shell tools reach the sandbox, and each one makes sure the box is on the right branch first.</p><pre class="code"><code><span class="ln">56</span>  private box(): Box {
+<span class="ln">57</span>    if (this.env.FAKE_BOX === '1') return demoBox(this.branch);
+<span class="ln">58</span>    const sandbox = this.env.SANDBOX.getByName(this.id);
+<span class="ln">59</span>    const branch = this.branch;
+<span class="ln">60</span>    return {
+<span class="ln">61</span>      async run(command, opts) {
+<span class="ln">62</span>        await sandbox.prepare(branch);
+<span class="ln">63</span>        return sandbox.run(command, opts?.env, opts?.timeoutMs);
+<span class="ln">64</span>      },
+<span class="ln">65</span>      async readFile(path) {
+<span class="ln">66</span>        await sandbox.prepare(branch);
+<span class="ln">67</span>        return sandbox.readFile(path);
+<span class="ln">68</span>      },
+<span class="ln">69</span>      async writeFile(path, content) {
+<span class="ln">70</span>        await sandbox.prepare(branch);
+<span class="ln">71</span>        return sandbox.writeFile(path, content);
+<span class="ln">72</span>      },
+<span class="ln">73</span>    };
+<span class="ln">74</span>  }</code></pre></div><div class="snip"><h3>Admin forwards Cathy’s API privately</h3><div class="file">admin/src/index.ts:41–45</div><p>The Cathy Worker has no public address. Admin reaches it through a service binding, WebSockets included.</p><pre class="code"><code><span class="ln">41</span>    const { pathname } = url;
+<span class="ln">42</span> 
+<span class="ln">43</span>    // Cathy's API lives in the Cathy Worker; forward it (WebSockets included).
+<span class="ln">44</span>    if (pathname.startsWith('/api/cathy/')) {
+<span class="ln">45</span>      if (!env.CATHY) return Response.json({ error: 'Cathy is not connected to this admin.' }, { status: 503 });</code></pre></div>
+  </section>
+
+  <section id="open">
+    <h2>Before this goes live</h2>
+    <ol class="todo">
+      <li><b>Workers Paid</b> ($5/month) for the sandbox containers, if the preview deploy reports it's needed.</li>
+      <li><b>Set <code>ADMIN_PASSWORD</code></b> (GitHub secret). Admin is open, and Cathy spends real Claude credit, so anyone with the link could use her.</li>
+      <li><b>Add <code>CATHY_GITHUB_TOKEN</code></b>: a fine-grained token for this repo only (Contents and Pull requests: read and write), so Cathy can push and open PRs.</li>
+      <li>Merge <code>cathy-v1</code>. Production deploys Cathy first, then admin.</li>
+    </ol>
+  </section>
+
+  <section id="reproduce">
+    <h2>Reproduce</h2>
+<pre class="cmd">npm ci
+npm test                 # 25 unit tests
+npm run typecheck:workers
+npm run dev:cathy        # local clone on http://localhost:8787
+npm run e2e              # browser test + video into e2e-out/</pre>
+  </section>
+</main>
+</body>
+</html>

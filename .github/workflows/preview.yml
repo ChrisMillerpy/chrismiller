@@ -12,7 +12,7 @@ name: Preview
 on:
   push:
     branches-ignore: [main, 'evidence/**']
-    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'package.json', 'package-lock.json', '.github/workflows/preview.yml', '.github/scripts/preview-config.mjs']
+    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'packs/**', 'package.json', 'package-lock.json', '.github/workflows/preview.yml', '.github/scripts/preview-config.mjs']
   pull_request:
     types: [closed]
   workflow_dispatch:

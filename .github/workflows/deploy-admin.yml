@@ -7,7 +7,7 @@ name: Deploy admin and Cathy
 on:
   push:
     branches: [main]
-    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-admin.yml']
+    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'packs/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-admin.yml']
   workflow_dispatch:
 
 permissions:
