@@ -1,12 +1,13 @@
-# Deploys the admin Worker (admin/) to Cloudflare whenever it changes.
-# Uses the CLOUDFLARE_API_TOKEN repo secret. Posts a short commit status
-# ("admin-deploy") so the result is visible without opening the logs.
-name: Deploy admin
+# Deploys Cathy (cathy/worker + its sandbox) and then admin to production on pushes to main.
+# Admin reaches Cathy through a service binding, so Cathy goes first.
+# Posts commit statuses ("cathy-deploy", "admin-deploy") and a comment with log tails,
+# so results are readable without the Actions logs.
+name: Deploy admin and Cathy
 
 on:
   push:
-    branches: [main, cathy-chat]
-    paths: ['admin/**', 'shared/**', '.github/workflows/deploy-admin.yml']
+    branches: [main]
+    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-admin.yml']
   workflow_dispatch:
 
 permissions:
@@ -20,84 +21,67 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: admin
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
 
-      - name: Deploy
-        id: deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Unit tests
+        run: npm test
+
+      - name: Deploy Cathy (builds the sandbox image)
+        id: cathy
+        working-directory: cathy/worker
         run: |
           set -o pipefail
-          npx --yes wrangler@4 deploy 2>&1 | tee ../deploy.log
+          npx wrangler deploy 2>&1 | tee ../../cathy-deploy.log
 
-      # Copies the Worker's secrets from GitHub repo secrets. Skips any that aren't set.
-      - name: Set Worker secrets
+      - name: Cathy secrets
+        if: steps.cathy.outcome == 'success'
+        working-directory: cathy/worker
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
+          CATHY_GITHUB_TOKEN: ${{ secrets.CATHY_GITHUB_TOKEN }}
         run: |
-          jq -n 'env | {ANTHROPIC_API_KEY, ADMIN_PASSWORD, ANTHROPIC_WORKSPACE_ID} | with_entries(select(.value != null and .value != ""))' > secrets.json
-          if [ "$(jq length secrets.json)" -gt 0 ]; then npx --yes wrangler@4 secret bulk secrets.json 2>&1 | tail -3; fi
+          jq -n 'env | {ANTHROPIC_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
+          if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json 2>&1 | tail -3; fi
           rm -f secrets.json
 
-      - name: Check the site answers
+      - name: Deploy admin
+        id: admin
+        if: steps.cathy.outcome == 'success'
+        working-directory: admin
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          set -o pipefail
+          npx wrangler deploy 2>&1 | tee ../admin-deploy.log
+          if [ -n "$ADMIN_PASSWORD" ]; then jq -n '{ADMIN_PASSWORD: env.ADMIN_PASSWORD}' > pw.json && npx wrangler secret bulk pw.json >/dev/null; rm -f pw.json; fi
+
+      - name: Check admin answers
         id: smoke
+        if: steps.admin.outcome == 'success'
         run: |
           sleep 5
           code=$(curl -s -o /dev/null -w '%{http_code}' https://withchris-admin.withchris.workers.dev/ || true)
-          echo "HTTP $code"
-          case "$code" in
-            401) echo "result=live, password protected" >> "$GITHUB_OUTPUT" ;;
-            200) echo "result=live, open (no password set)" >> "$GITHUB_OUTPUT" ;;
-            *)   echo "result=site returned HTTP $code" >> "$GITHUB_OUTPUT" ;;
-          esac
+          api=$(curl -s -o /dev/null -w '%{http_code}' https://withchris-admin.withchris.workers.dev/api/cathy/sessions || true)
+          echo "result=home HTTP $code, Cathy API HTTP $api" >> "$GITHUB_OUTPUT"
 
-      # Posts what happened as a commit comment, so it can be read without the
-      # Actions logs (which aren't reachable from Claude's sandbox). No secrets in it.
-      - name: Post diagnostics
+      - name: Report
         if: always()
-        working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set +e
-          cf() { curl -s "https://api.cloudflare.com/client/v4/$1" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"; }
-          acct=$(cf accounts | jq -r '.result[0].id // empty')
-          {
-            echo '### admin deploy diagnostics'
-            echo '**wrangler deploy (tail)**'; echo '```'; tail -15 deploy.log 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'; echo '```'
-            echo '**curl**'; echo '```'; curl -sS -o /dev/null -w 'HTTP %{http_code}\n' --max-time 20 https://withchris-admin.withchris.workers.dev/ 2>&1; echo '```'
-            echo '**Workers custom domains**'; echo '```'
-            cf "accounts/$acct/workers/domains" | jq -c '.errors, [.result[]? | {hostname, service, zone_name}]'
-            echo '```'
-            echo '**Zones the token sees**'; echo '```'; cf zones | jq -c '.errors, [.result[]? | {name, status}]'; echo '```'
-          } > diag.md
-          jq -n --rawfile body diag.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" --input - >/dev/null
-
-      - name: Report status
-        if: always()
-        working-directory: .
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RESULT: ${{ steps.smoke.outputs.result }}
-          DEPLOY: ${{ steps.deploy.outcome }}
-        run: |
-          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log 2>/dev/null | head -1)
-          if [ "$DEPLOY" = success ]; then state=success; desc="${url:-no workers.dev url} | $RESULT"
-          else state=failure
-            desc=$(grep -E 'ERROR|✘|error' deploy.log 2>/dev/null | head -3 | tr -d '\033' | sed 's/\[[0-9;]*m//g' | tr '\n' ' ')
-            desc=${desc:-deploy failed}
-          fi
-          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -f state="$state" -f context=admin-deploy -f description="${desc:0:138}" >/dev/null
+          ok() { [ "$1" = success ] && echo success || echo failure; }
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" -f state=$(ok "${{ steps.cathy.outcome }}") -f context=cathy-deploy -f description="cathy: ${{ steps.cathy.outcome }}" >/dev/null
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" -f state=$(ok "${{ steps.admin.outcome }}") -f context=admin-deploy \
+            -f description="https://withchris-admin.withchris.workers.dev | ${{ steps.smoke.outputs.result || steps.admin.outcome }}" >/dev/null
+          clean() { sed 's/\x1b\[[0-9;]*m//g' "$1" 2>/dev/null | grep -v -i telemetry | tail -n "$2"; }
+          { echo "### Production deploy"; echo "**Cathy (${{ steps.cathy.outcome }})**"; echo '```'; clean cathy-deploy.log 20; echo '```';
+            echo "**Admin (${{ steps.admin.outcome }})** ${{ steps.smoke.outputs.result }}"; echo '```'; clean admin-deploy.log 10; echo '```'; } > report.md
+          jq -n --rawfile body report.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" --input - >/dev/null
