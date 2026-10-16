@@ -5,7 +5,7 @@ name: Deploy sites
 
 on:
   push:
-    branches: [main, site-split]
+    branches: [main]
     paths: ['learn/**', 'blog/**', 'home/**', 'shared/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-sites.yml']
   workflow_dispatch:
 
