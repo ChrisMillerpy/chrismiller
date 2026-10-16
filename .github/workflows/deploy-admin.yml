@@ -41,9 +41,14 @@ jobs:
       - name: Check the site answers
         id: smoke
         run: |
-          sleep 10
-          code=$(curl -s -o page.html -w '%{http_code}' https://admin.withchris.uk/)
-          echo "HTTP $code"
+          # A brand-new custom domain can take a minute or two to start answering.
+          code=000
+          for i in $(seq 1 18); do
+            code=$(curl -s -o page.html -w '%{http_code}' https://admin.withchris.uk/ || true)
+            [ "$code" != 000 ] && break
+            sleep 10
+          done
+          echo "HTTP $code"; touch page.html
           if grep -q 'Hi Chris' page.html; then echo "result=live, public (no Access yet)" >> "$GITHUB_OUTPUT"
           elif grep -qi 'cloudflareaccess' page.html || [ "$code" = 302 ]; then echo "result=live, behind Access" >> "$GITHUB_OUTPUT"
           else echo "result=deployed, but site returned HTTP $code" >> "$GITHUB_OUTPUT"; fi
