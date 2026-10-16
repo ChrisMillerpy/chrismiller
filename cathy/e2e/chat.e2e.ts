@@ -93,8 +93,24 @@ try {
     await page.getByTestId('new-chat').click();
     await page.waitForURL(/\/cathy\/[a-z0-9]+$/);
     chatUrl = page.url();
-    await page.locator('[data-testid=status][data-status=idle]').waitFor();
+    await page.locator('[data-testid=status][data-status=idle]').waitFor({ state: 'attached' });
     return `chat ${chatUrl.split('/').pop()}, branch ${await page.locator('#branch').textContent()}`;
+  });
+
+  await step('Chat box fits the phone', page, async () => {
+    // iOS zooms into any text box under 16px; maximum-scale=1 stops the zoom on focus.
+    const viewport = await page.locator('meta[name=viewport]').getAttribute('content');
+    if (!/maximum-scale=1/.test(viewport ?? '')) throw new Error(`viewport meta lacks maximum-scale=1: ${viewport}`);
+    await page.getByTestId('composer').tap();
+    const m = await page.evaluate(() => {
+      const t = document.querySelector('[data-testid=composer]')!, s = document.querySelector('[data-testid=send]')!;
+      return { font: parseFloat(getComputedStyle(t).fontSize), sendRight: s.getBoundingClientRect().right, sendDisabled: (s as HTMLButtonElement).disabled };
+    });
+    const screenWidth = page.viewportSize()!.width;
+    if (m.font < 16) throw new Error(`text box font is ${m.font}px; iOS will zoom`);
+    if (m.sendRight > screenWidth) throw new Error(`Send is cut off (${Math.round(m.sendRight)} > ${screenWidth})`);
+    if (!m.sendDisabled) throw new Error('Send should be disabled while the box is empty');
+    return `font ${m.font}px, Send fully on screen, disabled while empty`;
   });
 
   await step('Send a message', page, async () => {
@@ -108,7 +124,7 @@ try {
   await step('Cathy uses a tool and replies', page, async () => {
     await page.getByTestId('msg-assistant').first().waitFor({ timeout: REPLY_TIMEOUT });
     const replyMs = Date.now() - sentAt;
-    await page.locator('[data-testid=status][data-status=idle]').waitFor({ timeout: REPLY_TIMEOUT });
+    await page.locator('[data-testid=status][data-status=idle]').waitFor({ state: 'attached', timeout: REPLY_TIMEOUT });
     const tools = await page.getByTestId('msg-tool').allTextContents();
     const reply = (await page.getByTestId('msg-assistant').first().textContent())!.trim();
     if (!tools.length) throw new Error('no tool use shown');
@@ -124,7 +140,7 @@ try {
   });
 
   await step('Chat is listed with a preview', page, async () => {
-    await page.getByText('‹ Chats').click();
+    await page.getByRole('link', { name: 'Back to chats' }).click();
     await page.waitForURL(/\/cathy$/);
     const row = page.getByTestId('chat-row').filter({ hasText: chatUrl.split('/').pop()! });
     await row.waitFor();
@@ -138,7 +154,7 @@ try {
   if (REAL && process.env.E2E_PR === '1') {
     await step('Cathy opens a PR', page, async () => {
       await page.goto(chatUrl);
-      await page.locator('[data-testid=status][data-status=idle]').waitFor();
+      await page.locator('[data-testid=status][data-status=idle]').waitFor({ state: 'attached' });
       const id = chatUrl.split('/').pop();
       const before = await page.getByTestId('msg-assistant').count();
       await page.getByTestId('composer').fill(
@@ -146,7 +162,7 @@ try {
       );
       await page.getByTestId('send').click();
       await page.getByTestId('msg-assistant').nth(before).waitFor({ timeout: 300_000 });
-      await page.locator('[data-testid=status][data-status=idle]').waitFor({ timeout: 300_000 });
+      await page.locator('[data-testid=status][data-status=idle]').waitFor({ state: 'attached', timeout: 300_000 });
       const reply = (await page.getByTestId('msg-assistant').nth(before).textContent()) ?? '';
       prUrl = reply.match(/https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+/)?.[0] ?? '';
       if (!prUrl) throw new Error(`no PR link in reply: ${reply.slice(0, 200)}`);
