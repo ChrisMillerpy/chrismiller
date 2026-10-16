@@ -11,5 +11,5 @@
     "types": []
   },
   "include": ["src/**/*.ts", "../../shared/text-modules.d.ts", "../agent/**/*.ts", "../sandbox/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "../agent/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "../agent/**/*.test.ts", "../sandbox/**/*.test.ts"]
 }

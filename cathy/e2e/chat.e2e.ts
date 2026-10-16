@@ -1,14 +1,15 @@
 // End-to-end: drive admin → Cathy like Chris does on his phone, record video and screenshots.
 // Usage: BASE_URL=http://localhost:8787 OUT=./e2e-out node cathy/e2e/chat.e2e.ts
 // Env: REAL=1 for real Claude and sandbox (longer waits, asks for a real command);
-//      CHROMIUM=/path/to/chrome to use a specific browser; ADMIN_PASSWORD if admin has one.
+//      CHROMIUM=/path/to/chrome to use a specific browser; ADMIN_PASSWORD if admin has one;
+//      E2E_PR=1 (with REAL=1) also asks Cathy to open a PR and records its link (CI closes it after).
 import { chromium, type Page } from 'playwright';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:8787';
-const OUT = process.env.OUT ?? 'e2e-out';
+const OUT = resolve(process.env.OUT ?? 'e2e-out'); // absolute, so ffmpeg's frame list works from any folder
 const REAL = process.env.REAL === '1';
 const REPLY_TIMEOUT = REAL ? 180_000 : 20_000;
 mkdirSync(OUT, { recursive: true });
@@ -59,6 +60,7 @@ const pause = () => page.waitForTimeout(700); // so each step is visible in the 
 const firstMessage = REAL ? 'Hi Cathy. Run git status and tell me which branch you are on, in one sentence.' : 'Hello Cathy, what branch are you on?';
 let chatUrl = '';
 let sentAt = 0;
+let prUrl = '';
 let failed = false;
 
 try {
@@ -119,6 +121,25 @@ try {
     return (await row.textContent())!.replace(/\s+/g, ' ').trim().slice(0, 160);
   });
 
+  if (REAL && process.env.E2E_PR === '1') {
+    await step('Cathy opens a PR', page, async () => {
+      await page.goto(chatUrl);
+      await page.locator('[data-testid=status][data-status=idle]').waitFor();
+      const id = chatUrl.split('/').pop();
+      const before = await page.getByTestId('msg-assistant').count();
+      await page.getByTestId('composer').fill(
+        `Test task: create the file e2e/cathy-check-${id}.txt containing the word hello, then use open_pr with the title "e2e: Cathy check ${id}". Reply with just the PR link.`,
+      );
+      await page.getByTestId('send').click();
+      await page.getByTestId('msg-assistant').nth(before).waitFor({ timeout: 300_000 });
+      await page.locator('[data-testid=status][data-status=idle]').waitFor({ timeout: 300_000 });
+      const reply = (await page.getByTestId('msg-assistant').nth(before).textContent()) ?? '';
+      prUrl = reply.match(/https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+/)?.[0] ?? '';
+      if (!prUrl) throw new Error(`no PR link in reply: ${reply.slice(0, 200)}`);
+      return prUrl;
+    });
+  }
+
   await page.emulateMedia({ colorScheme: 'dark' });
   await step('Dark mode', page, async () => {
     await page.goto(chatUrl);
@@ -131,7 +152,7 @@ try {
   await context.close();
   await browser.close();
   makeVideo();
-  writeFileSync(join(OUT, 'results.json'), JSON.stringify({ base: BASE, real: REAL, when: new Date().toISOString(), passed: !failed, steps }, null, 2));
+  writeFileSync(join(OUT, 'results.json'), JSON.stringify({ base: BASE, real: REAL, when: new Date().toISOString(), passed: !failed, pr: prUrl || undefined, steps }, null, 2));
   console.log(failed ? 'FAILED' : 'PASSED', `→ ${OUT}`);
   process.exit(failed ? 1 : 0);
 }
