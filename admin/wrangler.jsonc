@@ -7,7 +7,5 @@
   "routes": [{ "pattern": "admin.withchris.uk", "custom_domain": true }],
   // workers.dev on for now: withchris.uk is still in the old Cloudflare account.
   "workers_dev": true,
-  "preview_urls": false,
-  // Not secret. Needed because the Anthropic API key isn't tied to one workspace.
-  "vars": { "ANTHROPIC_WORKSPACE_ID": "wrkspc_01FmUYHR2hN27aVWV94E2fxV" }
+  "preview_urls": false
 }

@@ -1,25 +1,22 @@
-// Admin Worker: a chat with Cathy, Chris's AI tutor assistant.
-// Deliberately simple: password-protected (basic auth), no database,
-// conversation lives in the browser tab. Harden when there's real data.
-
-const MODEL = 'claude-sonnet-5-5';
-
-const CATHY = `You are Cathy, an AI maths tutor working with Chris Miller, who runs a one-to-one maths tutoring business (withchris.uk) in London.
-Chris is your colleague and the only person talking to you right now. Help him plan lessons, write worksheets and explanations, think through how to help particular students, and run the business.
-Talk like a sharp, friendly colleague: short, plain, direct. No filler. Answer first, then detail only if needed.
-Use LaTeX between $...$ for maths when it helps.`;
+// Admin Worker: Chris's home screen for the tools we build.
+// Deliberately simple: optional password (basic auth), no database.
 
 export default {
   async fetch(request, env) {
     if (!authorised(request, env)) {
       return new Response('Password needed', {
         status: 401,
-        headers: { 'www-authenticate': 'Basic realm="Cathy", charset="UTF-8"' },
+        headers: { 'www-authenticate': 'Basic realm="Admin", charset="UTF-8"' },
       });
     }
 
-    const url = new URL(request.url);
-    if (url.pathname === '/api/chat' && request.method === 'POST') return chat(request, env);
+    const { pathname } = new URL(request.url);
+    if (pathname === '/manifest.webmanifest') {
+      return new Response(JSON.stringify(MANIFEST), { headers: { 'content-type': 'application/manifest+json' } });
+    }
+    if (pathname === '/icon.svg') {
+      return new Response(ICON, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' } });
+    }
     return new Response(PAGE, {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
     });
@@ -39,111 +36,92 @@ function authorised(request, env) {
   }
 }
 
-async function chat(request, env) {
-  if (!env.ANTHROPIC_API_KEY) return json({ error: 'ANTHROPIC_API_KEY is not set' }, 500);
+// One card per feature. Add new features here.
+const CARDS = [
+  { id: 'cathy', title: 'Cathy', sub: 'Sessions with your tutor agent', icon: 'chat' },
+  { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code' },
+];
 
-  let messages;
-  try {
-    ({ messages } = await request.json());
-  } catch {
-    return json({ error: 'Bad request' }, 400);
-  }
-  if (!Array.isArray(messages) || !messages.length) return json({ error: 'No messages' }, 400);
+const ICONS = {
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>',
+};
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      // Needed when the API key isn't tied to one workspace.
-      ...(env.ANTHROPIC_WORKSPACE_ID && { 'anthropic-workspace-id': env.ANTHROPIC_WORKSPACE_ID }),
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 2000,
-      system: [{ type: 'text', text: CATHY, cache_control: { type: 'ephemeral' } }],
-      messages: messages.slice(-40),
-    }),
-  });
+const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1a1a1a"/><text x="256" y="330" font-family="system-ui,sans-serif" font-size="260" font-weight="700" fill="#fafaf7" text-anchor="middle">C</text></svg>`;
 
-  const data = await res.json();
-  if (!res.ok) return json({ error: data.error?.message || `Anthropic error ${res.status}` }, 502);
-  const reply = data.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
-  return json({ reply });
-}
+const MANIFEST = {
+  name: 'Chris Admin',
+  short_name: 'Admin',
+  start_url: '/',
+  display: 'standalone',
+  background_color: '#fafaf7',
+  theme_color: '#fafaf7',
+  icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+};
 
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-}
+const cardHtml = (c) => `
+  <button class="card" type="button" data-id="${c.id}">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[c.icon]}</svg></span>
+    <span class="txt"><span class="t">${c.title}</span><span class="s">${c.sub}</span></span>
+  </button>`;
 
 const PAGE = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Cathy</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Admin">
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>Admin</title>
 <style>
-  :root { --bg:#fafaf7; --fg:#1a1a1a; --muted:#6b6b6b; --me:#1a1a1a; --me-fg:#fff; --her:#ececE6; --line:#ddd; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#eee; --muted:#999; --me:#eee; --me-fg:#111; --her:#242424; --line:#333; } }
-  * { box-sizing: border-box; }
-  html, body { margin:0; height:100%; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
-  body { display:flex; flex-direction:column; height:100dvh; }
-  header { padding:12px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
-  header b { font-size:18px; }
-  header button { background:none; border:0; color:var(--muted); font:inherit; }
-  #log { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
-  .msg { max-width:85%; padding:10px 14px; border-radius:16px; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .me { align-self:flex-end; background:var(--me); color:var(--me-fg); border-bottom-right-radius:4px; }
-  .her { align-self:flex-start; background:var(--her); border-bottom-left-radius:4px; }
-  .note { align-self:center; color:var(--muted); font-size:14px; }
-  form { display:flex; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); }
-  textarea { flex:1; resize:none; font:inherit; padding:10px 12px; border-radius:20px; border:1px solid var(--line); background:var(--bg); color:var(--fg); max-height:140px; }
-  form button { border:0; border-radius:20px; padding:0 16px; background:var(--me); color:var(--me-fg); font:inherit; font-weight:600; }
-  form button:disabled { opacity:.4; }
+  :root {
+    --bg:#fafaf7; --fg:#1a1a1a; --muted:#6b6b66; --card:#fff; --line:#e6e5df; --ic:#f1f0ea;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121212; --fg:#ededed; --muted:#9a9a95; --card:#1c1c1c; --line:#2a2a2a; --ic:#262626; --shadow:none; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; -webkit-text-size-adjust:100%; }
+  body { min-height:100dvh; padding: calc(env(safe-area-inset-top) + 20px) max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left)); }
+  main { max-width:960px; margin:0 auto; }
+  h1 { font-size:32px; font-weight:700; letter-spacing:-.02em; margin:8px 4px 20px; }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(2, minmax(0,1fr)); }
+  @media (min-width:700px) { .grid { grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px; } h1 { font-size:36px; margin-bottom:28px; } }
+  .card {
+    all:unset; box-sizing:border-box; cursor:pointer; user-select:none; -webkit-user-select:none;
+    display:flex; flex-direction:column; justify-content:space-between; gap:20px;
+    min-height:140px; padding:16px; border-radius:20px;
+    background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow);
+    transition: transform .12s ease, background-color .12s ease;
+  }
+  @media (min-width:700px) { .card { min-height:160px; padding:20px; } }
+  .card:active { transform:scale(.97); }
+  @media (hover:hover) { .card:hover { background:var(--ic); } }
+  .card:focus-visible { outline:2px solid var(--fg); outline-offset:2px; }
+  .ic { width:44px; height:44px; border-radius:12px; background:var(--ic); display:grid; place-items:center; }
+  .ic svg { width:22px; height:22px; }
+  .txt { display:flex; flex-direction:column; gap:2px; }
+  .t { font-size:17px; font-weight:600; }
+  .s { font-size:14px; color:var(--muted); }
 </style>
 </head>
 <body>
-<header><b>Cathy</b><button id="clear" type="button">New chat</button></header>
-<div id="log"><div class="note">Hi Chris. What are we working on?</div></div>
-<form id="f"><textarea id="t" rows="1" placeholder="Message Cathy"></textarea><button id="send">Send</button></form>
+<main>
+  <h1>Hi Chris</h1>
+  <div class="grid">${CARDS.map(cardHtml).join('')}</div>
+</main>
 <script>
-  const log = document.getElementById('log'), t = document.getElementById('t'), send = document.getElementById('send');
-  let messages = [];
-  try { messages = JSON.parse(sessionStorage.getItem('cathy') || '[]'); } catch {}
-  const save = () => { try { sessionStorage.setItem('cathy', JSON.stringify(messages)); } catch {} };
-
-  function add(cls, text) {
-    const d = document.createElement('div');
-    d.className = 'msg ' + cls; d.textContent = text; log.appendChild(d);
-    if (window.renderMathInElement) renderMathInElement(d, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false });
-    log.scrollTop = log.scrollHeight; return d;
-  }
-  window.addEventListener('load', () => messages.forEach(m => add(m.role === 'user' ? 'me' : 'her', m.content)));
-
-  t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; });
-  document.getElementById('clear').onclick = () => { messages = []; save(); log.innerHTML = '<div class="note">New chat.</div>'; };
-
-  document.getElementById('f').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = t.value.trim(); if (!text) return;
-    t.value = ''; t.style.height = 'auto';
-    messages.push({ role: 'user', content: text }); save(); add('me', text);
-    const wait = add('note', 'Cathy is typing…'); send.disabled = true;
-    try {
-      const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages }) });
-      const data = await r.json(); wait.remove();
-      if (!r.ok) throw new Error(data.error || 'Something went wrong');
-      messages.push({ role: 'assistant', content: data.reply }); save(); add('her', data.reply);
-    } catch (err) {
-      wait.remove(); messages.pop(); save(); add('note', 'Error: ' + err.message);
-    } finally { send.disabled = false; }
-  });
-  t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); document.getElementById('f').requestSubmit(); } });
+  // No-ops for now; each card gets wired up as its feature is built.
+  document.querySelectorAll('.card').forEach((c) => c.addEventListener('click', () => {}));
 </script>
 </body>
 </html>`;
