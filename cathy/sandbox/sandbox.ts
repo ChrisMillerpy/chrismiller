@@ -3,6 +3,7 @@
 // minutes; every command resets the clock.
 import { DurableObject } from 'cloudflare:workers';
 import type { RunResult } from '../agent/box.ts';
+import { singleFlight } from './single-flight.ts';
 
 const IDLE_MS = 10 * 60 * 1000;
 const REPO = 'ChrisMillerpy/chrismiller';
@@ -56,13 +57,23 @@ export class Sandbox extends DurableObject<SandboxEnv> {
     return c;
   }
 
-  /** Wake the box and put it on the branch. Safe to call often. */
+  /**
+   * Wake the box and put it on the branch. Safe to call often and concurrently:
+   * callers share one run, so two git fetches never fight over git's lock files
+   * (opening a chat warms the box while Cathy's first command may arrive at once).
+   */
   async prepare(branch: string): Promise<void> {
     if (this.preparedFor === branch && this.ctx.container?.running) return;
+    this.wantBranch = branch;
+    return this.prepareOnce();
+  }
+  private wantBranch = '';
+  private prepareOnce = singleFlight(async () => {
+    const branch = this.wantBranch;
     const r = await this.exec(['bash', '-c', PREPARE], { BRANCH: branch });
     if (r.exitCode !== 0) throw new Error(`Could not prepare the box: ${r.stderr || r.stdout}`);
     this.preparedFor = branch;
-  }
+  });
 
   async run(command: string, env: Record<string, string> = {}, timeoutMs = 120_000): Promise<RunResult> {
     return this.exec(['bash', '-lc', command], env, timeoutMs);
