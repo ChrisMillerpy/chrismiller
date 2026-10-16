@@ -30,3 +30,4 @@ npm-debug.log*
 # claude
 .claude/
 !.claude/CLAUDE.md
+cathy/worker/wrangler.local.jsonc

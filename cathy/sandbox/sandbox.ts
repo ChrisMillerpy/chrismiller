@@ -35,7 +35,7 @@ export class Sandbox extends DurableObject<SandboxEnv> {
     if (!c) throw new Error('This Worker has no container configured.');
     if (!c.running) {
       const token = this.env.CATHY_GITHUB_TOKEN;
-      c.start({ image: c.images.workspace, enableInternet: true, env: token ? { GH_TOKEN: token } : {} });
+      c.start({ image: c.images.workspace, instance: 'standard-1', enableInternet: true, env: token ? { GH_TOKEN: token } : {} });
       this.preparedFor = null;
       this.timeoutSet = false;
       // start() returns before the box is ready; wait until it can run a command.
