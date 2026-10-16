@@ -2,7 +2,8 @@
 // Deliberately simple: optional password (basic auth), no database of its own.
 // Styled to match learn: same blue-and-white tokens and graph paper, navy in dark mode.
 import { ICON_SVG, ICON_PNGS } from './icons.ts';
-import { htmlResponse } from './layout.ts';
+import { htmlResponse, page } from './layout.ts';
+import { checkAuth, handleLogin, loginBody, loginNext } from './auth.ts';
 import { homePage } from './home.ts';
 import { chatPage, explorerPage } from './cathy.ts';
 
@@ -30,15 +31,14 @@ const MANIFEST = {
 
 export default {
   async fetch(request, env) {
-    if (!authorised(request, env)) {
-      return new Response('Password needed', {
-        status: 401,
-        headers: { 'www-authenticate': 'Basic realm="Admin", charset="UTF-8"' },
-      });
-    }
-
     const url = new URL(request.url);
     const { pathname } = url;
+
+    // Login: one password, remembered by a cookie for about a year.
+    if (pathname === '/login' && request.method === 'POST' && env.ADMIN_PASSWORD) return handleLogin(request, env.ADMIN_PASSWORD, loginPage);
+    if (pathname === '/login') return htmlResponse(loginPage(loginBody(loginNext(request))));
+    const denied = await checkAuth(request, env.ADMIN_PASSWORD);
+    if (denied) return denied;
 
     // Cathy's API lives in the Cathy Worker; forward it (WebSockets included).
     if (pathname.startsWith('/api/cathy/')) {
@@ -72,15 +72,13 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
-// Any username; the password must match ADMIN_PASSWORD. Open if it isn't set.
-function authorised(request: Request, env: Env) {
-  if (!env.ADMIN_PASSWORD) return true;
-  const header = request.headers.get('authorization') || '';
-  if (!header.startsWith('Basic ')) return false;
-  try {
-    const decoded = atob(header.slice(6));
-    return decoded.slice(decoded.indexOf(':') + 1) === env.ADMIN_PASSWORD;
-  } catch {
-    return false;
-  }
-}
+const LOGIN_CSS = `
+  .login { max-width:360px; margin:8vh auto 0; }
+  .login form { display:grid; gap:10px; }
+  .login label { font-weight:600; font-size:14px; color:var(--muted); }
+  .login input[type=password] { font:inherit; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
+  .login input:focus { outline:2px solid var(--cobalt); outline-offset:1px; }
+  .login button { font:inherit; font-weight:600; border:0; border-radius:12px; padding:12px; background:var(--fill); color:#fff; cursor:pointer; box-shadow:0 2px 0 var(--fill-shadow); }
+  .login .error { color:var(--pen); margin:0; font-size:14px; }
+`;
+const loginPage = (body: string) => page({ title: 'Log in · Admin', css: LOGIN_CSS, body });
