@@ -1,5 +1,7 @@
 # Plan: the agent harness ("Cathy")
 
+> **On hold (16 Oct 2026).** Chris chose a simpler first version: see [`plans/cathy-plan.md`](plans/cathy-plan.md). No Supabase; D1 plus a Durable Object and container per session; Mastra. This file stays as the long-term picture.
+
 A harness for a team of AI tutors. Every agent is a tutor called **Cathy**, with her own portfolio of students, the worksheets she has set them, their submissions and chat history, and a staff room where she can talk to the other Cathys. The same harness drives a terminal UI today, and later WhatsApp, a student-facing workspace, coding and deploy jobs, and swarms of agents working together.
 
 **Status:** research and planning. No harness code yet. This file is owned by the harness workstream; the admin workstream owns [`admin-user-account-plan.md`](admin-user-account-plan.md). See [Coordination](#coordination) for how the two talk.
