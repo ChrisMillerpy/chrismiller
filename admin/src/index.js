@@ -56,6 +56,8 @@ async function chat(request, env) {
       'content-type': 'application/json',
       'x-api-key': env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
+      // Needed when the API key isn't tied to one workspace.
+      ...(env.ANTHROPIC_WORKSPACE_ID && { 'anthropic-workspace-id': env.ANTHROPIC_WORKSPACE_ID }),
     },
     body: JSON.stringify({
       model: MODEL,
