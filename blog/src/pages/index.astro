@@ -1,7 +1,7 @@
 ---
-import Base from '../../layouts/Base.astro';
-import PostCover from '../../components/PostCover.astro';
-import { getPosts, formatDate } from '../../lib/posts';
+import Base from '../../../shared/Base.astro';
+import PostCover from '../components/PostCover.astro';
+import { getPosts, formatDate } from '../lib/posts';
 
 const [latest, ...rest] = await getPosts();
 ---
@@ -16,7 +16,7 @@ const [latest, ...rest] = await getPosts();
     {!latest && <p class="empty">The first posts are on the way.</p>}
 
     {latest && (
-      <a class="feature" href={`/blog/${latest.id}/`}>
+      <a class="feature" href={`/${latest.id}/`}>
         <PostCover post={latest} />
         <div>
           <span class="new">Latest</span>
@@ -31,7 +31,7 @@ const [latest, ...rest] = await getPosts();
     {rest.length > 0 && (
       <div class="grid">
         {rest.map((post) => (
-          <a class="card" href={`/blog/${post.id}/`}>
+          <a class="card" href={`/${post.id}/`}>
             <PostCover post={post} />
             <time class="meta" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
             {post.data.draft && <span class="draft">Draft</span>}

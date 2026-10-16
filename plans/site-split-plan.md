@@ -2,7 +2,7 @@
 
 Today one Astro site serves `withchris.uk/learn` and `withchris.uk/blog`. Split it into three small sites, each in its own folder and on its own subdomain.
 
-**Status:** planned, not started.
+**Status:** done (16 Oct 2026). Custom domains wait for the domain move: see `shared/site.ts` and the README.
 
 ## Target
 

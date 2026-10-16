@@ -1,0 +1,13 @@
+// Blog: static files from ./dist, served by a Worker. Deployed by .github/workflows/deploy-sites.yml.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "withchris-blog",
+  "compatibility_date": "2026-10-09",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+  // Custom domain goes here once withchris.uk is active in this account (see shared/site.ts).
+  "workers_dev": true,
+  "preview_urls": false
+}

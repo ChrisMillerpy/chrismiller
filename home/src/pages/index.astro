@@ -1,0 +1,46 @@
+---
+// Landing page for withchris.uk: who Chris is and where to go.
+import Base from '../../../shared/Base.astro';
+import { SITE, URLS } from '../../../shared/site';
+
+const places = [
+  { href: URLS.learn, title: 'Maths tuition', text: 'One-to-one lessons for GCSE, A Level and admissions tests, online or in London.' },
+  { href: URLS.blog, title: 'Blog', text: 'Writing on maths, medical imaging, code and the history behind them.' },
+];
+---
+
+<Base background="paper">
+  <div class="paper-bg" slot="before" aria-hidden="true"></div>
+  <main class="wrap">
+    <h1>{SITE.name}</h1>
+    <p class="lede">Mathematician, tutor and engineer in London.</p>
+    <div class="places">
+      {places.map((p) => (
+        <a class="place" href={p.href}>
+          <h2>{p.title} <span aria-hidden="true">→</span></h2>
+          <p>{p.text}</p>
+        </a>
+      ))}
+    </div>
+  </main>
+</Base>
+
+<style>
+  /* Graph paper behind the top of the page, fading out, as on learn. */
+  .paper-bg {
+    position: absolute; inset: 0 0 auto 0; height: 640px; z-index: -1; pointer-events: none;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(to bottom, #000 50%, transparent);
+  }
+  main { padding-block: 56px 96px; }
+  h1 { font-size: clamp(40px, 6vw, 64px); letter-spacing: -.015em; }
+  .lede { font-size: 19px; color: var(--muted); margin: 14px 0 40px; }
+  .places { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; max-width: 860px; }
+  .place { display: block; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 24px 26px; color: var(--ink); text-decoration: none; transition: border-color .15s; }
+  .place:hover { border-color: var(--cobalt); }
+  .place h2 { font-size: 24px; margin-bottom: 8px; }
+  .place h2 span { color: var(--cobalt); }
+  .place p { margin: 0; color: var(--muted); font-size: 16px; }
+  @media (max-width: 700px) { .places { grid-template-columns: 1fr; } }
+</style>

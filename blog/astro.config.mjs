@@ -1,16 +1,15 @@
 // @ts-check
+// Blog. Build with: npm run build:blog
 import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
-import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { SITE } from './src/site.ts';
+import sitemap from '@astrojs/sitemap';
+import { URLS } from '../shared/site.ts';
 
 export default defineConfig({
-  site: SITE.url,
-  // The homepage points at the tutoring page for now.
-  redirects: { '/': '/learn' },
+  site: URLS.blog,
   markdown: {
     // $inline$ and $$display$$ maths in .md and .mdx posts, rendered to HTML at build time.
     processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),
