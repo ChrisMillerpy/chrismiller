@@ -40,7 +40,6 @@ const context = await browser.newContext({
   deviceScaleFactor: 2,
   isMobile: true,
   hasTouch: true,
-  httpCredentials: process.env.ADMIN_PASSWORD ? { username: 'chris', password: process.env.ADMIN_PASSWORD } : undefined,
 });
 const page = await context.newPage();
 
@@ -64,6 +63,21 @@ let prUrl = '';
 let failed = false;
 
 try {
+  if (process.env.ADMIN_PASSWORD) {
+    await step('Log in once', page, async () => {
+      await page.goto(BASE + '/cathy');
+      await page.waitForURL(/\/login\?next=%2Fcathy$/);
+      await page.locator('#password').fill(process.env.ADMIN_PASSWORD!);
+      await page.getByRole('button', { name: 'Log in' }).click();
+      await page.waitForURL(/\/cathy$/);
+      const cookie = (await context.cookies()).find((c) => c.name === 'admin');
+      if (!cookie) throw new Error('no login cookie');
+      const days = Math.round((cookie.expires * 1000 - Date.now()) / 86_400_000);
+      if (days < 300) throw new Error(`cookie only lasts ${days} days`);
+      return `remembered for ${days} days`;
+    });
+  }
+
   await step('Admin home', page, async () => {
     await page.goto(BASE + '/');
     await page.getByText('Hi Chris').waitFor();
