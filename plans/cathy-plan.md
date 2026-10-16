@@ -123,19 +123,21 @@ Cathy's shell can read these. Keep them narrow.
 
 ## Files
 
+The Mastra agent is its own root folder. The admin Worker only routes and holds session state.
+
 ```
+cathy/                  the container: the Mastra agent
+  Dockerfile            node:22 + git + gh
+  package.json          mastra, @ai-sdk/anthropic
+  src/agent.ts          the Cathy agent, workspace, our tools
+  src/server.ts         POST /turn: history in, event stream out
 admin/
   src/index.js          routes, explorer and chat pages
   src/session.js        Session Durable Object (extends Container)
   migrations/0001_sessions.sql
-  cathy/                the container
-    Dockerfile          node:22 + git + gh
-    package.json        mastra, @ai-sdk/anthropic
-    src/agent.ts        the Cathy agent, workspace, our tools
-    src/server.ts       POST /turn: history in, event stream out
 ```
 
-`wrangler.jsonc` gains: `d1_databases`, `durable_objects` (Session), `containers` (image `./cathy/Dockerfile`, `sleepAfter` 10m), and a `migrations` entry for the new class.
+`admin/wrangler.jsonc` gains: `d1_databases`, `durable_objects` (Session), `containers` (image `../cathy/Dockerfile`, `sleepAfter` 10m), and a `migrations` entry for the new class. The deploy workflow also triggers on changes to `cathy/**`.
 
 ## Phases
 
