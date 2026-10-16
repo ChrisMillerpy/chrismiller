@@ -15,7 +15,9 @@
     "build": "npm run build:learn && npm run build:blog && npm run build:home",
     "check": "(cd learn && astro check) && (cd blog && astro check) && (cd home && astro check)",
     "test": "node --test 'cathy/**/*.test.ts'",
-    "typecheck:workers": "(cd admin && wrangler types src/worker-configuration.d.ts >/dev/null && tsc -p .) && node cathy/e2e/local-config.mjs >/dev/null && (cd cathy/worker && wrangler types -c wrangler.local.jsonc src/worker-configuration.d.ts >/dev/null && tsc -p .)"
+    "typecheck:workers": "(cd admin && wrangler types src/worker-configuration.d.ts >/dev/null && tsc -p .) && node cathy/e2e/local-config.mjs >/dev/null && (cd cathy/worker && wrangler types -c wrangler.local.jsonc src/worker-configuration.d.ts >/dev/null && tsc -p .)",
+    "dev:cathy": "node cathy/e2e/local-config.mjs && wrangler dev -c admin/wrangler.jsonc -c cathy/worker/wrangler.local.jsonc",
+    "e2e": "node cathy/e2e/chat.e2e.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.82",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "playwright": "^1.64.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.149.0"
   }

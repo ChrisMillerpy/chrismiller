@@ -10,6 +10,8 @@ interface Env {
   ADMIN_PASSWORD?: string;
   /** Service binding to the Cathy Worker (cathy/worker). */
   CATHY?: Fetcher;
+  /** Static files from packs/ (Evidence Packs). */
+  PACKS?: Fetcher;
 }
 
 const MANIFEST = {
@@ -43,6 +45,13 @@ export default {
       if (!env.CATHY) return Response.json({ error: 'Cathy is not connected to this admin.' }, { status: 503 });
       const target = new URL(pathname.replace('/api/cathy/', '/api/') + url.search, 'https://cathy.internal');
       return env.CATHY.fetch(new Request(target, request));
+    }
+
+    // Evidence Packs: static pages from packs/, at /packs/<name>/.
+    if (pathname === '/packs') return Response.redirect(new URL('/packs/', url).toString(), 302);
+    if (pathname.startsWith('/packs/') && env.PACKS) {
+      const target = new URL(pathname.slice('/packs'.length) + url.search, url);
+      return env.PACKS.fetch(new Request(target, request));
     }
 
     if (pathname === '/') return htmlResponse(homePage());

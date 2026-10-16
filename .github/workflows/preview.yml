@@ -1,0 +1,158 @@
+# Preview clones: every branch that touches admin or Cathy gets its own copy of the stack
+# (withchris-admin-<slug>, withchris-cathy-<slug> with its sandbox, withchris-registry-<slug>),
+# deployed, tested end to end with Playwright against real Claude, and torn down when the
+# branch's PR is closed or merged.
+#
+# Results are readable without the Actions logs (which Claude's sandbox can't reach):
+#  - commit status "preview" with the admin URL, and "preview-e2e" with pass/fail
+#  - a commit comment with the step results and log tails
+#  - screenshots, video and results.json pushed to the branch evidence/<slug>
+name: Preview
+
+on:
+  push:
+    branches-ignore: [main, 'evidence/**']
+    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'packs/**', 'package.json', 'package-lock.json', '.github/workflows/preview.yml', '.github/scripts/preview-config.mjs']
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  statuses: write
+
+concurrency:
+  group: preview-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+
+      - name: Name the clone
+        id: names
+        run: |
+          slug=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-30)
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          node .github/scripts/preview-config.mjs "$slug" | tee names.json
+
+      - name: Unit tests
+        run: npm test 2>&1 | tee unit.log
+
+      - name: Deploy Cathy (builds the sandbox image)
+        id: cathy
+        working-directory: cathy/worker
+        run: |
+          set -o pipefail
+          npx wrangler deploy -c wrangler.preview.jsonc 2>&1 | tee ../../cathy-deploy.log
+
+      - name: Cathy secrets
+        if: steps.cathy.outcome == 'success'
+        working-directory: cathy/worker
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CATHY_GITHUB_TOKEN: ${{ secrets.CATHY_GITHUB_TOKEN }}
+        run: |
+          jq -n 'env | {ANTHROPIC_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
+          if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json -c wrangler.preview.jsonc 2>&1 | tail -3; fi
+          rm -f secrets.json
+
+      - name: Deploy admin
+        id: admin
+        if: steps.cathy.outcome == 'success'
+        working-directory: admin
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          set -o pipefail
+          npx wrangler deploy -c wrangler.preview.jsonc 2>&1 | tee ../admin-deploy.log
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' ../admin-deploy.log | head -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          if [ -n "$ADMIN_PASSWORD" ]; then jq -n '{ADMIN_PASSWORD: env.ADMIN_PASSWORD}' > pw.json && npx wrangler secret bulk pw.json -c wrangler.preview.jsonc >/dev/null; rm -f pw.json; fi
+
+      - name: Browser test against the clone (real Claude, real sandbox)
+        id: e2e
+        if: steps.admin.outcome == 'success'
+        env:
+          BASE_URL: ${{ steps.admin.outputs.url }}
+          OUT: e2e-out
+          REAL: '1'
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+          sleep 10
+          node cathy/e2e/chat.e2e.ts 2>&1 | tee e2e.log
+
+      - name: Publish evidence to evidence/${{ steps.names.outputs.slug }}
+        if: always() && steps.names.outcome == 'success'
+        run: |
+          set +e
+          mkdir -p evidence && cp -r e2e-out/. evidence/ 2>/dev/null
+          cp names.json unit.log cathy-deploy.log admin-deploy.log e2e.log evidence/ 2>/dev/null
+          echo '{"sha":"${{ github.sha }}","branch":"${{ github.ref_name }}","admin":"${{ steps.admin.outputs.url }}","cathy":"${{ steps.cathy.outcome }}","e2e":"${{ steps.e2e.outcome }}","run":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' > evidence/run.json
+          cd evidence && git init -q && git checkout -q -b "evidence/${{ steps.names.outputs.slug }}"
+          git -c user.name=preview-bot -c user.email=preview-bot@users.noreply.github.com add -A
+          git -c user.name=preview-bot -c user.email=preview-bot@users.noreply.github.com commit -qm "Evidence for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/evidence/${{ steps.names.outputs.slug }}"
+
+      - name: Report
+        if: always() && steps.names.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.admin.outputs.url }}
+        run: |
+          set +e
+          ok() { [ "$1" = success ] && echo success || echo failure; }
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" -f state=$(ok "${{ steps.admin.outcome }}") -f context=preview \
+            -f description="${URL:-not deployed} | cathy: ${{ steps.cathy.outcome }}, admin: ${{ steps.admin.outcome }}" ${URL:+-f target_url="$URL"} >/dev/null
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" -f state=$(ok "${{ steps.e2e.outcome }}") -f context=preview-e2e \
+            -f description="browser test: ${{ steps.e2e.outcome }}" >/dev/null
+          clean() { sed 's/\x1b\[[0-9;]*m//g' "$1" 2>/dev/null | grep -v -i telemetry | tail -n "$2"; }
+          {
+            echo "### Preview clone"
+            echo "Admin: ${URL:-not deployed}  ·  Evidence branch: \`evidence/${{ steps.names.outputs.slug }}\`"
+            echo; echo "**Unit tests**"; echo '```'; grep -E '^# (pass|fail)' unit.log; echo '```'
+            echo "**Cathy deploy (${{ steps.cathy.outcome }})**"; echo '```'; clean cathy-deploy.log 25; echo '```'
+            echo "**Admin deploy (${{ steps.admin.outcome }})**"; echo '```'; clean admin-deploy.log 12; echo '```'
+            echo "**Browser test (${{ steps.e2e.outcome }})**"; echo '```'; clean e2e.log 20; echo '```'
+          } > report.md
+          jq -n --rawfile body report.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" --input - >/dev/null
+
+  teardown:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.event.pull_request.head.sha }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Delete the clone
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          slug=$(echo "${{ github.head_ref }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-30)
+          names=$(node .github/scripts/preview-config.mjs "$slug")
+          db=$(echo "$names" | jq -r .db); box=$(echo "$names" | jq -r .container)
+          (cd admin && yes | npx wrangler delete -c wrangler.preview.jsonc --force) 2>&1 | tail -3 | tee teardown.log
+          (cd cathy/worker && yes | npx wrangler delete -c wrangler.preview.jsonc --force) 2>&1 | tail -3 | tee -a teardown.log
+          npx wrangler d1 delete "$db" -y 2>&1 | tail -2 | tee -a teardown.log
+          for id in $(npx wrangler containers list --json 2>/dev/null | jq -r --arg n "$box" '.[] | select(.name == $n) | .id'); do
+            npx wrangler containers delete "$id" 2>&1 | tail -2 | tee -a teardown.log
+          done
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" --delete "evidence/$slug" 2>&1 | tee -a teardown.log
+          { echo "### Preview clone torn down"; echo '```'; sed 's/\x1b\[[0-9;]*m//g' teardown.log; echo '```'; } > report.md
+          jq -n --rawfile body report.md '{body: $body}' | gh api "repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/comments" --input - >/dev/null

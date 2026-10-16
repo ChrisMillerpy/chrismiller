@@ -1,0 +1,60 @@
+{
+  "base": "http://localhost:8787",
+  "real": false,
+  "when": "2026-10-16T22:52:14.070Z",
+  "passed": true,
+  "steps": [
+    {
+      "name": "Admin home",
+      "ok": true,
+      "ms": 1108,
+      "shot": "01-admin-home.png"
+    },
+    {
+      "name": "Open Cathy",
+      "ok": true,
+      "ms": 1196,
+      "shot": "02-open-cathy.png"
+    },
+    {
+      "name": "Start a new chat",
+      "ok": true,
+      "ms": 1164,
+      "detail": "chat 2zf7nv, branch cathy/2zf7nv",
+      "shot": "03-start-a-new-chat.png"
+    },
+    {
+      "name": "Send a message",
+      "ok": true,
+      "ms": 972,
+      "shot": "04-send-a-message.png"
+    },
+    {
+      "name": "Cathy uses a tool and replies",
+      "ok": true,
+      "ms": 849,
+      "detail": "reply 934 ms after sending; tools: run_command git status --short --branch; reply: \"Demo Cathy here. You said: \"Hello Cathy, what branch are you on?\". I checked my box: ## cathy/2zf7nv\nnothing to commit, working tree clean\n[exit 0].\"",
+      "shot": "05-cathy-uses-a-tool-and-replies.png"
+    },
+    {
+      "name": "Chat survives a reload",
+      "ok": true,
+      "ms": 1182,
+      "detail": "3 messages restored",
+      "shot": "06-chat-survives-a-reload.png"
+    },
+    {
+      "name": "Chat is listed with a preview",
+      "ok": true,
+      "ms": 1193,
+      "detail": "Hello Cathy, what branch are you on?nowDemo Cathy here. You said: \"Hello Cathy, what branch are you on?\". I checked my box: ## cathy/2zf7nv nothing to commit, w",
+      "shot": "07-chat-is-listed-with-a-preview.png"
+    },
+    {
+      "name": "Dark mode",
+      "ok": true,
+      "ms": 1142,
+      "shot": "08-dark-mode.png"
+    }
+  ]
+}

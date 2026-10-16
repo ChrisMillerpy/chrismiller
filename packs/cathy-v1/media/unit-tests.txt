@@ -1,0 +1,28 @@
+ok 1 - read_file numbers lines and respects offset/limit
+ok 2 - edit_file replaces a unique match
+ok 3 - edit_file refuses ambiguous and missing matches without writing
+ok 4 - edit_file replace_all replaces every match
+ok 5 - edit_file keeps $ signs in the replacement literally
+ok 6 - grep passes the pattern through env, not the command string
+ok 7 - open_pr pushes the session branch and returns the PR link
+ok 8 - run_command shows exit code and stderr
+ok 9 - Cathy has the box tools plus any extra tools
+ok 10 - her instructions name her session and branch
+ok 11 - a turn can call a tool on the box and then answer
+ok 12 - a message from Chris gets a streamed reply that is stored
+ok 13 - the next turn sees the earlier conversation
+ok 14 - tool use shows up as a tool message
+ok 15 - messages sent while Cathy is busy are answered in order
+ok 16 - a model error becomes a notice and the chat carries on
+ok 17 - tell_chris posts an update to the chat
+ok 18 - message_cathy sends with one more hop; a message from Chris resets the count
+ok 19 - a chain of Cathy-to-Cathy messages stops after 3 hops
+ok 20 - demo Cathy checks her box, then answers quoting what Chris said
+ok 21 - create makes an active session with a cathy/<id> branch
+ok 22 - list shows active sessions, most recently used first
+ok 23 - archived sessions leave the list
+ok 24 - touch trims long previews and sets a title on untitled chats
+ok 25 - the schema is applied once, even with many calls
+# tests 25
+# pass 25
+# fail 0
