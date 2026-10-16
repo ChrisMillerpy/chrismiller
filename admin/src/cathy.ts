@@ -8,7 +8,8 @@ const EXPLORER_CSS = `
   .new { background:var(--fill); color:#fff; border:0; border-radius:10px; padding:11px 16px; font-weight:600; cursor:pointer; box-shadow:0 2px 0 var(--fill-shadow); }
   .new:active { transform:translateY(1px); }
   .new[disabled] { opacity:.6; }
-  .chats { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+  .chats { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+  .chats li { min-width:0; }
   .chat { display:block; background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:14px 16px; color:var(--ink); text-decoration:none; box-shadow:var(--shadow); }
   .chat:active { transform:scale(.99); }
   @media (hover:hover) { .chat:hover { border-color:var(--cobalt); } }
