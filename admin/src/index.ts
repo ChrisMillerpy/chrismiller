@@ -3,12 +3,15 @@
 // Styled to match learn: same blue-and-white tokens and graph paper, navy in dark mode.
 import { ICON_SVG, ICON_PNGS } from './icons.ts';
 import { htmlResponse, page } from './layout.ts';
-import { checkAuth, handleLogin, loginBody, loginNext } from './auth.ts';
+import { accessOn, checkAuth, handleLogin, loginBody, loginNext } from './auth.ts';
 import { homePage } from './home.ts';
 import { chatPage, explorerPage } from './cathy.ts';
 
 interface Env {
   ADMIN_PASSWORD?: string;
+  /** Cloudflare Access: team domain and the app's AUD tag. Set = Access is the lock and password login is off. */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
   /** Service binding to the Cathy Worker (cathy/worker). */
   CATHY?: Fetcher;
   /** Static files from packs/ (Evidence Packs). */
@@ -34,10 +37,14 @@ export default {
     const url = new URL(request.url);
     const { pathname } = url;
 
-    // Login: one password, remembered by a cookie for about a year.
-    if (pathname === '/login' && request.method === 'POST' && env.ADMIN_PASSWORD) return handleLogin(request, env.ADMIN_PASSWORD, loginPage);
-    if (pathname === '/login') return htmlResponse(loginPage(loginBody(loginNext(request))));
-    const denied = await checkAuth(request, env.ADMIN_PASSWORD);
+    // Behind Cloudflare Access the password page is off; checkAuth checks the Access token instead.
+    const access = { teamDomain: env.ACCESS_TEAM_DOMAIN, aud: env.ACCESS_AUD };
+    // Otherwise: one password, remembered by a cookie for about a year.
+    if (!accessOn(access)) {
+      if (pathname === '/login' && request.method === 'POST' && env.ADMIN_PASSWORD) return handleLogin(request, env.ADMIN_PASSWORD, loginPage);
+      if (pathname === '/login') return htmlResponse(loginPage(loginBody(loginNext(request))));
+    }
+    const denied = await checkAuth(request, env.ADMIN_PASSWORD, access);
     if (denied) return denied;
 
     // Cathy's API lives in the Cathy Worker; forward it (WebSockets included).

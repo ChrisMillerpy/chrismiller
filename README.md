@@ -116,6 +116,27 @@ GitHub Actions deploys everything on every push to `main`, using the `CLOUDFLARE
 
 Each posts a commit status with its address, so you can see the result on the commit in GitHub.
 
+### Cloudflare Access (login for the live admin)
+
+The live admin (`withchris-admin.withchris.workers.dev`) can sit behind Cloudflare Access: only `learn@withchris.uk` gets in, with a one-time code sent to that email. No Google setup. The code checks Cloudflare's sign-in token on every request, and refuses if anything is off.
+
+Until you finish these steps, admin keeps using the password. Previews and local dev always use the password.
+
+1. Open Cloudflare → Zero Trust → Settings → Authentication. Check *One-time PIN* is listed as a login method (it is by default).
+2. Go to Workers & Pages → `withchris-admin` → Settings → Domains & Routes. Next to `workers.dev`, turn on *Cloudflare Access*. Leave preview URLs alone.
+3. Edit the Access policy it creates (Zero Trust → Access → Applications):
+   - Action: Allow
+   - Include: Emails → `learn@withchris.uk`
+   - Login method: One-time PIN only
+   - Session duration: 1 month
+4. On that application, copy the *AUD tag* (Overview, or Edit → Basic information). Copy your *team domain* too (Zero Trust → Settings → Custom Pages, or the start of the login page address). It looks like `yourteam.cloudflareaccess.com`.
+5. Put both in `admin/wrangler.jsonc`, under `vars`: `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`. Or send them to Cathy to do it. Merge and push.
+6. Open admin in a private window. You should get the code screen, then the home screen. Check that an email other than `learn@withchris.uk` gets no code.
+
+Careful with step 5: set both or neither. If only one is set, admin refuses everyone. Don't set them before step 2, or you'll be locked out. To undo, empty both values and push. The password login comes back.
+
+After step 5, the deploy's "Check admin answers" status will show HTTP 302 or 403 instead of 200. That's expected.
+
 ### When the domain is active in the new Cloudflare account
 
 1. In `shared/site.ts`, set `DOMAIN_LIVE = true`.
