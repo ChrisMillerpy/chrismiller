@@ -1,0 +1,19 @@
+✓ Log in once (1367 ms) — remembered for 400 days
+✓ Admin home (838 ms)
+✓ Open Cathy (877 ms)
+✓ Start a new chat (3936 ms) — chat biypjn, branch cathy/biypjn
+✓ Chat box fits the phone (796 ms) — font 16px, Send fully on screen, disabled while empty
+✓ Send a message (1067 ms)
+✓ Cathy uses a tool and replies (17069 ms) — reply 17339 ms after sending; tools: run_command git status | set_title Git branch check; reply: "I'm on cathy/biypjn, and there's nothing to commit.Opus 5.5 · medium effort"
+✓ Chat survives a reload (3603 ms) — 4 messages restored
+✓ Chat is listed with a preview (1129 ms) — Git branch checknowI'm on `cathy/biypjn`, and there's nothing to commit.cathy/biypjn
+✓ Cathy names the chat; Chris renames it (1735 ms) — Cathy named it "Git branch check"; renamed to "E2E renamed chat", kept after reload
+✓ Pick a model and effort (2915 ms) — Sonnet 5.5, low effort; kept after reload
+✓ Attach an image; Cathy sees it (4552 ms) — reply: "Pink.Sonnet 5.5 · low effort"; label: Sonnet 5.5 · low effort
+✓ Stop a reply with the square button (18311 ms) — stopped after ~520 words; label "Stopped · Sonnet 5.5 · low effort"
+✓ Interrupt with a new message (4895 ms) — first reply stopped; then: "interrupted okSonnet 5.5 · low effort"
+✓ Cathy publishes an artifact into the chat (7401 ms) — artifact 3mx69c5y: Fractions worksheet (private)
+✓ Open the artifact full screen (2333 ms) — 3 maths expressions rendered
+✗ Share by link; open it logged out: Error: share link gave 404
+video: 2850 frames → walkthrough.mp4
+FAILED → /home/runner/work/chrismiller/chrismiller/e2e-out
