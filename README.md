@@ -65,6 +65,8 @@ home/
 <site>/astro.config.mjs   Astro settings for that site
 <site>/wrangler.jsonc     Cloudflare settings for that site
 admin/                    Private admin Worker
+cathy/                    Cathy, the repo's AI agent: code in agent/, worker/, sandbox/
+cathy/self/               Her soul (SOUL.md), memory/ and skills/. Markdown she loads each turn and can edit via PR.
 mockups/                  The design mockups. Not part of any site.
 ```
 
