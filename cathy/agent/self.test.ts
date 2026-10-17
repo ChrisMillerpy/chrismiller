@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { loadSelf, instructions, parseFrontmatter } from './self.ts';
 import { createCathy } from './cathy.ts';
 import { fakeModel } from './fake-model.ts';
@@ -71,4 +71,18 @@ test('the real cathy/self files are well formed', async () => {
   const fm = parseFrontmatter(read('cathy/self/skills/edit-yourself/SKILL.md'));
   assert.equal(fm.name, 'edit-yourself');
   assert.ok(fm.description);
+});
+
+test('every real skill has a name matching its folder and a one-line description', () => {
+  for (const folder of readdirSync('cathy/self/skills')) {
+    const fm = parseFrontmatter(readFileSync(`cathy/self/skills/${folder}/SKILL.md`, 'utf8'));
+    assert.equal(fm.name, folder, `${folder}: name`);
+    assert.ok(fm.description && fm.description.length < 200 && !fm.description.includes('\n'), `${folder}: description`);
+  }
+});
+
+test('the artifacts skill covers publishing, privacy and versions', () => {
+  const skill = readFileSync('cathy/self/skills/artifacts/SKILL.md', 'utf8');
+  assert.match(parseFrontmatter(skill).description, /artifact/i);
+  for (const must of [/publish_artifact/, /private/i, /link/i, /student or parent/i, /list_artifacts/, /\bid\b/, /Markdown/, /\$\$/]) assert.match(skill, must);
 });
