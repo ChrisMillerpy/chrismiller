@@ -1,0 +1,32 @@
+diff --git a/.github/workflows/deploy-admin.yml b/.github/workflows/deploy-admin.yml
+index 4c98582..2593611 100644
+--- a/.github/workflows/deploy-admin.yml
++++ b/.github/workflows/deploy-admin.yml
+@@ -45,9 +45,10 @@ jobs:
+         working-directory: cathy/worker
+         env:
+           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
++          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+           CATHY_GITHUB_TOKEN: ${{ secrets.CATHY_GITHUB_TOKEN }}
+         run: |
+-          jq -n 'env | {ANTHROPIC_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
++          jq -n 'env | {ANTHROPIC_API_KEY, OPENAI_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
+           if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json 2>&1 | tail -3; fi
+           rm -f secrets.json
+ 
+diff --git a/.github/workflows/preview.yml b/.github/workflows/preview.yml
+index 4312890..e0fcd63 100644
+--- a/.github/workflows/preview.yml
++++ b/.github/workflows/preview.yml
+@@ -61,9 +61,10 @@ jobs:
+         working-directory: cathy/worker
+         env:
+           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
++          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+           CATHY_GITHUB_TOKEN: ${{ secrets.CATHY_GITHUB_TOKEN }}
+         run: |
+-          jq -n 'env | {ANTHROPIC_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
++          jq -n 'env | {ANTHROPIC_API_KEY, OPENAI_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
+           if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json -c wrangler.preview.jsonc 2>&1 | tail -3; fi
+           rm -f secrets.json
+ 

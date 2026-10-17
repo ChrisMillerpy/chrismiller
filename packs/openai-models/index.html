@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>GPT models for Cathy: evidence pack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Public+Sans:wght@400..600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root { --paper:#FAFBFD; --bg:#FFFFFF; --ink:#18203A; --muted:#5A6480; --line:#DDE3EE; --cobalt:#2443C9; --ok:#1B7F4B; --wait:#9A6700; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --paper:#0B1222; --bg:#0F1729; --ink:#E8EDF8; --muted:#9BA7C4; --line:#24304D; --cobalt:#8EA6FF; --ok:#5FD38D; --wait:#E3B341; color-scheme: dark; } }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 'Public Sans', system-ui, sans-serif; }
+  main { max-width:780px; margin:0 auto; padding:28px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); }
+  a { color:var(--cobalt); }
+  a.back { text-decoration:none; font-weight:600; font-size:15px; }
+  p.eyebrow { font-size:12.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--cobalt); margin:18px 0 6px; }
+  h1 { font:600 36px/1.1 Literata, Georgia, serif; margin:0 0 20px; }
+  h2 { font:600 24px/1.2 Literata, Georgia, serif; margin:36px 0 10px; }
+  table { border-collapse:collapse; width:100%; background:var(--bg); border:1px solid var(--line); font-size:15px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .ok { color:var(--ok); font-weight:600; } .wait { color:var(--wait); font-weight:600; }
+  code, pre { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:13.5px; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px 14px; overflow-x:auto; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/packs/">‹ Evidence packs</a>
+  <p class="eyebrow">Evidence pack</p>
+  <h1>GPT models for Cathy</h1>
+
+  <h2>RFC</h2>
+  <p><b>Problem.</b> Cathy runs on Mastra and the AI SDK, which work with any provider, but the Worker only ever built an Anthropic model and only sent Anthropic thinking settings. Chris wants GPT 6.1 Sol and GPT 6 Astra in the model picker.</p>
+  <p><b>Design.</b></p>
+  <ul>
+    <li><code>providerFor(id)</code> in <code>models.ts</code>: <code>gpt-*</code>, <code>o&lt;digit&gt;</code> and <code>openai/*</code> go to OpenAI; everything else stays Anthropic. Ids in <code>MODELS</code> stay plain, so the picker, saved choices and validation are unchanged.</li>
+    <li><code>buildModel</code> in the new <code>provider.ts</code> (no Workers imports, so it tests under Node) builds the model through <code>@ai-sdk/openai</code> on the Responses API, the one that returns reasoning summaries. A missing key is a plain error in the chat.</li>
+    <li><code>turnSettings</code> sends OpenAI <code>reasoningEffort</code> (our four levels map one to one, and Sol and Astra support all four), <code>reasoningSummary: 'auto'</code> and <code>store: false</code>. Anthropic settings are unchanged.</li>
+    <li>History stays provider-neutral: the existing <code>forMemory</code> already drops reasoning before saving, and <code>store: false</code> means we replay history ourselves rather than point at items held at OpenAI. That is what makes switching model mid-chat safe.</li>
+    <li><code>gpt-6.1-sol</code> and <code>gpt-6-astra</code> added to <code>MODELS</code> in <code>wrangler.jsonc</code>. <code>MODEL</code> (the default) stays Claude.</li>
+  </ul>
+  <p><b>Alternatives rejected.</b> OpenAI Agents SDK (a second agent runtime next to Mastra: tools, memory and streaming twice over). OpenRouter or another gateway (another account and middleman for no gain with one extra provider). Chat Completions API (no reasoning summaries). A <code>provider:</code> prefix on ids (breaks saved Claude ids, and nothing else in the repo does it).</p>
+  <p><b>Security.</b> <code>OPENAI_API_KEY</code> is a Worker secret, set by the deploy workflow from a repo secret, never logged or committed, handled like the Anthropic key. <code>store: false</code> means OpenAI keeps no conversation state, though OpenAI may keep API data for up to 30 days for abuse monitoring unless the account has zero data retention. Use a project key with a monthly spend limit.</p>
+  <p><b>Rollout.</b> 1) Merge: nothing changes for Claude chats. 2) Chris adds the <code>OPENAI_API_KEY</code> repo secret and applies the workflow patch. 3) Deploy, with Chris's go-ahead. 4) Live check below. <b>Rollback:</b> remove the GPT entries from <code>MODELS</code> and push. Chats that saved a GPT model fall back to the default (<code>resolve()</code> already does this). No data migration either way.</p>
+
+  <h2>Verdict</h2>
+  <table>
+    <tr><th>Claim</th><th>Result</th><th>Proof</th></tr>
+    <tr><td>The provider is chosen from the model id</td><td class="ok">Pass</td><td>test 5</td></tr>
+    <tr><td>GPT turns send effort, summaries and store: false; Claude turns are unchanged and get no OpenAI options</td><td class="ok">Pass</td><td>tests 4, 6, 9</td></tr>
+    <tr><td>A missing key gives a clear error, for either provider</td><td class="ok">Pass</td><td>tests 7, 8</td></tr>
+    <tr><td>Every tool Cathy has in a real chat reaches the Responses API with a valid schema</td><td class="ok">Pass</td><td>tests 9, 10</td></tr>
+    <tr><td>GPT sending <code>null</code> for optional fields still runs the tool</td><td class="ok">Pass</td><td>test 11</td></tr>
+    <tr><td>Switching Claude → GPT → Claude → GPT mid-chat works; tool calls and results carry over; no thinking carried over; nothing refers to items stored at OpenAI</td><td class="ok">Pass</td><td>test 12</td></tr>
+    <tr><td>Existing suite and type-check still pass</td><td class="ok">Pass</td><td>107 tests; <code>typecheck:workers</code> clean</td></tr>
+    <tr><td>A real GPT 6.1 Sol / GPT 6 Astra chat on the preview (read a file, run a command, publish an artifact, show thinking, switch to Opus and back)</td><td class="wait">Waiting</td><td>Needs the <code>OPENAI_API_KEY</code> secret and the workflow patch. Not run yet.</td></tr>
+    <tr><td>The two model ids exist on Chris's OpenAI account</td><td class="wait">Waiting</td><td>Same. Both are in <code>@ai-sdk/openai</code> 4.0.96; <code>gpt-6-sol</code> is there too as a fallback.</td></tr>
+  </table>
+
+  <h2>Tests written first</h2>
+  <p>These were written and seen failing (<code>providerFor</code> and <code>provider.ts</code> did not exist) before any code. Two checks I added while building, after reading what Mastra sends: the null-optionals test, and the switching test.</p>
+  <pre>ok 5 - the provider comes from the model id
+ok 6 - GPT models get reasoning effort and summaries, and nothing is stored at OpenAI
+ok 7 - GPT models need OPENAI_API_KEY, and the error says so
+ok 8 - Claude models still need ANTHROPIC_API_KEY, GPT ones do not
+ok 9 - a GPT turn goes to the Responses API with every tool, strict-compatible schemas, effort, summaries and store off
+ok 10 - every tool Cathy has in a real chat (box tools and chat tools) is sent to OpenAI with a valid schema
+ok 11 - GPT sends null for optional fields; the tools accept that and still run
+ok 12 - switching between Claude and GPT mid-chat works, tool calls and results included, no thinking carried over</pre>
+  <p class="muted">The OpenAI tests run the real <code>@ai-sdk/openai</code> client against a fake endpoint that records the request and streams a scripted reply, so they check what we would actually send, not a mock of our own code.</p>
+
+  <h2>What Mastra does to tool schemas</h2>
+  <p>Optional fields (<code>timeout_seconds</code>, <code>visibility</code>, <code>id</code>) are sent to OpenAI as required-but-nullable, and tools are sent with <code>strict: false</code>. So GPT may answer <code>null</code> for an optional field; test 11 proves our tools accept that.</p>
+
+  <h2>For Chris to do</h2>
+  <ol>
+    <li>Create an OpenAI project key with a monthly spend limit. Add it as the <code>OPENAI_API_KEY</code> repo secret (not in chat).</li>
+    <li>Apply the workflow patch (my token can't edit <code>.github/workflows/</code>): <a href="/packs/openai-models/openai-workflows.patch">the patch</a>, then <code>git apply openai-workflows.patch</code>. It adds <code>OPENAI_API_KEY</code> to the secrets step in <code>deploy-admin.yml</code> and <code>preview.yml</code>.</li>
+    <li>Tell me when both are done and I'll run the live check and add screenshots here.</li>
+  </ol>
+
+  <h2>Reproduce</h2>
+  <pre>npm test
+npm run typecheck:workers
+node --test cathy/worker/src/provider.test.ts cathy/worker/src/models.test.ts</pre>
+</main>
+</body>
+</html>
