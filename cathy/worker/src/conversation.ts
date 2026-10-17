@@ -3,6 +3,7 @@
 // the Session Durable Object wires it to SQLite, WebSockets, R2 and the sandbox.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { describeCall, outcome } from './steps.ts';
 
 export const MAX_HOPS = 10;
 
@@ -32,6 +33,23 @@ export interface Message {
   stopped?: boolean;
   /** Tokens for the whole turn (assistant messages). */
   usage?: Tokens;
+  /** One step of Cathy's work (role 'tool'): a tool call, a stretch of thinking, or what she said between tool calls. */
+  step?: Step;
+}
+export interface Step {
+  kind: 'tool' | 'think' | 'text';
+  /** Tool steps: which tool, a plain description, what went in, what came out. */
+  tool?: string;
+  desc?: string;
+  input?: string;
+  output?: string;
+  failed?: boolean;
+  /** Think and text steps: the words. */
+  text?: string;
+  /** How long it took. Missing while it's still running. */
+  ms?: number;
+  /** Chris stopped the turn while this was running. */
+  stopped?: boolean;
 }
 /** A turn's tokens. `input` is all input; `cacheRead` and `cacheWrite` are the parts read from and saved to the prompt cache. */
 export interface Tokens {
@@ -67,6 +85,8 @@ export type Status = 'thinking' | 'idle';
 export type Event =
   | { type: 'history'; messages: Message[]; status: Status }
   | { type: 'message'; message: Message }
+  /** A message already sent has changed: a step finished, with its output. */
+  | { type: 'changed'; message: Message }
   | { type: 'delta'; text: string }
   | { type: 'thinking'; text: string }
   | { type: 'tool'; name: string; summary: string }
@@ -76,6 +96,8 @@ export type Event =
 
 export interface Store {
   addMessage(m: Omit<Message, 'seq' | 'at'>): Message;
+  /** Replace a message's extra facts (step, usage…). Returns the updated message. */
+  updateMessage(seq: number, change: Partial<Pick<Message, 'step'>>): Message;
   messages(): Message[];
   /** The agent's own memory: model messages, including tool calls and results. */
   history(): unknown[];
@@ -259,7 +281,19 @@ export class Conversation {
     let userMessage: { role: string; content: any } = { role: 'user', content: p.content };
     let prompt = userMessage;
     let streamed = '';
-    let thinking = '';
+    // Steps still running, by tool call id: their message and when they started.
+    const running = new Map<string, { seq: number; step: Step; at: number }>();
+    const doneSteps: string[] = [];
+    let thinkStart = 0;
+    let thinkText = '';
+    const finish = (id: string, change: Partial<Step>) => {
+      const r = running.get(id);
+      if (!r) return;
+      running.delete(id);
+      const message = store.updateMessage(r.seq, { step: { ...r.step, ...change, ms: Date.now() - r.at } });
+      if (!change.stopped) doneSteps.push(`${r.step.desc}${change.failed ? ' (failed)' : ''}`);
+      broadcast({ type: 'changed', message });
+    };
     let settings: TurnSettings = { model: '', effort: '' };
     try {
       settings = (await this.deps.settings?.()) ?? settings;
@@ -278,31 +312,53 @@ export class Conversation {
       }
       const agent = this.deps.makeAgent(this.chatTools(), settings);
       const out = await agent.stream([...store.history(), prompt], { maxSteps: 40, ...settings.streamOptions, abortSignal: abort.signal });
-      for await (const chunk of out.fullStream as AsyncIterable<any>) {
+      // Read the stream until it ends or Chris stops. On a stop, don't wait: a box command
+      // may run for minutes, and Mastra waits for it before ending the stream.
+      const stopped = new Promise<'stopped'>((r) => abort.signal.addEventListener('abort', () => r('stopped'), { once: true }));
+      const chunks = (out.fullStream as AsyncIterable<any>)[Symbol.asyncIterator]();
+      for (;;) {
+        const next = await Promise.race([chunks.next(), stopped]);
+        if (next === 'stopped' || next.done) break;
+        const chunk = next.value;
         if (chunk.type === 'text-delta') {
           streamed += chunk.payload.text;
           broadcast({ type: 'delta', text: chunk.payload.text });
         }
+        if (chunk.type === 'reasoning-start') {
+          thinkStart = Date.now();
+          thinkText = '';
+        }
         if (chunk.type === 'reasoning-delta' && chunk.payload.text) {
-          thinking += chunk.payload.text;
+          thinkText += chunk.payload.text;
           broadcast({ type: 'thinking', text: chunk.payload.text });
         }
+        if (chunk.type === 'reasoning-end' && thinkText.trim()) {
+          this.add({ role: 'tool', content: 'thinking', step: { kind: 'think', text: thinkText.trim(), ms: Date.now() - (thinkStart || Date.now()) } });
+          thinkText = '';
+        }
         if (chunk.type === 'tool-call') {
-          const summary = summarise(chunk.payload.args);
-          broadcast({ type: 'tool', name: chunk.payload.toolName, summary });
-          this.add({ role: 'tool', content: `${chunk.payload.toolName} ${summary}`.trim() });
-          streamed = ''; // text before a tool call was shown live; the reply is what follows
+          const { toolName, args, toolCallId } = chunk.payload;
+          // What she said before the call was shown live; keep it as a step rather than lose it.
+          if (streamed.trim()) this.add({ role: 'tool', content: streamed.trim(), step: { kind: 'text', text: streamed.trim() } });
+          streamed = '';
+          broadcast({ type: 'tool', name: toolName, summary: summarise(args) });
+          // tell_chris shows as the update itself, so it isn't a step too.
+          if (toolName !== 'tell_chris') {
+            const step: Step = { kind: 'tool', tool: toolName, ...describeCall(toolName, args ?? {}) };
+            const message = this.add({ role: 'tool', content: `${toolName} ${summarise(args)}`.trim(), step });
+            running.set(toolCallId, { seq: message.seq, step, at: Date.now() });
+          }
         }
-        if (chunk.type === 'tool-result' && /loop guard/i.test(String(chunk.payload.result))) {
-          this.add({ role: 'tool', content: String(chunk.payload.result) });
-        }
+        if (chunk.type === 'tool-result') finish(chunk.payload.toolCallId, outcome(chunk.payload.toolName, chunk.payload.result));
+        if (chunk.type === 'tool-error') finish(chunk.payload.toolCallId, outcome(chunk.payload.toolName, undefined, chunk.payload.error));
         if (chunk.type === 'error') throw chunk.payload?.error ?? new Error('Model error');
       }
-      const label = { ...(settings.model ? { model: settings.model, effort: settings.effort } : {}), ...(thinking.trim() ? { thinking: thinking.trim() } : {}) };
+      const label = settings.model ? { model: settings.model, effort: settings.effort } : {};
       if (abort.signal.aborted) {
-        // Keep only finished steps, so memory never holds a tool call without its result.
-        const response = await out.response.catch(() => null);
-        store.appendHistory([userMessage, ...completeSteps(response?.messages ?? []), { role: 'assistant', content: `${streamed.trim()}\n\n(Chris stopped me here.)`.trim() }]);
+        // Memory gets a plain note of what she'd done, not the raw steps: the stream may still be
+        // waiting on a box command, so its messages aren't ready, and a tool call without its
+        // result would break the next turn.
+        store.appendHistory([userMessage, { role: 'assistant', content: stoppedNote(streamed, doneSteps) }]);
         this.add({ role: 'assistant', content: streamed.trim(), stopped: true, ...label });
         return;
       }
@@ -313,7 +369,7 @@ export class Conversation {
       if (text) this.add({ role: 'assistant', content: text, ...label, ...(usage ? { usage } : {}) });
     } catch (err) {
       if (abort.signal.aborted) {
-        store.appendHistory([userMessage, { role: 'assistant', content: `${streamed.trim()}\n\n(Chris stopped me here.)`.trim() }]);
+        store.appendHistory([userMessage, { role: 'assistant', content: stoppedNote(streamed, doneSteps) }]);
         this.add({ role: 'assistant', content: streamed.trim(), stopped: true, ...(settings.model ? { model: settings.model, effort: settings.effort } : {}) });
         return;
       }
@@ -321,9 +377,17 @@ export class Conversation {
       store.appendHistory([userMessage, { role: 'assistant', content: '(I hit an error and could not answer.)' }]);
       this.add({ role: 'notice', content: `Error: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
+      // Anything still running (Chris stopped, or the model errored) is marked stopped.
+      for (const id of [...running.keys()]) finish(id, { stopped: true });
       if (this.current === abort) this.current = null;
     }
   }
+}
+
+/** What Cathy remembers of a turn Chris stopped: what she'd said and done so far. */
+export function stoppedNote(said: string, done: string[]) {
+  const steps = done.length ? `\n\nSteps I'd finished: ${done.join('; ')}.` : '';
+  return `${said.trim()}${steps}\n\n(Chris stopped me here.)`.trim();
 }
 
 /**
@@ -334,12 +398,6 @@ export function forMemory(messages: any[]): any[] {
   return messages
     .map((m) => (m.role === 'assistant' && Array.isArray(m.content) ? { ...m, content: m.content.filter((p: any) => p.type !== 'reasoning' && p.type !== 'redacted-reasoning') } : m))
     .filter((m) => !(m.role === 'assistant' && Array.isArray(m.content) && m.content.length === 0));
-}
-
-/** After a stop: drop tool calls that never got a result (and empty messages left behind). */
-export function completeSteps(messages: any[]): any[] {
-  const answered = new Set(messages.filter((m) => m.role === 'tool').flatMap((m) => (Array.isArray(m.content) ? m.content.map((p: any) => p.toolCallId) : [])));
-  return forMemory(messages.map((m) => (m.role === 'assistant' && Array.isArray(m.content) ? { ...m, content: m.content.filter((p: any) => p.type !== 'tool-call' || answered.has(p.toolCallId)) } : m)));
 }
 
 /**
@@ -383,6 +441,11 @@ export function memoryStore(): Store {
       const message = { ...m, seq: ++seq, at: Date.now() };
       msgs.push(message);
       return message;
+    },
+    updateMessage(n, change) {
+      const i = msgs.findIndex((m) => m.seq === n);
+      msgs[i] = { ...msgs[i], ...change };
+      return msgs[i];
     },
     messages: () => [...msgs],
     history: () => [...hist],

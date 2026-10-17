@@ -92,9 +92,12 @@ export function boxTools(box: Box, branch: string) {
 
     run_command: createTool({
       id: 'run_command',
-      description: 'Run a bash command in the repo root (git, node, npm, gh are available). Returns output and exit code.',
+      description:
+        'Run a bash command in the repo root (git, node, npm, gh are available). Returns output and exit code. ' +
+        'Always give a description: what the command does, in 3 to 8 plain words, for Chris reading the chat (e.g. "Run the unit tests", "Check the production deploy").',
       inputSchema: z.object({
         command: z.string(),
+        description: z.string().optional().describe('What this does, in 3 to 8 plain words, e.g. "Run the unit tests"'),
         timeout_seconds: z.number().int().min(1).max(600).optional().describe('Default 120'),
       }),
       execute: async ({ command, timeout_seconds = 120 }) => show(await box.run(command, { timeoutMs: timeout_seconds * 1000 })),

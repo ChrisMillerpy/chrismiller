@@ -76,3 +76,14 @@ test('run_command shows exit code and stderr', async () => {
   const out = await call(boxTools(box, 'b').run_command, { command: 'false' });
   assert.equal(out, 'out\n[stderr]\nbad\n[exit 2]');
 });
+
+test('run_command takes a plain description for Chris, and asks for one', async () => {
+  const { box, runs } = fakeBox();
+  const tool = boxTools(box, 'b').run_command;
+  const parsed = tool.inputSchema.safeParse({ command: 'npm test', description: 'Run the unit tests' });
+  assert.equal(parsed.success, true);
+  assert.equal(parsed.data.description, 'Run the unit tests');
+  assert.match(tool.description, /description/i);
+  await call(tool, { command: 'npm test', description: 'Run the unit tests' });
+  assert.equal(runs[0].command, 'npm test', 'the description is not run');
+});

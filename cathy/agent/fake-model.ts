@@ -1,9 +1,9 @@
 // A scripted language model for tests: each call plays the next step in the script.
 // A step is text to say (optionally with thinking first), or a tool call to make.
 // `slow` streams text word by word with a pause, so tests can stop a reply part-way.
-// `usage` overrides the token counts the step reports.
+// `usage` overrides the token counts the step reports. `say` is text said before a tool call.
 type Usage = Record<string, unknown>;
-export type Step = { text: string; thinking?: string; slow?: number; usage?: Usage } | { tool: string; input: Record<string, unknown>; usage?: Usage };
+export type Step = { text: string; thinking?: string; slow?: number; usage?: Usage } | { tool: string; input: Record<string, unknown>; usage?: Usage; say?: string };
 
 export function fakeModel(script: Step[]) {
   let call = 0;
@@ -31,6 +31,7 @@ export function fakeModel(script: Step[]) {
         parts.push({ type: 'text-end', id: 't' }, { type: 'finish', finishReason: 'stop', usage });
         pause = step.slow ?? 0;
       } else {
+        if (step.say) parts.push({ type: 'text-start', id: 's' }, { type: 'text-delta', id: 's', delta: step.say }, { type: 'text-end', id: 's' });
         parts.push({ type: 'tool-call', toolCallId: `call-${call}`, toolName: step.tool, input: JSON.stringify(step.input) });
         parts.push({ type: 'finish', finishReason: 'tool-calls', usage });
       }

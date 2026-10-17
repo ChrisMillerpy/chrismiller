@@ -13,7 +13,7 @@ import type { Env } from './env.ts';
 import { SCHEMA } from './schema.ts';
 
 /** Extra facts on a message, kept as JSON so new ones don't need new columns. */
-const META = ['files', 'model', 'effort', 'thinking', 'stopped', 'usage'] as const;
+const META = ['files', 'model', 'effort', 'thinking', 'stopped', 'usage', 'step'] as const;
 
 export class Session extends DurableObject<Env> {
   private convo: Conversation | null = null;
@@ -56,6 +56,12 @@ export class Session extends DurableObject<Env> {
           .exec<{ seq: number }>('INSERT INTO messages (role, sender, content, meta, at) VALUES (?, ?, ?, ?, ?) RETURNING seq', m.role, m.sender ?? null, m.content, Object.keys(meta).length ? JSON.stringify(meta) : null, at)
           .one().seq;
         return { ...m, seq, at };
+      },
+      updateMessage(seq, change) {
+        const { meta: saved, ...row } = sql.exec<any>('SELECT seq, role, sender, content, meta, at FROM messages WHERE seq = ?', seq).one();
+        const meta = { ...(saved ? JSON.parse(saved) : {}), ...change };
+        sql.exec('UPDATE messages SET meta = ? WHERE seq = ?', JSON.stringify(meta), seq);
+        return { ...row, sender: row.sender ?? undefined, ...meta } as Message;
       },
       messages: () =>
         sql
