@@ -16,7 +16,7 @@
     "check": "(cd learn && astro check) && (cd blog && astro check) && (cd home && astro check)",
     "test": "node --test 'cathy/**/*.test.ts' 'admin/**/*.test.ts' 'share/**/*.test.ts'",
     "typecheck:workers": "(cd admin && wrangler types src/worker-configuration.d.ts >/dev/null && tsc -p .) && (cd share && wrangler types src/worker-configuration.d.ts >/dev/null && tsc -p .) && node cathy/e2e/local-config.mjs >/dev/null && (cd cathy/worker && wrangler types -c wrangler.local.jsonc src/worker-configuration.d.ts >/dev/null && tsc -p .)",
-    "dev:cathy": "node cathy/e2e/local-config.mjs && wrangler dev -c admin/wrangler.jsonc -c cathy/worker/wrangler.local.jsonc -c share/wrangler.jsonc",
+    "dev:cathy": "node cathy/e2e/local-config.mjs && wrangler dev -c admin/wrangler.jsonc -c cathy/worker/wrangler.local.jsonc -c share/wrangler.jsonc --var ACCESS_TEAM_DOMAIN: --var ACCESS_AUD:",
     "e2e": "node cathy/e2e/chat.e2e.ts"
   },
   "dependencies": {
