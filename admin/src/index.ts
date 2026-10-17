@@ -6,6 +6,7 @@ import { htmlResponse, page } from './layout.ts';
 import { accessOn, checkAuth, handleLogin, loginBody, loginNext } from './auth.ts';
 import { homePage } from './home.ts';
 import { chatPage, explorerPage } from './cathy.ts';
+import { artifactPage, artifactsPage } from './artifacts.ts';
 
 interface Env {
   ADMIN_PASSWORD?: string;
@@ -64,6 +65,8 @@ export default {
     if (pathname === '/') return htmlResponse(homePage());
     if (pathname === '/cathy' || pathname === '/cathy/') return htmlResponse(explorerPage());
     if (/^\/cathy\/[a-z0-9]+$/.test(pathname)) return htmlResponse(chatPage());
+  if (pathname === '/artifacts' || pathname === '/artifacts/') return htmlResponse(artifactsPage());
+  if (/^\/artifacts\/[a-z0-9]+$/.test(pathname)) return htmlResponse(artifactPage());
 
     if (pathname === '/manifest.webmanifest') {
       return new Response(JSON.stringify(MANIFEST), { headers: { 'content-type': 'application/manifest+json' } });

@@ -1,0 +1,13 @@
+// Public share Worker: serves artifacts Chris set to "anyone with the link", read only.
+// It holds no data and no secrets; it forwards GET /a/<token> to the private Cathy Worker.
+// Later: add { "pattern": "artifacts.withchris.uk", "custom_domain": true } to routes.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "withchris-share",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "services": [{ "binding": "CATHY", "service": "withchris-cathy" }],
+  "observability": { "enabled": true }
+}

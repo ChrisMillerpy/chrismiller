@@ -1,6 +1,6 @@
-// The Cathy Worker: session registry (D1), one Session per chat, one Sandbox (container) per chat.
-// Private: no workers.dev address; admin reaches it through a service binding.
-// Deployed by .github/workflows/deploy-cathy.yml (which also makes a "-preview" copy for testing).
+// The Cathy Worker: session registry (D1), files (R2), one Session per chat, one Sandbox (container) per chat.
+// Private: no workers.dev address. Admin (behind Access) and share (public, read-only links) reach it through service bindings.
+// Deployed by .github/workflows/deploy-admin.yml; preview.yml makes a per-branch copy.
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "withchris-cathy",
@@ -12,11 +12,17 @@
   // Lets the Worker import d1/migrations/*.sql as text.
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "vars": {
+    // Default model for new chats, and the models Chris can pick in a chat ("id=Label", comma-separated).
     "MODEL": "claude-opus-5-5",
+    "MODELS": "claude-opus-5-5=Opus 5.5,claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5=Haiku 5.5",
+    // Where share links point (the share Worker, share/). Becomes https://artifacts.withchris.uk with the domain.
+    "SHARE_URL": "https://withchris-share.withchris.workers.dev",
     // Not secret. Needed because the Anthropic API key isn't tied to one workspace.
     "ANTHROPIC_WORKSPACE_ID": "wrkspc_01FmUYHR2hN27aVWV94E2fxV"
   },
   "d1_databases": [{ "binding": "DB", "database_name": "withchris-registry" }],
+  // Attachments and artifacts. Created on first deploy if missing.
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "withchris-files" }],
   "durable_objects": {
     "bindings": [
       { "name": "SESSION", "class_name": "Session" },

@@ -1,5 +1,6 @@
 // Writes a "preview" copy of the admin and Cathy configs for one branch, so each PR gets
-// its own isolated clone: withchris-admin-<slug>, withchris-cathy-<slug>, withchris-registry-<slug>.
+// its own isolated clone: withchris-admin-<slug>, withchris-cathy-<slug>, withchris-share-<slug>,
+// D1 withchris-registry-<slug> and R2 withchris-files-<slug>.
 // Usage: node .github/scripts/preview-config.mjs <slug>
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -14,6 +15,11 @@ cathy.name = `withchris-cathy-${slug}`;
 cathy.d1_databases = cathy.d1_databases.map((d) => ({ ...d, database_name: `${d.database_name}-${slug}` }));
 cathy.containers = cathy.containers.map((c) => ({ ...c, name: `${c.name}-${slug}` }));
 cathy.exports.Sandbox.container = cathy.containers[0].name;
+cathy.r2_buckets = cathy.r2_buckets.map((b) => ({ ...b, bucket_name: `${b.bucket_name}-${slug}` }));
+const share = load('share/wrangler.jsonc');
+share.name = `withchris-share-${slug}`;
+share.services = share.services.map((s) => ({ ...s, service: cathy.name }));
+cathy.vars = { ...cathy.vars, SHARE_URL: `https://${share.name}.withchris.workers.dev` };
 save('cathy/worker/wrangler.preview.jsonc', cathy);
 
 const admin = load('admin/wrangler.jsonc');
@@ -23,5 +29,6 @@ admin.workers_dev = true;
 admin.vars = { ...admin.vars, ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '' }; // previews keep the password; Access only covers production
 admin.services = admin.services.map((s) => ({ ...s, service: cathy.name }));
 save('admin/wrangler.preview.jsonc', admin);
+save('share/wrangler.preview.jsonc', share);
 
-console.log(JSON.stringify({ admin: admin.name, cathy: cathy.name, db: cathy.d1_databases[0].database_name, container: cathy.containers[0].name }));
+console.log(JSON.stringify({ admin: admin.name, cathy: cathy.name, share: share.name, share_url: cathy.vars.SHARE_URL, db: cathy.d1_databases[0].database_name, bucket: cathy.r2_buckets[0].bucket_name, container: cathy.containers[0].name }));
