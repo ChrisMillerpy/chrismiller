@@ -1,0 +1,722 @@
+
+> test
+> node --test 'cathy/**/*.test.ts' 'admin/**/*.test.ts' 'share/**/*.test.ts'
+
+TAP version 13
+# Subtest: no password set: everything is open
+ok 1 - no password set: everything is open
+  ---
+  duration_ms: 65.604405
+  type: 'test'
+  ...
+# Subtest: without a cookie, pages redirect to the login page and keep where you were going
+ok 2 - without a cookie, pages redirect to the login page and keep where you were going
+  ---
+  duration_ms: 20.939294
+  type: 'test'
+  ...
+# Subtest: without a cookie, the API answers 401 instead of redirecting
+ok 3 - without a cookie, the API answers 401 instead of redirecting
+  ---
+  duration_ms: 4.626917
+  type: 'test'
+  ...
+# Subtest: icons and the manifest load without logging in (the home screen fetches them)
+ok 4 - icons and the manifest load without logging in (the home screen fetches them)
+  ---
+  duration_ms: 1.162841
+  type: 'test'
+  ...
+# Subtest: the right password sets a long-lived, secure cookie and goes back where you were
+ok 5 - the right password sets a long-lived, secure cookie and goes back where you were
+  ---
+  duration_ms: 19.058192
+  type: 'test'
+  ...
+# Subtest: that cookie lets you in afterwards
+ok 6 - that cookie lets you in afterwards
+  ---
+  duration_ms: 6.30242
+  type: 'test'
+  ...
+# Subtest: a forged or stale cookie does not
+ok 7 - a forged or stale cookie does not
+  ---
+  duration_ms: 7.647652
+  type: 'test'
+  ...
+# Subtest: a wrong password shows the login page again with an error, and no cookie
+ok 8 - a wrong password shows the login page again with an error, and no cookie
+  ---
+  duration_ms: 4.290954
+  type: 'test'
+  ...
+# Subtest: next only ever points inside admin
+ok 9 - next only ever points inside admin
+  ---
+  duration_ms: 10.043998
+  type: 'test'
+  ...
+# Subtest: access: a valid token for learn@withchris.uk gets in
+ok 10 - access: a valid token for learn@withchris.uk gets in
+  ---
+  duration_ms: 8.684994
+  type: 'test'
+  ...
+# Subtest: access: aud may be a plain string, and the email check ignores case
+ok 11 - access: aud may be a plain string, and the email check ignores case
+  ---
+  duration_ms: 4.764128
+  type: 'test'
+  ...
+# Subtest: access: no header is refused
+ok 12 - access: no header is refused
+  ---
+  duration_ms: 0.570225
+  type: 'test'
+  ...
+# Subtest: access: wrong aud, wrong issuer, expired, wrong email are refused
+ok 13 - access: wrong aud, wrong issuer, expired, wrong email are refused
+  ---
+  duration_ms: 27.171153
+  type: 'test'
+  ...
+# Subtest: access: a bad signature is refused
+ok 14 - access: a bad signature is refused
+  ---
+  duration_ms: 10.593303
+  type: 'test'
+  ...
+# Subtest: access: unknown key id, other algorithms and junk are refused
+ok 15 - access: unknown key id, other algorithms and junk are refused
+  ---
+  duration_ms: 5.107358
+  type: 'test'
+  ...
+# Subtest: access: fails closed when the keys cannot be fetched
+ok 16 - access: fails closed when the keys cannot be fetched
+  ---
+  duration_ms: 2.781295
+  type: 'test'
+  ...
+# Subtest: access: the cookie password does not replace the token
+ok 17 - access: the cookie password does not replace the token
+  ---
+  duration_ms: 1.788219
+  type: 'test'
+  ...
+# Subtest: access: the API gets JSON, and icons and the manifest stay public
+ok 18 - access: the API gets JSON, and icons and the manifest stay public
+  ---
+  duration_ms: 0.528006
+  type: 'test'
+  ...
+# Subtest: access: works with no ADMIN_PASSWORD set
+ok 19 - access: works with no ADMIN_PASSWORD set
+  ---
+  duration_ms: 4.241679
+  type: 'test'
+  ...
+# Subtest: access: half-configured (only one of team and aud) refuses everything
+ok 20 - access: half-configured (only one of team and aud) refuses everything
+  ---
+  duration_ms: 2.680247
+  type: 'test'
+  ...
+# Subtest: access: when not configured, the cookie login still works
+ok 21 - access: when not configured, the cookie login still works
+  ---
+  duration_ms: 5.347507
+  type: 'test'
+  ...
+# Subtest: access: team domain may be given with https:// and a trailing slash
+ok 22 - access: team domain may be given with https:// and a trailing slash
+  ---
+  duration_ms: 2.914082
+  type: 'test'
+  ...
+# Subtest: read_file numbers lines and respects offset/limit
+ok 23 - read_file numbers lines and respects offset/limit
+  ---
+  duration_ms: 6.278365
+  type: 'test'
+  ...
+# Subtest: edit_file replaces a unique match
+ok 24 - edit_file replaces a unique match
+  ---
+  duration_ms: 2.320804
+  type: 'test'
+  ...
+# Subtest: edit_file refuses ambiguous and missing matches without writing
+ok 25 - edit_file refuses ambiguous and missing matches without writing
+  ---
+  duration_ms: 1.818837
+  type: 'test'
+  ...
+# Subtest: edit_file replace_all replaces every match
+ok 26 - edit_file replace_all replaces every match
+  ---
+  duration_ms: 5.193549
+  type: 'test'
+  ...
+# Subtest: edit_file keeps $ signs in the replacement literally
+ok 27 - edit_file keeps $ signs in the replacement literally
+  ---
+  duration_ms: 1.193148
+  type: 'test'
+  ...
+# Subtest: grep passes the pattern through env, not the command string
+ok 28 - grep passes the pattern through env, not the command string
+  ---
+  duration_ms: 1.500151
+  type: 'test'
+  ...
+# Subtest: open_pr pushes the session branch and returns the PR link
+ok 29 - open_pr pushes the session branch and returns the PR link
+  ---
+  duration_ms: 1.435
+  type: 'test'
+  ...
+# Subtest: run_command shows exit code and stderr
+ok 30 - run_command shows exit code and stderr
+  ---
+  duration_ms: 1.560705
+  type: 'test'
+  ...
+# Subtest: run_command takes a plain description for Chris, and asks for one
+ok 31 - run_command takes a plain description for Chris, and asks for one
+  ---
+  duration_ms: 5.047937
+  type: 'test'
+  ...
+# Subtest: Cathy has the box tools plus any extra tools
+ok 32 - Cathy has the box tools plus any extra tools
+  ---
+  duration_ms: 3.883653
+  type: 'test'
+  ...
+# Subtest: her instructions name her session and branch
+ok 33 - her instructions name her session and branch
+  ---
+  duration_ms: 1.399203
+  type: 'test'
+  ...
+# Subtest: a turn can call a tool on the box and then answer
+ok 34 - a turn can call a tool on the box and then answer
+  ---
+  duration_ms: 153.853222
+  type: 'test'
+  ...
+# Subtest: frontmatter: name and description, quoted or not
+ok 35 - frontmatter: name and description, quoted or not
+  ---
+  duration_ms: 2.145277
+  type: 'test'
+  ...
+# Subtest: loads soul, memory index and skill descriptions
+ok 36 - loads soul, memory index and skill descriptions
+  ---
+  duration_ms: 1.642868
+  type: 'test'
+  ...
+# Subtest: missing files do not break her
+ok 37 - missing files do not break her
+  ---
+  duration_ms: 0.477752
+  type: 'test'
+  ...
+# Subtest: an edit she commits is in her instructions on the next turn
+ok 38 - an edit she commits is in her instructions on the next turn
+  ---
+  duration_ms: 150.985357
+  type: 'test'
+  ...
+# Subtest: the real cathy/self files are well formed
+ok 39 - the real cathy/self files are well formed
+  ---
+  duration_ms: 0.751193
+  type: 'test'
+  ...
+# Subtest: every real skill has a name matching its folder and a one-line description
+ok 40 - every real skill has a name matching its folder and a one-line description
+  ---
+  duration_ms: 0.615008
+  type: 'test'
+  ...
+# Subtest: the artifacts skill covers publishing, privacy and versions
+ok 41 - the artifacts skill covers publishing, privacy and versions
+  ---
+  duration_ms: 0.644574
+  type: 'test'
+  ...
+# Subtest: no token: nothing added
+ok 42 - no token: nothing added
+  ---
+  duration_ms: 1.788991
+  type: 'test'
+  ...
+# Subtest: with a token: gh gets GH_TOKEN
+ok 43 - with a token: gh gets GH_TOKEN
+  ---
+  duration_ms: 0.231713
+  type: 'test'
+  ...
+# Subtest: with a token: real git sends it for github.com, without writing it to any config file
+ok 44 - with a token: real git sends it for github.com, without writing it to any config file
+  ---
+  duration_ms: 10.667388
+  type: 'test'
+  ...
+# Subtest: other hosts are left alone
+ok 45 - other hosts are left alone
+  ---
+  duration_ms: 6.898954
+  type: 'test'
+  ...
+# Subtest: concurrent calls share one run
+ok 46 - concurrent calls share one run
+  ---
+  duration_ms: 29.813166
+  type: 'test'
+  ...
+# Subtest: a later call after it finishes runs again
+ok 47 - a later call after it finishes runs again
+  ---
+  duration_ms: 0.406699
+  type: 'test'
+  ...
+# Subtest: a failure reaches every waiter and does not stick
+ok 48 - a failure reaches every waiter and does not stick
+  ---
+  duration_ms: 0.460189
+  type: 'test'
+  ...
+# (node:2479) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: sessions: create with defaults, rename, change model, archive and unarchive
+ok 49 - sessions: create with defaults, rename, change model, archive and unarchive
+  ---
+  duration_ms: 78.773974
+  type: 'test'
+  ...
+# Subtest: models endpoint lists the choices and defaults
+ok 50 - models endpoint lists the choices and defaults
+  ---
+  duration_ms: 0.680792
+  type: 'test'
+  ...
+# Subtest: uploads: stored, served back to their own chat only, size-limited
+ok 51 - uploads: stored, served back to their own chat only, size-limited
+  ---
+  duration_ms: 51.408033
+  type: 'test'
+  ...
+# Subtest: artifacts: admin can list, read, rename, share, re-link and delete; the token never leaks except in share_url
+ok 52 - artifacts: admin can list, read, rename, share, re-link and delete; the token never leaks except in share_url
+  ---
+  duration_ms: 15.63573
+  type: 'test'
+  ...
+# Subtest: share: serves only link artifacts by token; private, wrong, old tokens and everything else are 404
+ok 53 - share: serves only link artifacts by token; private, wrong, old tokens and everything else are 404
+  ---
+  duration_ms: 7.846524
+  type: 'test'
+  ...
+# Subtest: Markdown artifacts are served as a rendered page with maths, and the Markdown cannot break out
+ok 54 - Markdown artifacts are served as a rendered page with maths, and the Markdown cannot break out
+  ---
+  duration_ms: 6.672481
+  type: 'test'
+  ...
+# (node:2488) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: publishFromBox reads the file, picks its type from the name, and returns links
+ok 55 - publishFromBox reads the file, picks its type from the name, and returns links
+  ---
+  duration_ms: 11.106081
+  type: 'test'
+  ...
+# Subtest: publishFromBox with an id adds a version to that artifact
+ok 56 - publishFromBox with an id adds a version to that artifact
+  ---
+  duration_ms: 2.276802
+  type: 'test'
+  ...
+# Subtest: publishFromBox explains what went wrong: unknown id, missing file, too big
+ok 57 - publishFromBox explains what went wrong: unknown id, missing file, too big
+  ---
+  duration_ms: 2.301478
+  type: 'test'
+  ...
+# Subtest: publishFromBox won't update another chat's artifact
+ok 58 - publishFromBox won't update another chat's artifact
+  ---
+  duration_ms: 1.732144
+  type: 'test'
+  ...
+# Subtest: attachToBox writes each upload under /uploads/<id>/<name> and returns its bytes
+ok 59 - attachToBox writes each upload under /uploads/<id>/<name> and returns its bytes
+  ---
+  duration_ms: 2.651221
+  type: 'test'
+  ...
+# Subtest: attachToBox fails clearly if a file has gone from storage
+ok 60 - attachToBox fails clearly if a file has gone from storage
+  ---
+  duration_ms: 0.382425
+  type: 'test'
+  ...
+# Subtest: a message from Chris gets a streamed reply that is stored
+ok 61 - a message from Chris gets a streamed reply that is stored
+  ---
+  duration_ms: 88.456383
+  type: 'test'
+  ...
+# Subtest: the next turn sees the earlier conversation
+ok 62 - the next turn sees the earlier conversation
+  ---
+  duration_ms: 29.4884
+  type: 'test'
+  ...
+# Subtest: tool use shows up as a tool message
+ok 63 - tool use shows up as a tool message
+  ---
+  duration_ms: 33.907513
+  type: 'test'
+  ...
+# Subtest: messages sent while Cathy is busy are answered in order
+ok 64 - messages sent while Cathy is busy are answered in order
+  ---
+  duration_ms: 23.616524
+  type: 'test'
+  ...
+# Subtest: a model error becomes a notice and the chat carries on
+ok 65 - a model error becomes a notice and the chat carries on
+  ---
+  duration_ms: 9.440019
+  type: 'test'
+  ...
+# Subtest: tell_chris posts an update to the chat
+ok 66 - tell_chris posts an update to the chat
+  ---
+  duration_ms: 18.077199
+  type: 'test'
+  ...
+# Subtest: message_cathy sends with one more hop; a message from Chris resets the count
+ok 67 - message_cathy sends with one more hop; a message from Chris resets the count
+  ---
+  duration_ms: 15.12727
+  type: 'test'
+  ...
+# Subtest: Cathys can message each other up to 10 times in a row without Chris
+ok 68 - Cathys can message each other up to 10 times in a row without Chris
+  ---
+  duration_ms: 0.177822
+  type: 'test'
+  ...
+# Subtest: a chain of Cathy-to-Cathy messages stops after 10 hops
+ok 69 - a chain of Cathy-to-Cathy messages stops after 10 hops
+  ---
+  duration_ms: 13.341906
+  type: 'test'
+  ...
+# Subtest: attachments: images are shown to Cathy, every file is put in her box, and memory keeps only the paths
+ok 70 - attachments: images are shown to Cathy, every file is put in her box, and memory keeps only the paths
+  ---
+  duration_ms: 24.557802
+  type: 'test'
+  ...
+# Subtest: a message with only files still counts as activity
+ok 71 - a message with only files still counts as activity
+  ---
+  duration_ms: 5.947016
+  type: 'test'
+  ...
+# Subtest: set_title names the chat and tells open pages; Chris's name is kept
+ok 72 - set_title names the chat and tells open pages; Chris's name is kept
+  ---
+  duration_ms: 25.962004
+  type: 'test'
+  ...
+# Subtest: publish_artifact posts an artifact card and returns the links
+ok 73 - publish_artifact posts an artifact card and returns the links
+  ---
+  duration_ms: 22.717874
+  type: 'test'
+  ...
+# Subtest: each reply is labelled with the model and effort, and effort reaches the model
+ok 74 - each reply is labelled with the model and effort, and effort reaches the model
+  ---
+  duration_ms: 12.151063
+  type: 'test'
+  ...
+# Subtest: each reply records its tokens for the whole turn, including what came from the prompt cache
+ok 75 - each reply records its tokens for the whole turn, including what came from the prompt cache
+  ---
+  duration_ms: 10.894005
+  type: 'test'
+  ...
+# Subtest: tokens() reads both usage shapes: flat numbers and per-kind objects
+ok 76 - tokens() reads both usage shapes: flat numbers and per-kind objects
+  ---
+  duration_ms: 0.171931
+  type: 'test'
+  ...
+# Subtest: thinking streams live and becomes a step in the timeline, but not in memory
+ok 77 - thinking streams live and becomes a step in the timeline, but not in memory
+  ---
+  duration_ms: 12.884121
+  type: 'test'
+  ...
+# Subtest: stop keeps the partial reply, marks it stopped, and the chat carries on
+ok 78 - stop keeps the partial reply, marks it stopped, and the chat carries on
+  ---
+  duration_ms: 78.254771
+  type: 'test'
+  ...
+# Subtest: stopping mid tool call leaves no dangling tool call in memory
+ok 79 - stopping mid tool call leaves no dangling tool call in memory
+  ---
+  duration_ms: 17.693352
+  type: 'test'
+  ...
+# Subtest: interrupt stops the current reply and answers the new message next, ahead of the queue
+ok 80 - interrupt stops the current reply and answers the new message next, ahead of the queue
+  ---
+  duration_ms: 64.917103
+  type: 'test'
+  ...
+# Subtest: stop drops queued messages and says so
+ok 81 - stop drops queued messages and says so
+  ---
+  duration_ms: 35.986455
+  type: 'test'
+  ...
+# Subtest: each tool call becomes a described step, then gains its output, timing and result
+ok 82 - each tool call becomes a described step, then gains its output, timing and result
+  ---
+  duration_ms: 12.002775
+  type: 'test'
+  ...
+# Subtest: a failing command, and a tool that throws, are failed steps
+ok 83 - a failing command, and a tool that throws, are failed steps
+  ---
+  duration_ms: 18.516349
+  type: 'test'
+  ...
+# Subtest: what Cathy says before a tool call is kept as a step, not thrown away
+ok 84 - what Cathy says before a tool call is kept as a step, not thrown away
+  ---
+  duration_ms: 10.337986
+  type: 'test'
+  ...
+# Subtest: a step still running when Chris stops is marked stopped
+ok 85 - a step still running when Chris stops is marked stopped
+  ---
+  duration_ms: 12.675912
+  type: 'test'
+  ...
+# Subtest: after a stop, Cathy's memory notes what she'd said and finished
+ok 86 - after a stop, Cathy's memory notes what she'd said and finished
+  ---
+  duration_ms: 0.156642
+  type: 'test'
+  ...
+# Subtest: demo Cathy checks her box, then answers quoting what Chris said
+ok 87 - demo Cathy checks her box, then answers quoting what Chris said
+  ---
+  duration_ms: 756.770695
+  type: 'test'
+  ...
+# Subtest: the model list comes from MODELS, with labels
+ok 88 - the model list comes from MODELS, with labels
+  ---
+  duration_ms: 2.251314
+  type: 'test'
+  ...
+# Subtest: only listed models and known efforts are accepted
+ok 89 - only listed models and known efforts are accepted
+  ---
+  duration_ms: 0.87331
+  type: 'test'
+  ...
+# Subtest: saved choices fall back to defaults, including when a model is removed
+ok 90 - saved choices fall back to defaults, including when a model is removed
+  ---
+  duration_ms: 0.409805
+  type: 'test'
+  ...
+# Subtest: effort, summarised thinking and a 1-hour prompt cache are sent to Anthropic
+ok 91 - effort, summarised thinking and a 1-hour prompt cache are sent to Anthropic
+  ---
+  duration_ms: 0.304159
+  type: 'test'
+  ...
+# (node:2518) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: create makes an active session with a cathy/<id> branch
+ok 92 - create makes an active session with a cathy/<id> branch
+  ---
+  duration_ms: 20.746685
+  type: 'test'
+  ...
+# Subtest: list shows active sessions, most recently used first
+ok 93 - list shows active sessions, most recently used first
+  ---
+  duration_ms: 2.092067
+  type: 'test'
+  ...
+# Subtest: archived sessions leave the list
+ok 94 - archived sessions leave the list
+  ---
+  duration_ms: 1.801174
+  type: 'test'
+  ...
+# Subtest: touch trims long previews and sets a title on untitled chats
+ok 95 - touch trims long previews and sets a title on untitled chats
+  ---
+  duration_ms: 1.370229
+  type: 'test'
+  ...
+# Subtest: the schema is applied once, even with many calls
+ok 96 - the schema is applied once, even with many calls
+  ---
+  duration_ms: 4.639033
+  type: 'test'
+  ...
+# Subtest: the schema can be applied to a database that already has it (redeploys)
+ok 97 - the schema can be applied to a database that already has it (redeploys)
+  ---
+  duration_ms: 1.734239
+  type: 'test'
+  ...
+# Subtest: Chris can rename any chat; Cathy only chats Chris has not named
+ok 98 - Chris can rename any chat; Cathy only chats Chris has not named
+  ---
+  duration_ms: 5.398301
+  type: 'test'
+  ...
+# Subtest: archived chats can be listed and brought back
+ok 99 - archived chats can be listed and brought back
+  ---
+  duration_ms: 1.802496
+  type: 'test'
+  ...
+# Subtest: model and effort are saved per chat
+ok 100 - model and effort are saved per chat
+  ---
+  duration_ms: 3.594012
+  type: 'test'
+  ...
+# Subtest: uploads keep a safe name, and their bytes go to R2
+ok 101 - uploads keep a safe name, and their bytes go to R2
+  ---
+  duration_ms: 2.440057
+  type: 'test'
+  ...
+# Subtest: without R2 connected, file operations fail clearly
+ok 102 - without R2 connected, file operations fail clearly
+  ---
+  duration_ms: 4.838075
+  type: 'test'
+  ...
+# Subtest: artifacts start private; link opens them; private or a new link closes them
+ok 103 - artifacts start private; link opens them; private or a new link closes them
+  ---
+  duration_ms: 2.586932
+  type: 'test'
+  ...
+# Subtest: republishing adds a version: same id and link, new content, old versions kept
+ok 104 - republishing adds a version: same id and link, new content, old versions kept
+  ---
+  duration_ms: 2.728486
+  type: 'test'
+  ...
+# Subtest: a command is described by what Cathy said it does, and shows the command as input
+ok 105 - a command is described by what Cathy said it does, and shows the command as input
+  ---
+  duration_ms: 2.821088
+  type: 'test'
+  ...
+# Subtest: a command without a description falls back to the command itself
+ok 106 - a command without a description falls back to the command itself
+  ---
+  duration_ms: 0.388346
+  type: 'test'
+  ...
+# Subtest: other tools get a plain description written for them
+ok 107 - other tools get a plain description written for them
+  ---
+  duration_ms: 0.578189
+  type: 'test'
+  ...
+# Subtest: a file write shows the path and size as input, never the whole file
+ok 108 - a file write shows the path and size as input, never the whole file
+  ---
+  duration_ms: 0.231232
+  type: 'test'
+  ...
+# Subtest: an edit shows the text replaced and its replacement, trimmed
+ok 109 - an edit shows the text replaced and its replacement, trimmed
+  ---
+  duration_ms: 0.241672
+  type: 'test'
+  ...
+# Subtest: a command that exits non-zero, or a tool that refuses, is a failed step
+ok 110 - a command that exits non-zero, or a tool that refuses, is a failed step
+  ---
+  duration_ms: 0.461391
+  type: 'test'
+  ...
+# Subtest: a thrown tool error is a failed step with its message
+ok 111 - a thrown tool error is a failed step with its message
+  ---
+  duration_ms: 0.240749
+  type: 'test'
+  ...
+# Subtest: long output keeps its start and end, with the cut marked
+ok 112 - long output keeps its start and end, with the cut marked
+  ---
+  duration_ms: 0.484274
+  type: 'test'
+  ...
+# Subtest: results that are objects are shown as readable JSON
+ok 113 - results that are objects are shown as readable JSON
+  ---
+  duration_ms: 0.539959
+  type: 'test'
+  ...
+# Subtest: forwards only /a/<token> and /a/<token>/download, as a bare GET
+ok 114 - forwards only /a/<token> and /a/<token>/download, as a bare GET
+  ---
+  duration_ms: 43.862113
+  type: 'test'
+  ...
+# Subtest: refuses everything else before Cathy sees it
+ok 115 - refuses everything else before Cathy sees it
+  ---
+  duration_ms: 3.325901
+  type: 'test'
+  ...
+# Subtest: a dead or private link gets a friendly 404 page
+ok 116 - a dead or private link gets a friendly 404 page
+  ---
+  duration_ms: 2.086266
+  type: 'test'
+  ...
+# Subtest: robots are told to stay away
+ok 117 - robots are told to stay away
+  ---
+  duration_ms: 0.53019
+  type: 'test'
+  ...
+1..117
+# tests 117
+# suites 0
+# pass 117
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4137.332776

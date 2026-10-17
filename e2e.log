@@ -1,0 +1,19 @@
+✓ Log in once (1316 ms) — remembered for 400 days
+✓ Admin home (861 ms)
+✓ Open Cathy (909 ms)
+✓ Start a new chat (3469 ms) — chat afmenh, branch cathy/afmenh
+✓ Chat box fits the phone (812 ms) — font 16px, Send fully on screen, disabled while empty
+✓ Send a message (884 ms)
+✓ Cathy uses a tool and replies (18120 ms) — reply 18172 ms after sending; tools: set_title Check git branch | run_command git status; reply: "I'm on branch cathy/afmenh, and there are no uncommitted changes.Opus 5.5 · medium effort · 7.6k in, 48% cached · 154 out"
+✓ Chat survives a reload (2649 ms) — 4 messages restored
+✓ Chat is listed with a preview (1135 ms) — Check git branchnowI'm on branch `cathy/afmenh`, and there are no uncommitted changes.cathy/afmenh
+✓ Cathy names the chat; Chris renames it (1625 ms) — Cathy named it "Check git branch"; renamed to "E2E renamed chat", kept after reload
+✓ Pick a model and effort (3290 ms) — Sonnet 5.5, low effort; kept after reload
+✓ Attach an image; Cathy sees it (3539 ms) — reply: "Pink.Sonnet 5.5 · low effort · 4.0k in, 0% cached · 6 out"; label: Sonnet 5.5 · low effort · 4.0k in, 0% cached · 6 out
+✓ Stop a reply with the square button (14911 ms) — stopped after ~492 words; label "Stopped · Sonnet 5.5 · low effort"
+✓ Interrupt with a new message (6444 ms) — first reply stopped; then: "interrupted okSonnet 5.5 · low effort · 5.3k in, 95% cached · 8 out"
+✓ Cathy publishes an artifact into the chat (7399 ms) — artifact 76ebvqhe: Fractions worksheet (private)
+✓ Open the artifact full screen (2367 ms) — 3 maths expressions rendered
+✗ Share by link; open it logged out: Error: share link gave 404
+video: 2765 frames → walkthrough.mp4
+FAILED → /home/runner/work/chrismiller/chrismiller/e2e-out
