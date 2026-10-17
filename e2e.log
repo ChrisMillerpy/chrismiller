@@ -1,0 +1,12 @@
+✓ Log in once (1290 ms) — remembered for 400 days
+✓ Admin home (857 ms)
+✓ Open Cathy (875 ms)
+✓ Start a new chat (3331 ms) — chat vccj95, branch cathy/vccj95
+✓ Chat box fits the phone (817 ms) — font 16px, Send fully on screen, disabled while empty
+✓ Send a message (986 ms)
+✓ Cathy uses a tool and replies (18100 ms) — reply 18261 ms after sending; tools: run_command git status; reply: "I'm on the cathy/vccj95 branch, the working tree is clean, and git says it's up to date with origin/main."
+✓ Chat survives a reload (1668 ms) — 3 messages restored
+✓ Chat is listed with a preview (1034 ms) — Hi Cathy. Run git status and tell me which branch you are o…nowI'm on the `cathy/vccj95` branch, the working tree is clean, and git says it's up to date with `o
+✗ Cathy opens a PR: Error: no PR link in reply: I couldn't get a PR link. open_pr failed when pushing cathy/vccj95: GitHub returned a 403, "Permission to ChrisMillerpy/chrismiller.git denied to ChrisMillerpy".The file e2e/cathy-check-vccj95.txt exi
+video: 1521 frames → walkthrough.mp4
+FAILED → /home/runner/work/chrismiller/chrismiller/e2e-out

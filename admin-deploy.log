@@ -1,0 +1,36 @@
+
+ ⛅️ wrangler 4.149.0 (update available 4.151.1)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 16 files from the assets directory /home/runner/work/chrismiller/chrismiller/packs
+🌀 Starting asset upload...
+🌀 Found 13 new or modified static assets to upload. Proceeding with upload...
++ /cathy-v1/media/unit-tests.txt
++ /cathy-v1/index.html
++ /cathy-v1/media/05-cathy-uses-a-tool-and-replies.png
++ /cathy-v1/media/bug-overflow-before.png
++ /cathy-v1/media/walkthrough.mp4
++ /cathy-v1/media/e2e-results.json
++ /cathy-v1/media/01-admin-home.png
++ /cathy-v1/media/04-send-a-message.png
++ /cathy-v1/media/02-open-cathy.png
++ /index.html
++ /cathy-v1/media/03-start-a-new-chat.png
++ /cathy-v1/media/08-dark-mode.png
++ /cathy-v1/media/07-chat-is-listed-with-a-preview.png
+Uploaded 4 of 13 assets
+Uploaded 8 of 13 assets
+Uploaded 13 of 13 assets
+✨ Success! Uploaded 13 files (1 already uploaded) (1.26 sec)
+
+Total Upload: 85.08 KiB / gzip: 50.54 KiB
+Worker Startup Time: 1 ms
+Your Worker has access to the following bindings:
+Binding                                         Resource      
+env.CATHY (withchris-cathy-fix-ci-honesty)      Worker        
+env.PACKS                                       Assets        
+
+Uploaded withchris-admin-fix-ci-honesty (3.56 sec)
+Deployed withchris-admin-fix-ci-honesty triggers (0.32 sec)
+  https://withchris-admin-fix-ci-honesty.withchris.workers.dev
+Current Version ID: e75ba565-a661-45da-8796-8790bfc94220

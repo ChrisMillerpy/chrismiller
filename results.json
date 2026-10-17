@@ -1,0 +1,75 @@
+{
+  "base": "https://withchris-admin-fix-ci-honesty.withchris.workers.dev",
+  "real": true,
+  "when": "2026-10-17T00:01:24.904Z",
+  "passed": false,
+  "steps": [
+    {
+      "name": "Log in once",
+      "ok": true,
+      "ms": 1290,
+      "detail": "remembered for 400 days",
+      "shot": "01-log-in-once.png"
+    },
+    {
+      "name": "Admin home",
+      "ok": true,
+      "ms": 857,
+      "shot": "02-admin-home.png"
+    },
+    {
+      "name": "Open Cathy",
+      "ok": true,
+      "ms": 875,
+      "shot": "03-open-cathy.png"
+    },
+    {
+      "name": "Start a new chat",
+      "ok": true,
+      "ms": 3331,
+      "detail": "chat vccj95, branch cathy/vccj95",
+      "shot": "04-start-a-new-chat.png"
+    },
+    {
+      "name": "Chat box fits the phone",
+      "ok": true,
+      "ms": 817,
+      "detail": "font 16px, Send fully on screen, disabled while empty",
+      "shot": "05-chat-box-fits-the-phone.png"
+    },
+    {
+      "name": "Send a message",
+      "ok": true,
+      "ms": 986,
+      "shot": "06-send-a-message.png"
+    },
+    {
+      "name": "Cathy uses a tool and replies",
+      "ok": true,
+      "ms": 18100,
+      "detail": "reply 18261 ms after sending; tools: run_command git status; reply: \"I'm on the cathy/vccj95 branch, the working tree is clean, and git says it's up to date with origin/main.\"",
+      "shot": "07-cathy-uses-a-tool-and-replies.png"
+    },
+    {
+      "name": "Chat survives a reload",
+      "ok": true,
+      "ms": 1668,
+      "detail": "3 messages restored",
+      "shot": "08-chat-survives-a-reload.png"
+    },
+    {
+      "name": "Chat is listed with a preview",
+      "ok": true,
+      "ms": 1034,
+      "detail": "Hi Cathy. Run git status and tell me which branch you are o…nowI'm on the `cathy/vccj95` branch, the working tree is clean, and git says it's up to date with `o",
+      "shot": "09-chat-is-listed-with-a-preview.png"
+    },
+    {
+      "name": "Cathy opens a PR",
+      "ok": false,
+      "ms": 8248,
+      "detail": "Error: no PR link in reply: I couldn't get a PR link. open_pr failed when pushing cathy/vccj95: GitHub returned a 403, \"Permission to ChrisMillerpy/chrismiller.git denied to ChrisMillerpy\".The file e2e/cathy-check-vccj95.txt exi",
+      "shot": "10-cathy-opens-a-pr.png"
+    }
+  ]
+}
