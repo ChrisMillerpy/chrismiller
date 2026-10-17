@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Read `AGENTS.md` first; it points to Cathy's soul and memory in `cathy/self/`.
+
 Agent tooling, secrets and setup for this repo live in `.agents/`. Read `.agents/AGENTS.md` before starting work. It covers:
 
 - creating worktrees with `.agents/new-worktree.sh` (symlinks env files in)
