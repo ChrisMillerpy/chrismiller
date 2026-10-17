@@ -89,7 +89,8 @@ const CHAT_CSS = `
   .assistant a { color:var(--cobalt); }
   .cathy { align-self:flex-start; max-width:85%; background:var(--cobalt-soft); border-radius:16px; padding:10px 14px; white-space:pre-wrap; }
   .cathy::before { content:attr(data-from); display:block; font-size:12px; font-weight:600; color:var(--cobalt); margin-bottom:2px; }
-  .update { align-self:flex-start; color:var(--pen); font-family:var(--hand, cursive); font-size:17px; }
+  /* Progress updates (tell_chris): a plain note. Not the --hand font: admin doesn't load Kalam, and iOS's "cursive" fallback is calligraphy. */
+  .update { align-self:flex-start; max-width:85%; color:var(--muted); font-size:15px; border-left:3px solid var(--cobalt); padding:2px 0 2px 10px; white-space:pre-wrap; }
   .tool { align-self:flex-start; max-width:100%; font:13px/1.4 ui-monospace, monospace; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .tool::before { content:'› '; color:var(--cobalt); }
   .notice { align-self:center; font-size:13px; color:var(--pen); text-align:center; }
