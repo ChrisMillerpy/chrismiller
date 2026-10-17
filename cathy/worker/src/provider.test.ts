@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildModel } from './provider.ts';
 import { createCathy } from '../../agent/cathy.ts';
+import { fakeModel } from '../../agent/fake-model.ts';
 import { turnSettings } from './models.ts';
-import { Conversation, memoryStore } from './conversation.ts';
+import { Conversation, memoryStore, type Event } from './conversation.ts';
 import type { Box } from '../../agent/box.ts';
 
 test('GPT models need OPENAI_API_KEY, and the error says so', () => {
@@ -17,7 +18,7 @@ test('Claude models still need ANTHROPIC_API_KEY, GPT ones do not', () => {
 });
 
 /** A fake OpenAI endpoint: records the request, answers with a short streamed reply. */
-function fakeOpenAI(script: { call?: { name: string; args: unknown } } = {}) {
+function fakeOpenAI(script: { call?: { name: string; args: unknown }; thinking?: string } = {}) {
   const bodies: any[] = [];
   const urls: string[] = [];
   const fetch = async (url: any, init: any) => {
@@ -26,6 +27,7 @@ function fakeOpenAI(script: { call?: { name: string; args: unknown } } = {}) {
     const sawResult = JSON.stringify(JSON.parse(init.body).input).includes('function_call_output');
     const events = script.call && !sawResult ? callEvents(script.call) : [
       { type: 'response.created', response: { id: 'resp_1', created_at: 1, model: 'gpt-6-astra' } },
+      ...(script.thinking ? reasoningEvents(script.thinking) : []),
       { type: 'response.output_item.added', output_index: 0, item: { type: 'message', id: 'msg_1', role: 'assistant', content: [] } },
       { type: 'response.content_part.added', item_id: 'msg_1', output_index: 0, content_index: 0, part: { type: 'output_text', text: '' } },
       { type: 'response.output_text.delta', item_id: 'msg_1', output_index: 0, content_index: 0, delta: 'Hello.' },
@@ -100,6 +102,16 @@ test('every tool Cathy has in a real chat (box tools and chat tools) is sent to 
   }
 });
 
+function reasoningEvents(text: string) {
+  const done = { type: 'reasoning', id: 'rs_1', summary: [{ type: 'summary_text', text }], encrypted_content: null };
+  return [
+    { type: 'response.output_item.added', output_index: 0, item: { type: 'reasoning', id: 'rs_1', summary: [], encrypted_content: null } },
+    { type: 'response.reasoning_summary_part.added', item_id: 'rs_1', summary_index: 0 },
+    { type: 'response.reasoning_summary_text.delta', item_id: 'rs_1', summary_index: 0, delta: text },
+    { type: 'response.output_item.done', output_index: 0, item: done },
+  ];
+}
+
 function callEvents(call: { name: string; args: unknown }) {
   const item = { type: 'function_call', id: 'fc_1', call_id: 'call_1', name: call.name, arguments: JSON.stringify(call.args), status: 'completed' };
   return [
@@ -121,4 +133,45 @@ test('GPT sends null for optional fields; the tools accept that and still run', 
   assert.equal((await out.text).trim(), 'Hello.');
   assert.ok(ran.includes('echo hi'), 'the command ran despite timeout_seconds: null');
   assert.equal(api.bodies.length, 2, 'the result went back to the model');
+});
+
+test('switching between Claude and GPT mid-chat works, tool calls and results included, no thinking carried over', async () => {
+  const api = fakeOpenAI({ call: { name: 'run_command', args: { command: 'echo hi' } }, thinking: 'GPT reasoning.' });
+  const gpt = buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6.1-sol', api.fetch as any);
+  const claude = fakeModel([{ text: 'Claude here.', thinking: 'Claude reasoning.' }]);
+  const events: Event[] = [];
+  const settings = { model: 'gpt-6.1-sol', effort: 'medium' };
+  const store = memoryStore();
+  const convo = new Conversation({
+    store,
+    broadcast: (e) => events.push(e),
+    makeAgent: (tools, s) => createCathy({ model: (s!.model.startsWith('gpt') ? gpt : claude) as any, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    settings: async () => turnSettings(settings.model, settings.effort as any),
+  });
+
+  await convo.fromChris('run it');
+  assert.ok(events.some((e) => e.type === 'thinking' && e.text === 'GPT reasoning.'), 'GPT thinking streams to the chat');
+  assert.equal(store.messages().at(-1)!.thinking, 'GPT reasoning.');
+
+  settings.model = 'claude-opus-5-5';
+  await convo.fromChris('now you');
+  assert.equal(store.messages().at(-1)!.content, 'Claude here.');
+  const seen = JSON.stringify(claude.calls[0].prompt);
+  assert.match(seen, /echo hi/, 'Claude sees the tool call GPT made');
+  assert.match(seen, /tool-result/, 'and its result');
+  assert.doesNotMatch(seen, /GPT reasoning/, 'but not GPT thinking');
+
+  settings.model = 'gpt-6-astra';
+  await convo.fromChris('and back');
+  const last = api.bodies.at(-1);
+  const input = JSON.stringify(last.input);
+  assert.doesNotMatch(input, /item_reference/, 'nothing refers to items stored at OpenAI');
+  assert.doesNotMatch(input, /"type":"reasoning"/, 'no reasoning items replayed');
+  assert.doesNotMatch(input, /Claude reasoning/, 'Claude thinking is not sent to GPT');
+  assert.match(input, /Claude here\./, 'GPT sees what Claude said');
+  assert.match(input, /function_call_output/, 'and the earlier tool result');
+  assert.equal(last.store, false);
 });
