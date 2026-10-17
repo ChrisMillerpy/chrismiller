@@ -1,0 +1,124 @@
+{
+  "base": "https://withchris-admin-cathy-yysxyt-evidence.withchris.workers.dev",
+  "real": true,
+  "when": "2026-10-17T17:03:41.807Z",
+  "passed": false,
+  "steps": [
+    {
+      "name": "Log in once",
+      "ok": true,
+      "ms": 1338,
+      "detail": "remembered for 400 days",
+      "shot": "01-log-in-once.png"
+    },
+    {
+      "name": "Admin home",
+      "ok": true,
+      "ms": 823,
+      "shot": "02-admin-home.png"
+    },
+    {
+      "name": "Open Cathy",
+      "ok": true,
+      "ms": 858,
+      "shot": "03-open-cathy.png"
+    },
+    {
+      "name": "Start a new chat",
+      "ok": true,
+      "ms": 3839,
+      "detail": "chat wr2z48, branch cathy/wr2z48",
+      "shot": "04-start-a-new-chat.png"
+    },
+    {
+      "name": "Chat box fits the phone",
+      "ok": true,
+      "ms": 813,
+      "detail": "font 16px, Send fully on screen, disabled while empty",
+      "shot": "05-chat-box-fits-the-phone.png"
+    },
+    {
+      "name": "Send a message",
+      "ok": true,
+      "ms": 882,
+      "shot": "06-send-a-message.png"
+    },
+    {
+      "name": "Cathy uses a tool and replies",
+      "ok": true,
+      "ms": 29619,
+      "detail": "reply 29682 ms after sending; tools: set_title Git status check | run_command git status; reply: \"I'm on branch cathy/wr2z48, and the working tree is clean.Opus 5.5 · medium effort\"",
+      "shot": "07-cathy-uses-a-tool-and-replies.png"
+    },
+    {
+      "name": "Chat survives a reload",
+      "ok": true,
+      "ms": 3132,
+      "detail": "4 messages restored",
+      "shot": "08-chat-survives-a-reload.png"
+    },
+    {
+      "name": "Chat is listed with a preview",
+      "ok": true,
+      "ms": 1166,
+      "detail": "Git status checknowI'm on branch `cathy/wr2z48`, and the working tree is clean.cathy/wr2z48",
+      "shot": "09-chat-is-listed-with-a-preview.png"
+    },
+    {
+      "name": "Cathy names the chat; Chris renames it",
+      "ok": true,
+      "ms": 1663,
+      "detail": "Cathy named it \"Git status check\"; renamed to \"E2E renamed chat\", kept after reload",
+      "shot": "10-cathy-names-the-chat-chris-renames-it.png"
+    },
+    {
+      "name": "Pick a model and effort",
+      "ok": true,
+      "ms": 3222,
+      "detail": "Sonnet 5.5, low effort; kept after reload",
+      "shot": "11-pick-a-model-and-effort.png"
+    },
+    {
+      "name": "Attach an image; Cathy sees it",
+      "ok": true,
+      "ms": 4385,
+      "detail": "reply: \"Pink.Sonnet 5.5 · low effort\"; label: Sonnet 5.5 · low effort",
+      "shot": "12-attach-an-image-cathy-sees-it.png"
+    },
+    {
+      "name": "Stop a reply with the square button",
+      "ok": true,
+      "ms": 19412,
+      "detail": "stopped after ~513 words; label \"Stopped · Sonnet 5.5 · low effort\"",
+      "shot": "13-stop-a-reply-with-the-square-button.png"
+    },
+    {
+      "name": "Interrupt with a new message",
+      "ok": true,
+      "ms": 4912,
+      "detail": "first reply stopped; then: \"interrupted okSonnet 5.5 · low effort\"",
+      "shot": "14-interrupt-with-a-new-message.png"
+    },
+    {
+      "name": "Cathy publishes an artifact into the chat",
+      "ok": true,
+      "ms": 6399,
+      "detail": "artifact xippvcrp: Fractions worksheet (private)",
+      "shot": "15-cathy-publishes-an-artifact-into-the-chat.png"
+    },
+    {
+      "name": "Open the artifact full screen",
+      "ok": true,
+      "ms": 2348,
+      "detail": "3 maths expressions rendered",
+      "shot": "16-open-the-artifact-full-screen.png"
+    },
+    {
+      "name": "Share by link; open it logged out",
+      "ok": false,
+      "ms": 3300,
+      "detail": "Error: share link gave 404",
+      "shot": "17-share-by-link-open-it-logged-out.png"
+    }
+  ]
+}

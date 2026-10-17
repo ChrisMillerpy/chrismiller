@@ -1,0 +1,97 @@
+
+ ⛅️ wrangler 4.149.0 (update available 4.151.1)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 82 files from the assets directory /home/runner/work/chrismiller/chrismiller/packs
+🌀 Starting asset upload...
+🌀 Found 72 new or modified static assets to upload. Proceeding with upload...
++ /cathy-agent-manager/media/real/run.json
++ /cathy-v1/media/e2e-results.json
++ /cathy-agent-manager/media/results.json
++ /cathy-agent-manager/media/artifact-viewer.jpg
++ /cathy-agent-manager/media/unit-tests.txt
++ /cathy-v1/index.html
++ /cathy-agent-manager/media/01-admin-home.jpg
++ /cathy-agent-manager/media/09-cathy-names-the-chat-chris-renames-it.jpg
++ /cathy-agent-manager/media/walk-24.jpg
++ /cathy-agent-manager/media/walk-112.jpg
++ /cathy-agent-manager/media/walk-76.jpg
++ /cathy-agent-manager/media/19-a-hostile-html-artifact-is-sandboxed.jpg
++ /cathy-agent-manager/media/16-share-by-link-open-it-logged-out.jpg
++ /cathy-agent-manager/media/walk-52.jpg
++ /cathy-agent-manager/media/real/artifact-viewer.jpg
++ /cathy-agent-manager/media/08-chat-is-listed-with-a-preview.jpg
++ /cathy-agent-manager/media/real/04-start-a-new-chat.jpg
++ /cathy-agent-manager/media/real/03-open-cathy.jpg
++ /cathy-agent-manager/media/real/07-cathy-uses-a-tool-and-replies.jpg
++ /cathy-v1/media/04-send-a-message.png
++ /cathy-v1/media/bug-overflow-before.png
++ /cathy-v1/media/07-chat-is-listed-with-a-preview.png
++ /cathy-agent-manager/media/real/14-interrupt-with-a-new-message.jpg
++ /cathy-agent-manager/media/walkthrough.mp4
++ /cathy-v1/media/unit-tests.txt
++ /index.html
++ /cathy-agent-manager/walkthrough.ts
++ /cathy-agent-manager/media/sandbox-probe.jpg
++ /cathy-agent-manager/build.mjs
++ /cathy-agent-manager/media/04-chat-box-fits-the-phone.jpg
++ /cathy-agent-manager/media/walk-92.jpg
++ /cathy-agent-manager/media/07-chat-survives-a-reload.jpg
++ /cathy-agent-manager/index.html
++ /cathy-agent-manager/media/real/share-logged-out.jpg
++ /cathy-v1/media/01-admin-home.png
++ /cathy-agent-manager/media/real/10-cathy-names-the-chat-chris-renames-it.jpg
++ /cathy-agent-manager/media/11-attach-an-image-cathy-sees-it.jpg
++ /cathy-v1/media/03-start-a-new-chat.png
++ /cathy-agent-manager/media/13-interrupt-with-a-new-message.jpg
++ /cathy-agent-manager/media/real/06-send-a-message.jpg
++ /cathy-agent-manager/media/real/01-log-in-once.jpg
++ /cathy-agent-manager/media/real/09-chat-is-listed-with-a-preview.jpg
++ /cathy-agent-manager/media/real/08-chat-survives-a-reload.jpg
++ /cathy-v1/media/08-dark-mode.png
++ /cathy-v1/media/02-open-cathy.png
++ /cathy-agent-manager/media/real/15-cathy-publishes-an-artifact-into-the-chat.jpg
++ /cathy-v1/media/walkthrough.mp4
++ /cathy-agent-manager/media/real/walkthrough.mp4
++ /cathy-agent-manager/media/security.json
++ /cathy-agent-manager/media/real/results.json
++ /cathy-agent-manager/media/share-logged-out.jpg
++ /cathy-agent-manager/media/05-send-a-message.jpg
++ /cathy-agent-manager/media/03-start-a-new-chat.jpg
++ /cathy-agent-manager/media/18-artifacts-page-versions-new-link.jpg
++ /cathy-agent-manager/media/10-pick-a-model-and-effort.jpg
++ /cathy-agent-manager/media/06-cathy-uses-a-tool-and-replies.jpg
++ /cathy-agent-manager/media/22-dark-mode.jpg
++ /cathy-agent-manager/media/walk-38.jpg
++ /cathy-agent-manager/media/14-cathy-publishes-an-artifact-into-the-chat.jpg
++ /cathy-agent-manager/media/walk-6.jpg
++ /cathy-agent-manager/media/12-stop-a-reply-with-the-square-button.jpg
++ /cathy-agent-manager/media/02-open-cathy.jpg
++ /cathy-agent-manager/media/20-search-archive-and-unarchive.jpg
++ /cathy-agent-manager/media/walk-64.jpg
++ /cathy-agent-manager/media/real/05-chat-box-fits-the-phone.jpg
++ /cathy-agent-manager/media/real/11-pick-a-model-and-effort.jpg
++ /cathy-v1/media/05-cathy-uses-a-tool-and-replies.png
++ /cathy-agent-manager/media/real/02-admin-home.jpg
++ /cathy-agent-manager/media/real/12-attach-an-image-cathy-sees-it.jpg
++ /cathy-agent-manager/media/real/17-share-by-link-open-it-logged-out.jpg
++ /cathy-agent-manager/media/real/13-stop-a-reply-with-the-square-button.jpg
++ /cathy-agent-manager/media/user-walkthrough.mp4
+Uploaded 24 of 72 assets
+Uploaded 48 of 72 assets
+Uploaded 72 of 72 assets
+✨ Success! Uploaded 72 files (5 already uploaded) (1.81 sec)
+
+Total Upload: 118.75 KiB / gzip: 59.25 KiB
+Worker Startup Time: 1 ms
+Your Worker has access to the following bindings:
+Binding                                                             Resource                  
+env.CATHY (withchris-cathy-cathy-yysxyt-evidence)                   Worker                    
+env.PACKS                                                           Assets                    
+env.ACCESS_TEAM_DOMAIN ("")                                         Environment Variable      
+env.ACCESS_AUD ("")                                                 Environment Variable      
+
+Uploaded withchris-admin-cathy-yysxyt-evidence (4.33 sec)
+Deployed withchris-admin-cathy-yysxyt-evidence triggers (0.54 sec)
+  https://withchris-admin-cathy-yysxyt-evidence.withchris.workers.dev
+Current Version ID: 3b8f14c2-8831-4aae-9dc0-bae70a093b43
