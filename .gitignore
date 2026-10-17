@@ -36,3 +36,6 @@ cathy/worker/wrangler.local.jsonc
 worker-configuration.d.ts
 e2e-out/
 wrangler.preview.jsonc
+
+# working plans (local only, never committed)
+plans/
