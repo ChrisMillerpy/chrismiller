@@ -1,0 +1,369 @@
+
+ ⛅️ wrangler 4.149.0
+────────────────────
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 722B done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#2 ...
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#2 DONE 0.9s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/5] FROM docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#5 resolve docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 0.1s done
+#5 sha256:d0a16be756b6ec6658aecb8b7bcf87fa6c7d0d7fcc6ca53ad14bb49a4c90bdd7 6.77kB / 6.77kB done
+#5 sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39 0B / 28.25MB 0.1s
+#5 sha256:f0400f4b55b0ad346bf6167a1b64a258e4d73db608c457798ce35e4ffeebfaaf 0B / 3.31kB 0.1s
+#5 sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856 0B / 49.84MB 0.1s
+#5 sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 5.22kB / 5.22kB done
+#5 sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562 1.93kB / 1.93kB done
+#5 sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39 28.25MB / 28.25MB 0.3s
+#5 sha256:f0400f4b55b0ad346bf6167a1b64a258e4d73db608c457798ce35e4ffeebfaaf 3.31kB / 3.31kB 0.2s done
+#5 sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856 12.58MB / 49.84MB 0.3s
+#5 sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5 0B / 1.71MB 0.3s
+#5 sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856 49.84MB / 49.84MB 0.5s
+#5 sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5 1.71MB / 1.71MB 0.5s
+#5 sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39 28.25MB / 28.25MB 0.6s done
+#5 sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5 1.71MB / 1.71MB 0.8s done
+#5 extracting sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39
+#5 sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567 0B / 448B 1.1s
+#5 sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856 49.84MB / 49.84MB 1.0s done
+#5 sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567 448B / 448B 1.5s
+#5 extracting sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39 0.8s done
+#5 sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567 448B / 448B 1.5s done
+#5 extracting sha256:f0400f4b55b0ad346bf6167a1b64a258e4d73db608c457798ce35e4ffeebfaaf done
+#5 extracting sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856
+#5 extracting sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856 0.8s done
+#5 extracting sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5
+#5 extracting sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5 0.0s done
+#5 extracting sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567 done
+#5 DONE 7.5s
+
+#6 [2/5] RUN apt-get update  && apt-get install -y --no-install-recommends git ca-certificates ripgrep gh curl  && rm -rf /var/lib/apt/lists/*
+#6 0.164 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#6 0.202 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#6 0.215 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#6 0.252 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#6 0.377 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#6 0.378 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [354 kB]
+#6 1.023 Fetched 9393 kB in 1s (10.6 MB/s)
+#6 1.023 Reading package lists...
+#6 1.385 Reading package lists...
+#6 1.732 Building dependency tree...
+#6 1.855 Reading state information...
+#6 1.950 The following additional packages will be installed:
+#6 1.950   git-man libbrotli1 libcurl3-gnutls libcurl4 liberror-perl libexpat1
+#6 1.950   libgdbm-compat4 libgdbm6 libgssapi-krb5-2 libk5crypto3 libkeyutils1
+#6 1.950   libkrb5-3 libkrb5support0 libldap-2.5-0 libnghttp2-14 libperl5.36 libpsl5
+#6 1.950   librtmp1 libsasl2-2 libsasl2-modules-db libssh2-1 libssl3 openssl perl
+#6 1.951   perl-base perl-modules-5.36
+#6 1.951 Suggested packages:
+#6 1.951   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+#6 1.951   gitk gitweb git-cvs git-mediawiki git-svn gdbm-l10n krb5-doc krb5-user
+#6 1.951   sensible-utils perl-doc libterm-readline-gnu-perl
+#6 1.951   | libterm-readline-perl-perl make libtap-harness-archive-perl
+#6 1.951 Recommended packages:
+#6 1.951   patch less ssh-client krb5-locales libldap-common publicsuffix
+#6 1.951   libsasl2-modules netbase
+#6 2.047 The following NEW packages will be installed:
+#6 2.048   ca-certificates curl gh git git-man libbrotli1 libcurl3-gnutls libcurl4
+#6 2.048   liberror-perl libexpat1 libgdbm-compat4 libgdbm6 libgssapi-krb5-2
+#6 2.048   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap-2.5-0
+#6 2.048   libnghttp2-14 libperl5.36 libpsl5 librtmp1 libsasl2-2 libsasl2-modules-db
+#6 2.049   libssh2-1 libssl3 openssl perl perl-modules-5.36 ripgrep
+#6 2.050 The following packages will be upgraded:
+#6 2.050   perl-base
+#6 2.120 1 upgraded, 30 newly installed, 0 to remove and 0 not upgraded.
+#6 2.120 Need to get 33.2 MB of archives.
+#6 2.120 After this operation, 158 MB of additional disk space will be used.
+#6 2.120 Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 perl-base amd64 5.36.0-7+deb12u4 [1610 kB]
+#6 2.232 Get:2 http://deb.debian.org/debian-security bookworm-security/main amd64 perl-modules-5.36 all 5.36.0-7+deb12u4 [2817 kB]
+#6 2.266 Get:3 http://deb.debian.org/debian bookworm/main amd64 libgdbm6 amd64 1.23-3 [72.2 kB]
+#6 2.266 Get:4 http://deb.debian.org/debian bookworm/main amd64 libgdbm-compat4 amd64 1.23-3 [48.2 kB]
+#6 2.267 Get:5 http://deb.debian.org/debian-security bookworm-security/main amd64 libperl5.36 amd64 5.36.0-7+deb12u4 [4208 kB]
+#6 2.293 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 perl amd64 5.36.0-7+deb12u4 [239 kB]
+#6 2.294 Get:7 http://deb.debian.org/debian-security bookworm-security/main amd64 libssl3 amd64 3.0.22-1~deb12u1 [2039 kB]
+#6 2.304 Get:8 http://deb.debian.org/debian-security bookworm-security/main amd64 openssl amd64 3.0.22-1~deb12u1 [1442 kB]
+#6 2.330 Get:9 http://deb.debian.org/debian-security bookworm-security/main amd64 ca-certificates all 20250419~deb12u1 [162 kB]
+#6 2.331 Get:10 http://deb.debian.org/debian bookworm/main amd64 libbrotli1 amd64 1.0.9-2+b6 [275 kB]
+#6 2.333 Get:11 http://deb.debian.org/debian bookworm/main amd64 libkrb5support0 amd64 1.20.1-2+deb12u5 [33.2 kB]
+#6 2.333 Get:12 http://deb.debian.org/debian bookworm/main amd64 libk5crypto3 amd64 1.20.1-2+deb12u5 [79.7 kB]
+#6 2.334 Get:13 http://deb.debian.org/debian bookworm/main amd64 libkeyutils1 amd64 1.6.3-2 [8808 B]
+#6 2.335 Get:14 http://deb.debian.org/debian bookworm/main amd64 libkrb5-3 amd64 1.20.1-2+deb12u5 [332 kB]
+#6 2.335 Get:15 http://deb.debian.org/debian bookworm/main amd64 libgssapi-krb5-2 amd64 1.20.1-2+deb12u5 [135 kB]
+#6 2.336 Get:16 http://deb.debian.org/debian bookworm/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg-10 [20.3 kB]
+#6 2.336 Get:17 http://deb.debian.org/debian bookworm/main amd64 libsasl2-2 amd64 2.1.28+dfsg-10 [59.7 kB]
+#6 2.336 Get:18 http://deb.debian.org/debian bookworm/main amd64 libldap-2.5-0 amd64 2.5.13+dfsg-5 [183 kB]
+#6 2.349 Get:19 http://deb.debian.org/debian bookworm/main amd64 libnghttp2-14 amd64 1.52.0-1+deb12u3 [72.4 kB]
+#6 2.349 Get:20 http://deb.debian.org/debian bookworm/main amd64 libpsl5 amd64 0.21.2-1 [58.7 kB]
+#6 2.350 Get:21 http://deb.debian.org/debian bookworm/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+#6 2.364 Get:22 http://deb.debian.org/debian-security bookworm-security/main amd64 libssh2-1 amd64 1.10.0-3+deb12u1 [176 kB]
+#6 2.364 Get:23 http://deb.debian.org/debian bookworm/main amd64 libcurl4 amd64 7.88.1-10+deb12u15 [392 kB]
+#6 2.365 Get:24 http://deb.debian.org/debian bookworm/main amd64 curl amd64 7.88.1-10+deb12u15 [316 kB]
+#6 2.381 Get:25 http://deb.debian.org/debian bookworm/main amd64 gh amd64 2.23.0+dfsg1-1 [7261 kB]
+#6 2.399 Get:26 http://deb.debian.org/debian bookworm/main amd64 libcurl3-gnutls amd64 7.88.1-10+deb12u15 [386 kB]
+#6 2.400 Get:27 http://deb.debian.org/debian-security bookworm-security/main amd64 libexpat1 amd64 2.5.0-1+deb12u4 [106 kB]
+#6 2.401 Get:28 http://deb.debian.org/debian bookworm/main amd64 liberror-perl all 0.17029-2 [29.0 kB]
+#6 2.401 Get:29 http://deb.debian.org/debian bookworm/main amd64 git-man all 1:2.39.5-0+deb12u3 [2053 kB]
+#6 2.406 Get:30 http://deb.debian.org/debian bookworm/main amd64 git amd64 1:2.39.5-0+deb12u3 [7264 kB]
+#6 2.434 Get:31 http://deb.debian.org/debian bookworm/main amd64 ripgrep amd64 13.0.0-4+b2 [1253 kB]
+#6 2.897 debconf: delaying package configuration, since apt-utils is not installed
+#6 2.918 Fetched 33.2 MB in 1s (42.9 MB/s)
+#6 2.928 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+#6 2.933 Preparing to unpack .../perl-base_5.36.0-7+deb12u4_amd64.deb ...
+#6 2.942 Unpacking perl-base (5.36.0-7+deb12u4) over (5.36.0-7+deb12u3) ...
+#6 3.665 Setting up perl-base (5.36.0-7+deb12u4) ...
+#6 3.691 Selecting previously unselected package perl-modules-5.36.
+#6 3.691 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+#6 3.700 Preparing to unpack .../00-perl-modules-5.36_5.36.0-7+deb12u4_all.deb ...
+#6 3.702 Unpacking perl-modules-5.36 (5.36.0-7+deb12u4) ...
+#6 3.934 Selecting previously unselected package libgdbm6:amd64.
+#6 3.935 Preparing to unpack .../01-libgdbm6_1.23-3_amd64.deb ...
+#6 3.937 Unpacking libgdbm6:amd64 (1.23-3) ...
+#6 3.951 Selecting previously unselected package libgdbm-compat4:amd64.
+#6 3.952 Preparing to unpack .../02-libgdbm-compat4_1.23-3_amd64.deb ...
+#6 3.953 Unpacking libgdbm-compat4:amd64 (1.23-3) ...
+#6 3.966 Selecting previously unselected package libperl5.36:amd64.
+#6 3.967 Preparing to unpack .../03-libperl5.36_5.36.0-7+deb12u4_amd64.deb ...
+#6 3.968 Unpacking libperl5.36:amd64 (5.36.0-7+deb12u4) ...
+#6 4.190 Selecting previously unselected package perl.
+#6 4.191 Preparing to unpack .../04-perl_5.36.0-7+deb12u4_amd64.deb ...
+#6 4.196 Unpacking perl (5.36.0-7+deb12u4) ...
+#6 4.220 Selecting previously unselected package libssl3:amd64.
+#6 4.221 Preparing to unpack .../05-libssl3_3.0.22-1~deb12u1_amd64.deb ...
+#6 4.222 Unpacking libssl3:amd64 (3.0.22-1~deb12u1) ...
+#6 4.316 Selecting previously unselected package openssl.
+#6 4.318 Preparing to unpack .../06-openssl_3.0.22-1~deb12u1_amd64.deb ...
+#6 4.318 Unpacking openssl (3.0.22-1~deb12u1) ...
+#6 4.395 Selecting previously unselected package ca-certificates.
+#6 4.396 Preparing to unpack .../07-ca-certificates_20250419~deb12u1_all.deb ...
+#6 4.397 Unpacking ca-certificates (20250419~deb12u1) ...
+#6 4.429 Selecting previously unselected package libbrotli1:amd64.
+#6 4.430 Preparing to unpack .../08-libbrotli1_1.0.9-2+b6_amd64.deb ...
+#6 4.431 Unpacking libbrotli1:amd64 (1.0.9-2+b6) ...
+#6 4.469 Selecting previously unselected package libkrb5support0:amd64.
+#6 4.470 Preparing to unpack .../09-libkrb5support0_1.20.1-2+deb12u5_amd64.deb ...
+#6 4.471 Unpacking libkrb5support0:amd64 (1.20.1-2+deb12u5) ...
+#6 4.484 Selecting previously unselected package libk5crypto3:amd64.
+#6 4.485 Preparing to unpack .../10-libk5crypto3_1.20.1-2+deb12u5_amd64.deb ...
+#6 4.486 Unpacking libk5crypto3:amd64 (1.20.1-2+deb12u5) ...
+#6 4.501 Selecting previously unselected package libkeyutils1:amd64.
+#6 4.502 Preparing to unpack .../11-libkeyutils1_1.6.3-2_amd64.deb ...
+#6 4.503 Unpacking libkeyutils1:amd64 (1.6.3-2) ...
+#6 4.515 Selecting previously unselected package libkrb5-3:amd64.
+#6 4.516 Preparing to unpack .../12-libkrb5-3_1.20.1-2+deb12u5_amd64.deb ...
+#6 4.517 Unpacking libkrb5-3:amd64 (1.20.1-2+deb12u5) ...
+#6 4.547 Selecting previously unselected package libgssapi-krb5-2:amd64.
+#6 4.548 Preparing to unpack .../13-libgssapi-krb5-2_1.20.1-2+deb12u5_amd64.deb ...
+#6 4.549 Unpacking libgssapi-krb5-2:amd64 (1.20.1-2+deb12u5) ...
+#6 4.566 Selecting previously unselected package libsasl2-modules-db:amd64.
+#6 4.568 Preparing to unpack .../14-libsasl2-modules-db_2.1.28+dfsg-10_amd64.deb ...
+#6 4.568 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+#6 4.598 Selecting previously unselected package libsasl2-2:amd64.
+#6 4.600 Preparing to unpack .../15-libsasl2-2_2.1.28+dfsg-10_amd64.deb ...
+#6 4.600 Unpacking libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+#6 4.616 Selecting previously unselected package libldap-2.5-0:amd64.
+#6 4.617 Preparing to unpack .../16-libldap-2.5-0_2.5.13+dfsg-5_amd64.deb ...
+#6 4.618 Unpacking libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+#6 4.639 Selecting previously unselected package libnghttp2-14:amd64.
+#6 4.640 Preparing to unpack .../17-libnghttp2-14_1.52.0-1+deb12u3_amd64.deb ...
+#6 4.641 Unpacking libnghttp2-14:amd64 (1.52.0-1+deb12u3) ...
+#6 4.657 Selecting previously unselected package libpsl5:amd64.
+#6 4.659 Preparing to unpack .../18-libpsl5_0.21.2-1_amd64.deb ...
+#6 4.660 Unpacking libpsl5:amd64 (0.21.2-1) ...
+#6 4.675 Selecting previously unselected package librtmp1:amd64.
+#6 4.676 Preparing to unpack .../19-librtmp1_2.4+20151223.gitfa8646d.1-2+b2_amd64.deb ...
+#6 4.677 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#6 4.691 Selecting previously unselected package libssh2-1:amd64.
+#6 4.692 Preparing to unpack .../20-libssh2-1_1.10.0-3+deb12u1_amd64.deb ...
+#6 4.693 Unpacking libssh2-1:amd64 (1.10.0-3+deb12u1) ...
+#6 4.714 Selecting previously unselected package libcurl4:amd64.
+#6 4.715 Preparing to unpack .../21-libcurl4_7.88.1-10+deb12u15_amd64.deb ...
+#6 4.716 Unpacking libcurl4:amd64 (7.88.1-10+deb12u15) ...
+#6 4.751 Selecting previously unselected package curl.
+#6 4.753 Preparing to unpack .../22-curl_7.88.1-10+deb12u15_amd64.deb ...
+#6 4.753 Unpacking curl (7.88.1-10+deb12u15) ...
+#6 4.776 Selecting previously unselected package gh.
+#6 4.777 Preparing to unpack .../23-gh_2.23.0+dfsg1-1_amd64.deb ...
+#6 4.778 Unpacking gh (2.23.0+dfsg1-1) ...
+#6 5.077 Selecting previously unselected package libcurl3-gnutls:amd64.
+#6 5.078 Preparing to unpack .../24-libcurl3-gnutls_7.88.1-10+deb12u15_amd64.deb ...
+#6 5.079 Unpacking libcurl3-gnutls:amd64 (7.88.1-10+deb12u15) ...
+#6 5.106 Selecting previously unselected package libexpat1:amd64.
+#6 5.107 Preparing to unpack .../25-libexpat1_2.5.0-1+deb12u4_amd64.deb ...
+#6 5.108 Unpacking libexpat1:amd64 (2.5.0-1+deb12u4) ...
+#6 5.124 Selecting previously unselected package liberror-perl.
+#6 5.125 Preparing to unpack .../26-liberror-perl_0.17029-2_all.deb ...
+#6 5.126 Unpacking liberror-perl (0.17029-2) ...
+#6 5.138 Selecting previously unselected package git-man.
+#6 5.139 Preparing to unpack .../27-git-man_1%3a2.39.5-0+deb12u3_all.deb ...
+#6 5.140 Unpacking git-man (1:2.39.5-0+deb12u3) ...
+#6 5.209 Selecting previously unselected package git.
+#6 5.210 Preparing to unpack .../28-git_1%3a2.39.5-0+deb12u3_amd64.deb ...
+#6 5.214 Unpacking git (1:2.39.5-0+deb12u3) ...
+#6 5.457 Selecting previously unselected package ripgrep.
+#6 5.458 Preparing to unpack .../29-ripgrep_13.0.0-4+b2_amd64.deb ...
+#6 5.459 Unpacking ripgrep (13.0.0-4+b2) ...
+#6 5.546 Setting up libexpat1:amd64 (2.5.0-1+deb12u4) ...
+#6 5.548 Setting up libkeyutils1:amd64 (1.6.3-2) ...
+#6 5.550 Setting up libpsl5:amd64 (0.21.2-1) ...
+#6 5.552 Setting up libbrotli1:amd64 (1.0.9-2+b6) ...
+#6 5.553 Setting up libssl3:amd64 (3.0.22-1~deb12u1) ...
+#6 5.555 Setting up libnghttp2-14:amd64 (1.52.0-1+deb12u3) ...
+#6 5.557 Setting up libkrb5support0:amd64 (1.20.1-2+deb12u5) ...
+#6 5.559 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+#6 5.560 Setting up perl-modules-5.36 (5.36.0-7+deb12u4) ...
+#6 5.562 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#6 5.564 Setting up gh (2.23.0+dfsg1-1) ...
+#6 5.566 Setting up libk5crypto3:amd64 (1.20.1-2+deb12u5) ...
+#6 5.567 Setting up libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+#6 5.569 Setting up ripgrep (13.0.0-4+b2) ...
+#6 5.571 Setting up git-man (1:2.39.5-0+deb12u3) ...
+#6 5.593 Setting up libssh2-1:amd64 (1.10.0-3+deb12u1) ...
+#6 5.595 Setting up libkrb5-3:amd64 (1.20.1-2+deb12u5) ...
+#6 5.597 Setting up openssl (3.0.22-1~deb12u1) ...
+#6 5.600 Setting up libgdbm6:amd64 (1.23-3) ...
+#6 5.602 Setting up libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+#6 5.603 Setting up ca-certificates (20250419~deb12u1) ...
+#6 5.649 debconf: unable to initialize frontend: Dialog
+#6 5.649 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#6 5.649 debconf: falling back to frontend: Readline
+#6 5.654 debconf: unable to initialize frontend: Readline
+#6 5.654 debconf: (This frontend requires a controlling tty.)
+#6 5.654 debconf: falling back to frontend: Teletype
+#6 5.946 Updating certificates in /etc/ssl/certs...
+#6 6.363 150 added, 0 removed; done.
+#6 6.375 Setting up libgssapi-krb5-2:amd64 (1.20.1-2+deb12u5) ...
+#6 6.377 Setting up libgdbm-compat4:amd64 (1.23-3) ...
+#6 6.379 Setting up libcurl4:amd64 (7.88.1-10+deb12u15) ...
+#6 6.381 Setting up curl (7.88.1-10+deb12u15) ...
+#6 6.382 Setting up libperl5.36:amd64 (5.36.0-7+deb12u4) ...
+#6 6.384 Setting up libcurl3-gnutls:amd64 (7.88.1-10+deb12u15) ...
+#6 6.386 Setting up perl (5.36.0-7+deb12u4) ...
+#6 6.393 Setting up liberror-perl (0.17029-2) ...
+#6 6.395 Setting up git (1:2.39.5-0+deb12u3) ...
+#6 6.400 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#6 6.409 Processing triggers for ca-certificates (20250419~deb12u1) ...
+#6 6.411 Updating certificates in /etc/ssl/certs...
+#6 6.738 0 added, 0 removed; done.
+#6 6.738 Running hooks in /etc/ca-certificates/update.d...
+#6 6.739 done.
+#6 DONE 7.6s
+
+#7 [3/5] RUN git config --system user.name "Cathy"  && git config --system user.email "cathy@withchris.uk"  && git config --system --add safe.directory /workspace
+#7 DONE 0.1s
+
+#8 [4/5] RUN git clone --depth 50 https://github.com/ChrisMillerpy/chrismiller /workspace  && cd /workspace && npm ci --no-audit --no-fund
+#8 0.101 Cloning into '/workspace'...
+#8 9.056 
+#8 9.056 added 543 packages in 8s
+#8 9.056 npm notice
+#8 9.056 npm notice New major version of npm available! 10.9.9 -> 12.2.0
+#8 9.056 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#8 9.056 npm notice To update run: npm install -g npm@12.2.0
+#8 9.056 npm notice
+#8 DONE 13.3s
+
+#9 [5/5] WORKDIR /workspace
+#9 DONE 0.0s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 3.6s done
+#10 writing image sha256:63a506ca1ae309bd5e3c5173e5840e2b49e9169a0084b52222c5638fc4cd54b2 done
+#10 naming to docker.io/library/withchris-cathy-cathy-vuzvmy-sandbox-workspace:wrangler-mvcn7qzu done
+#10 DONE 3.6s
+
+WARNING! Your credentials are stored unencrypted in '/home/runner/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+Image does not exist remotely, pushing: registry.cloudflare.com/de6ad5955b93c5b2572e73c5e687467a/withchris-cathy-cathy-vuzvmy-sandbox-workspace:wrangler-mvcn7qzu
+Untagged: withchris-cathy-cathy-vuzvmy-sandbox-workspace:wrangler-mvcn7qzu
+The push refers to repository [registry.cloudflare.com/de6ad5955b93c5b2572e73c5e687467a/withchris-cathy-cathy-vuzvmy-sandbox-workspace]
+5f70bf18a086: Preparing
+154d14670b78: Preparing
+e32ab5016b13: Preparing
+a7be9f111f09: Preparing
+cae24708e29a: Preparing
+f6becc1249c3: Preparing
+3714bbaf3203: Preparing
+4990a62cab15: Preparing
+e58989146fce: Preparing
+f6becc1249c3: Waiting
+3714bbaf3203: Waiting
+4990a62cab15: Waiting
+e58989146fce: Waiting
+5f70bf18a086: Layer already exists
+cae24708e29a: Layer already exists
+f6becc1249c3: Layer already exists
+3714bbaf3203: Layer already exists
+4990a62cab15: Layer already exists
+e32ab5016b13: Pushed
+e58989146fce: Pushed
+a7be9f111f09: Pushed
+154d14670b78: Pushed
+wrangler-mvcn7qzu: digest: sha256:8eed2d561317b18b0c069a71992a3eb5d71d6ccd85d934b1344b8524d62081c4 size: 2205
+├ Preparing workspace for Cloudflare Containers
+│   registry.cloudflare.com/de6ad5955b93c5b2572e73c5e687467a/withchris-cathy-cathy-vuzvmy-sandbox-workspace@sha256:8eed2d561317b18b0c069a71992a3eb5d71d6ccd85d934b1344b8524d62081c4
+│
+├ workspace is ready to run
+│   registry.cloudflare.com/de6ad5955b93c5b2572e73c5e687467a/withchris-cathy-cathy-vuzvmy-sandbox-workspace@sha256:8eed2d561317b18b0c069a71992a3eb5d71d6ccd85d934b1344b8524d62081c4
+│
+Total Upload: 12642.21 KiB / gzip: 2314.08 KiB
+
+The following bindings need to be provisioned:
+Binding           Resource         
+env.DB            D1 Database      
+env.FILES         R2 Bucket        
+
+
+Provisioning DB (D1 Database)...
+Resource name found in config: withchris-registry-cathy-vuzvmy
+🌀 Creating new D1 Database "withchris-registry-cathy-vuzvmy"...
+✨ DB provisioned 🎉
+
+Provisioning FILES (R2 Bucket)...
+Resource name found in config: withchris-files-cathy-vuzvmy
+🌀 Creating new R2 Bucket "withchris-files-cathy-vuzvmy"...
+✨ FILES provisioned 🎉
+
+🎉 Resources provisioned, continuing with deployment...
+
+
+Durable Object exports reconciliation:
+  Created: Sandbox, Session
+
+Worker Startup Time: 428 ms
+Your Worker has access to the following bindings:
+Binding                                                                      Resource                  
+env.SESSION (Session)                                                        Durable Object            
+env.SANDBOX (Sandbox)                                                        Durable Object            
+env.DB (withchris-registry-cathy-vuzvmy)                                     D1 Database               
+env.FILES (withchris-files-cathy-vuzvmy)                                     R2 Bucket                 
+env.MODEL ("claude-opus-5-5")                                                Environment Variable      
+env.MODELS ("claude-opus-5-5=Opus 5.5,claude-sonne...")                      Environment Variable      
+env.SHARE_URL ("https://withchris-share-cathy-vuzvmy....")                   Environment Variable      
+env.ANTHROPIC_WORKSPACE_ID ("wrkspc_01FmUYHR2hN27aVWV94E2fxV")               Environment Variable      
+
+The following containers are available:
+- sandbox-cathy-vuzvmy (durable_object)
+
+Uploaded withchris-cathy-cathy-vuzvmy (129.06 sec)
+No targets deployed for withchris-cathy-cathy-vuzvmy (0.38 sec)
+Current Version ID: faa49b88-878c-4b8c-856c-3600657cd808
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
