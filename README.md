@@ -67,7 +67,6 @@ home/
 admin/                    Private admin Worker
 cathy/                    Cathy, the repo's AI agent: code in agent/, worker/, sandbox/
 cathy/self/               Her soul (SOUL.md), memory/ and skills/. Markdown she loads each turn and can edit via PR.
-mockups/                  The design mockups. Not part of any site.
 ```
 
 ## Writing a blog post
