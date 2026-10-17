@@ -1,4 +1,4 @@
-// Settings shared by every site. Change the name, email or addresses here and they update everywhere.
+// Settings shared by every site (home, learn and blog). Change the name, email or addresses here and they update everywhere.
 export const SITE = {
   name: 'Chris Miller',
   email: 'learn@withchris.uk',
