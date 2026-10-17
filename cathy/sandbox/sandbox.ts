@@ -84,10 +84,22 @@ export class Sandbox extends DurableObject<SandboxEnv> {
   }
 
   async writeFile(path: string, content: string): Promise<void> {
+    return this.writeBytes(path, new TextEncoder().encode(content));
+  }
+
+  async readBytes(path: string): Promise<Uint8Array> {
+    const c = await this.box();
+    const p = await c.exec(['cat', '--', path], { cwd: '/workspace', env: {} });
+    const out = await p.output();
+    if (out.exitCode !== 0) throw new Error(decode(out.stderr).trim() || `Could not read ${path}`);
+    return new Uint8Array(out.stdout);
+  }
+
+  async writeBytes(path: string, bytes: Uint8Array): Promise<void> {
     const c = await this.box();
     const p = await c.exec(['bash', '-c', 'mkdir -p -- "$(dirname -- "$1")" && cat > "$1"', '_', path], { cwd: '/workspace', stdin: 'pipe' });
     const w = p.stdin!.getWriter();
-    await w.write(new TextEncoder().encode(content));
+    await w.write(bytes);
     await w.close();
     const out = await p.output();
     if (out.exitCode !== 0) throw new Error(decode(out.stderr).trim() || `Could not write ${path}`);
