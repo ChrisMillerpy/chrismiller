@@ -4,10 +4,10 @@ import { DurableObject } from 'cloudflare:workers';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createCathy } from '../../agent/cathy.ts';
 import type { Box } from '../../agent/box.ts';
-import { Conversation, type Event, type FileRef, type Message, type PublishedArtifact, type Store } from './conversation.ts';
-import { Registry, uploadKey, type Artifact } from './registry.ts';
+import { Conversation, type Event, type FileRef, type Message, type Store } from './conversation.ts';
+import { Registry } from './registry.ts';
+import { artifactView, attachToBox, publishFromBox } from './box-files.ts';
 import { demoBox, demoModel } from './demo.ts';
-import { mimeFor, MAX_FILE, shareUrl } from './files.ts';
 import { resolve, turnSettings } from './models.ts';
 import type { Env } from './env.ts';
 import { SCHEMA } from './schema.ts';
@@ -110,10 +110,6 @@ export class Session extends DurableObject<Env> {
     return anthropic(id);
   }
 
-  private artifactView(a: Artifact): PublishedArtifact {
-    return { id: a.id, title: a.title, filename: a.filename, mime: a.mime, size: a.size, version: a.version, visibility: a.visibility, admin_url: `/artifacts/${a.id}`, share_url: shareUrl(this.env, a.token) };
-  }
-
   private conversation() {
     if (this.convo) return this.convo;
     const registry = this.registry();
@@ -133,25 +129,10 @@ export class Session extends DurableObject<Env> {
         await this.env.SESSION.getByName(to).receiveFromCathy(to, id, text, hops);
       },
       listCathys: async () => (await registry.list()).filter((s) => s.id !== id).map((s) => ({ id: s.id, title: s.title })),
-      // Chris's files go in /uploads/<upload id>/<name>, outside the repo, so they're never committed by accident.
-      attach: async (files) =>
-        Promise.all(
-          files.map(async (f) => {
-            const bytes = (await registry.getBytes(uploadKey(f.id))) ?? new Uint8Array();
-            const path = `/uploads/${f.id}/${f.name}`;
-            await box.writeBytes!(path, bytes);
-            return { ...f, path, bytes };
-          }),
-        ),
+      attach: (files) => attachToBox(registry, box, files),
       setTitle: (title) => registry.rename(id, title, 'cathy'),
-      publishArtifact: async ({ path, title, visibility, id: artifactId }) => {
-        if (artifactId && !(await registry.artifact(artifactId))) throw new Error(`No artifact ${artifactId}. Use list_artifacts to find it.`);
-        const bytes = await box.readBytes!(path);
-        if (bytes.length > MAX_FILE) throw new Error(`${path} is ${(bytes.length / 1024 / 1024).toFixed(1)} MB; artifacts can be up to ${MAX_FILE / 1024 / 1024} MB.`);
-        const filename = path.split('/').pop() || 'file';
-        return this.artifactView(await registry.publish({ session_id: id, title, filename, mime: mimeFor(filename), visibility, id: artifactId }, bytes));
-      },
-      listArtifacts: async () => (await registry.artifacts({ session_id: id })).map((a) => this.artifactView(a)),
+      publishArtifact: (input) => publishFromBox(registry, box, id, this.env, input),
+      listArtifacts: async () => (await registry.artifacts({ session_id: id })).map((a) => artifactView(a, this.env)),
     });
     return this.convo;
   }
