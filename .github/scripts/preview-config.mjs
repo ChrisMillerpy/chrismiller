@@ -20,6 +20,7 @@ const admin = load('admin/wrangler.jsonc');
 admin.name = `withchris-admin-${slug}`;
 delete admin.routes; // no custom domain for previews
 admin.workers_dev = true;
+admin.vars = { ...admin.vars, ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '' }; // previews keep the password; Access only covers production
 admin.services = admin.services.map((s) => ({ ...s, service: cathy.name }));
 save('admin/wrangler.preview.jsonc', admin);
 

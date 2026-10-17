@@ -8,10 +8,9 @@
   // workers.dev on for now: withchris.uk is still in the old Cloudflare account.
   "workers_dev": true,
   "preview_urls": false,
-  // Cloudflare Access (see README). Leave both empty until Chris gives the team domain
-  // (like "withchris.cloudflareaccess.com") and the app's AUD tag. Empty = password login, as for previews.
+  // Cloudflare Access (see README): team domain and the withchris-admin app AUD tag. Both empty = password login, as for previews.
   // Set one without the other and admin refuses everything. Not secrets.
-  "vars": { "ACCESS_TEAM_DOMAIN": "", "ACCESS_AUD": "" },
+  "vars": { "ACCESS_TEAM_DOMAIN": "withchris-team.cloudflareaccess.com", "ACCESS_AUD": "2721fe935c2544034fcf2515a5204be2af22456d6b49e842e3bf73cf26dfef20" },
   // Lets src/layout.ts import shared/theme.css as text.
   "rules": [{ "type": "Text", "globs": ["**/*.css"], "fallthrough": true }],
   // The Cathy Worker (cathy/worker), reached privately. Admin forwards /api/cathy/* to it.
