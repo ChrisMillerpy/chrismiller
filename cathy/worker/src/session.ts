@@ -79,7 +79,7 @@ export class Session extends DurableObject<Env> {
       apiKey: this.env.ANTHROPIC_API_KEY,
       headers: this.env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': this.env.ANTHROPIC_WORKSPACE_ID } : undefined,
     });
-    return anthropic(this.env.MODEL || 'claude-sonnet-5-5');
+    return anthropic(this.env.MODEL || 'claude-opus-5-5');
   }
 
   private conversation() {
