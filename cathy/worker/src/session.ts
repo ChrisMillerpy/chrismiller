@@ -9,6 +9,7 @@ import { Registry } from './registry.ts';
 import { artifactView, attachToBox, publishFromBox } from './box-files.ts';
 import { demoBox, demoModel } from './demo.ts';
 import { resolve, turnSettings } from './models.ts';
+import { agents, childInstructions, snapshot, type Agents } from './agents.ts';
 import type { Env } from './env.ts';
 import { SCHEMA } from './schema.ts';
 
@@ -44,6 +45,10 @@ export class Session extends DurableObject<Env> {
   }
   private get branch() {
     return `cathy/${this.id}`;
+  }
+  /** The Cathy that started this chat, if it's a sub-agent. */
+  private get parent(): string | null {
+    return this.sql.exec<{ value: string }>("SELECT value FROM kv WHERE key = 'parent'").toArray()[0]?.value ?? null;
   }
 
   private store(): Store {
@@ -115,10 +120,21 @@ export class Session extends DurableObject<Env> {
     const registry = this.registry();
     const id = this.id;
     const box = this.box();
+    const parent = this.parent;
+    const control = parent ? null : this.agentControl(box);
     this.convo = new Conversation({
       store: this.store(),
       broadcast: (e) => this.broadcast(e),
-      makeAgent: (tools, s) => createCathy({ model: this.model(s?.model || resolve(this.env, {}).model), box, sessionId: id, branch: this.branch, tools }),
+      makeAgent: (tools, s) =>
+        createCathy({
+          model: this.model(s?.model || resolve(this.env, {}).model),
+          box,
+          sessionId: id,
+          branch: this.branch,
+          tools,
+          // A sub-agent pushes her branch for her parent to merge; she doesn't open PRs.
+          ...(parent ? { withoutTools: ['open_pr'], extraInstructions: async () => childInstructions(parent, this.branch, (await registry.get(id))?.instructions) } : {}),
+        }),
       settings: async () => {
         const { model, effort } = resolve(this.env, (await registry.get(id)) ?? {});
         return turnSettings(model, effort);
@@ -133,11 +149,33 @@ export class Session extends DurableObject<Env> {
       setTitle: (title) => registry.rename(id, title, 'cathy'),
       publishArtifact: (input) => publishFromBox(registry, box, id, this.env, input),
       listArtifacts: async () => (await registry.artifacts({ session_id: id })).map((a) => artifactView(a, this.env)),
+      ...(control ? { agents: control } : {}),
+      ...(parent ? { report: (text: string, stopped: boolean) => this.env.SESSION.getByName(parent).receiveFromAgent(parent, id, stopped ? `(Stopped before finishing.)\n${text}` : text) } : {}),
     });
     return this.convo;
   }
 
+  /** Starting, steering and stopping this chat's sub-agents (agents.ts). */
+  private agentControl(box: Box): Agents {
+    const id = this.id;
+    const session = (cid: string) => this.env.SESSION.getByName(cid);
+    return agents({
+      id,
+      registry: this.registry(),
+      env: this.env,
+      child: (cid) => ({
+        start: (childId, parentId, history, task) => session(cid).startAsChild(childId, parentId, history, task),
+        message: (childId, parentId, text) => session(cid).messageFromParent(childId, parentId, text),
+        stop: (childId) => session(cid).stopFromParent(childId),
+      }),
+      forkHistory: () => this.conversation().forkHistory(),
+      snapshot: this.env.FAKE_BOX === '1' ? undefined : (branch) => snapshot(box, id, branch),
+    });
+  }
+
   private broadcast(e: Event) {
+    // Keep the registry's working/idle in step, so parents and admin can see who is busy.
+    if (e.type === 'status') this.ctx.waitUntil(this.registry().setState(this.id, e.status === 'thinking' ? 'working' : 'idle').catch(() => {}));
     const data = JSON.stringify(e);
     for (const ws of this.ctx.getWebSockets()) {
       try {
@@ -173,6 +211,8 @@ export class Session extends DurableObject<Env> {
     }
     if (msg.type === 'stop') {
       this.convo?.stop();
+      // Stopping a chat stops its sub-agents too.
+      if (!this.parent) this.ctx.waitUntil(this.agentControl(this.box()).stopAll().catch(() => {}));
       return;
     }
     if (msg.type !== 'send') return;
@@ -207,5 +247,36 @@ export class Session extends DurableObject<Env> {
   async receiveFromCathy(myId: string, from: string, text: string, hops: number) {
     this.setId(myId);
     this.ctx.waitUntil(this.conversation().fromCathy(from, text, hops));
+  }
+
+  // ── Sub-agents ──────────────────────────────────────────────
+
+  /** This chat is a new sub-agent: remember its parent, take a copy of her conversation (fork mode), and start on the task. */
+  async startAsChild(myId: string, parentId: string, history: unknown[], task: string) {
+    this.setId(myId);
+    this.sql.exec("INSERT OR IGNORE INTO kv (key, value) VALUES ('parent', ?)", parentId);
+    if (this.convo && this.convo.status === 'idle') this.convo = null; // built before it knew its parent
+    const store = this.store();
+    if (history.length && !store.history().length) store.appendHistory(history);
+    this.warmUp();
+    this.ctx.waitUntil(this.conversation().fromParent(parentId, task));
+  }
+
+  /** More instructions from the parent. */
+  async messageFromParent(myId: string, parentId: string, text: string) {
+    this.setId(myId);
+    this.ctx.waitUntil(this.conversation().fromParent(parentId, text));
+  }
+
+  /** The parent stopped this sub-agent: stop without reporting back. */
+  async stopFromParent(myId: string) {
+    this.setId(myId);
+    this.convo?.stop({ silent: true });
+  }
+
+  /** One of this chat's sub-agents reports back. */
+  async receiveFromAgent(myId: string, childId: string, text: string) {
+    this.setId(myId);
+    this.ctx.waitUntil(this.conversation().fromAgent(childId, text));
   }
 }

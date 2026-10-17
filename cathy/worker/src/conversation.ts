@@ -2,9 +2,12 @@
 // and the Cathy-to-Cathy loop guard. No Cloudflare code, so it's tested in plain Node;
 // the Session Durable Object wires it to SQLite, WebSockets, R2 and the sandbox.
 import { createTool } from '@mastra/core/tools';
+import { MAX_WORKING } from './agents.ts';
 import { z } from 'zod';
 
 export const MAX_HOPS = 10;
+/** Messages and spawns a Cathy may send her sub-agents before Chris speaks again: stops a parent and child looping. */
+export const MAX_AGENT_MESSAGES = 30;
 
 export type Role = 'user' | 'assistant' | 'tool' | 'update' | 'cathy' | 'notice' | 'artifact';
 /** A file Chris attached to a message. Bytes are in R2 under its id. */
@@ -107,6 +110,29 @@ export interface Deps {
   setTitle?(title: string): Promise<boolean>;
   publishArtifact?(a: { path: string; title: string; visibility?: Visibility; id?: string }): Promise<PublishedArtifact>;
   listArtifacts?(): Promise<PublishedArtifact[]>;
+  /** Sub-agent controls. Only chats Chris started have them (sub-agents can't start their own). */
+  agents?: {
+    spawn(input: { task: string; title?: string; mode?: 'fresh' | 'fork' | 'custom'; instructions?: string; model?: string; effort?: string }): Promise<AgentInfo>;
+    list(): Promise<AgentInfo[]>;
+    message(id: string, text: string): Promise<void>;
+    stop(id: string): Promise<void>;
+  };
+  /** A sub-agent finished what its parent asked: send the final reply back. */
+  report?(text: string, stopped: boolean): Promise<void>;
+}
+
+/** A sub-agent, as the tools describe it. */
+export interface AgentInfo {
+  id: string;
+  title: string;
+  mode: string | null;
+  state: string;
+  model: string;
+  effort: string;
+  branch: string;
+  task: string | null;
+  last_message: string | null;
+  url: string;
 }
 
 type Pending = { content: string; files?: FileRef[] };
@@ -115,6 +141,12 @@ export class Conversation {
   private queue: Pending[] = [];
   private running: Promise<void> | null = null;
   private current: AbortController | null = null;
+  /** A message from the parent is being answered: report the final reply when done. */
+  private reportPending = false;
+  private lastReply = '';
+  private lastStopped = false;
+  /** The message the current turn is answering (as remembered), for forks. */
+  private currentMessage: { role: string; content: any } | null = null;
   private deps: Deps;
   constructor(deps: Deps) {
     this.deps = deps;
@@ -130,6 +162,7 @@ export class Conversation {
    */
   fromChris(text: string, files: FileRef[] = [], opts: { interrupt?: boolean } = {}) {
     this.deps.store.setNumber('hops', 0);
+    this.deps.store.setNumber('agent_msgs', 0);
     this.add({ role: 'user', sender: 'chris', content: text, ...(files.length ? { files } : {}) });
     if (opts.interrupt && this.current) {
       this.queue.unshift({ content: text, files });
@@ -146,8 +179,36 @@ export class Conversation {
     return this.enqueue({ content: `[Message from Cathy ${from}]\n${text}` });
   }
 
-  /** Chris pressed stop: end the reply in progress and drop anything queued behind it. */
-  stop() {
+  /** A task or message from the Cathy that started this one. Her final reply goes back as a report. */
+  fromParent(from: string, text: string) {
+    this.add({ role: 'cathy', sender: from, content: text });
+    this.reportPending = true;
+    return this.enqueue({ content: `[Message from Cathy ${from}, who started you]\n${text}` });
+  }
+
+  /** A report from one of this chat's sub-agents. */
+  fromAgent(from: string, text: string) {
+    this.add({ role: 'cathy', sender: from, content: text });
+    return this.enqueue({ content: `[Report from your sub-agent ${from}]\n${text}` });
+  }
+
+  /**
+   * The conversation so far, for a forked sub-agent: memory, then the message being answered,
+   * ending on an assistant turn so the child's task can follow as a user message.
+   */
+  forkHistory(): unknown[] {
+    const out = [...this.deps.store.history()];
+    if (this.currentMessage) out.push(this.currentMessage);
+    if ((out.at(-1) as any)?.role !== 'assistant') out.push({ role: 'assistant', content: '(Here I started a sub-agent with a copy of this conversation. That sub-agent is you; your task follows.)' });
+    return out;
+  }
+
+  /**
+   * Chris pressed stop: end the reply in progress and drop anything queued behind it.
+   * `silent`: the parent stopped this sub-agent, so don't report back.
+   */
+  stop(opts: { silent?: boolean } = {}) {
+    if (opts.silent) this.reportPending = false;
     if (!this.current) return false;
     const dropped = this.queue.length;
     this.queue = [];
@@ -157,6 +218,10 @@ export class Conversation {
   }
 
   private add(m: Omit<Message, 'seq' | 'at'>) {
+    if (m.role === 'assistant' || m.role === 'notice') {
+      this.lastReply = m.content;
+      this.lastStopped = m.stopped === true;
+    }
     const message = this.deps.store.addMessage(m);
     this.deps.broadcast({ type: 'message', message });
     const preview = m.content || (m.files?.length ? `📎 ${m.files.map((f) => f.name).join(', ')}` : '');
@@ -167,9 +232,13 @@ export class Conversation {
   private enqueue(p: Pending) {
     this.queue.push(p);
     if (!this.running) {
-      this.running = this.drain().finally(() => {
+      this.running = this.drain().finally(async () => {
         this.running = null;
         this.deps.broadcast({ type: 'status', status: 'idle' });
+        if (this.reportPending) {
+          this.reportPending = false;
+          await this.deps.report?.(this.lastReply || '(No reply.)', this.lastStopped).catch(() => {});
+        }
       });
     }
     return this.running;
@@ -181,8 +250,82 @@ export class Conversation {
   }
 
   private chatTools() {
-    const { store, sendToCathy, listCathys, setTitle, publishArtifact, listArtifacts } = this.deps;
+    const { store, sendToCathy, listCathys, setTitle, publishArtifact, listArtifacts, agents } = this.deps;
     const extra: Record<string, any> = {};
+    if (agents) {
+      const budget = () => {
+        const n = store.getNumber('agent_msgs') + 1;
+        if (n > MAX_AGENT_MESSAGES) return `Not sent (loop guard): ${MAX_AGENT_MESSAGES} messages to sub-agents since Chris last spoke. Tell Chris where things stand and wait for him.`;
+        store.setNumber('agent_msgs', n);
+        return null;
+      };
+      const describe = (a: AgentInfo) => `${a.id} "${a.title}" (${a.mode ?? 'fresh'}, ${a.model} ${a.effort}, ${a.state}) branch ${a.branch}, ${a.url}`;
+      extra.spawn_agent = createTool({
+        id: 'spawn_agent',
+        description:
+          'Start a sub-agent: another Cathy with her own chat, Linux box and branch, working in parallel with you. Her branch starts from your current work (uncommitted changes included). ' +
+          'mode: "fresh" (default) starts with just the task; "fork" starts with a copy of this conversation; "custom" adds your instructions to her system prompt as a role (e.g. a reviewer who must not edit files). ' +
+          'Choose model and effort for the job (a cheaper model for simple, well-specified work). Write the task so it stands alone: goal, files she owns, how to check it, what to report. ' +
+          'Give parallel agents separate files. Each pushes her branch; her final reply comes back to you as a "[Report from your sub-agent …]" message, so you do not need to wait or poll. ' +
+          'Then merge her branch into yours (git fetch origin <branch> && git merge FETCH_HEAD), run the tests, and open one PR yourself. Chris can open, message or stop any sub-agent in admin. ' +
+          `Up to ${MAX_WORKING} working at once; sub-agents cannot start their own.`,
+        inputSchema: z.object({
+          task: z.string().describe('What she should do; she sees only this (plus the conversation, in fork mode)'),
+          title: z.string().optional().describe('Short name for her chat, 3 to 6 words'),
+          mode: z.enum(['fresh', 'fork', 'custom']).optional(),
+          instructions: z.string().optional().describe('Custom mode: her role, added to her system prompt'),
+          model: z.string().optional().describe('A model id from the chat model list; default is the default model'),
+          effort: z.enum(['low', 'medium', 'high', 'max']).optional(),
+        }),
+        execute: async (input) => {
+          const over = budget();
+          if (over) return over;
+          try {
+            const a = await agents.spawn(input);
+            return `Started sub-agent ${describe(a)}. Her report will arrive as a message; you can end your turn.`;
+          } catch (err) {
+            return `Not started: ${err instanceof Error ? err.message : String(err)}`;
+          }
+        },
+      });
+      extra.list_agents = createTool({
+        id: 'list_agents',
+        description: 'List your sub-agents: id, title, mode, model, state (working or idle), branch, and their latest message.',
+        inputSchema: z.object({}),
+        execute: async () => {
+          const list = await agents.list();
+          return list.length ? list.map((a) => `- ${describe(a)}${a.last_message ? `\n  latest: ${a.last_message}` : ''}`).join('\n') : 'No sub-agents.';
+        },
+      });
+      extra.message_agent = createTool({
+        id: 'message_agent',
+        description: 'Send one of your sub-agents a message (more instructions, an answer, a correction). She replies with a new report when done.',
+        inputSchema: z.object({ id: z.string(), text: z.string() }),
+        execute: async ({ id, text }) => {
+          const over = budget();
+          if (over) return over;
+          try {
+            await agents.message(id, text);
+            return `Sent to ${id}.`;
+          } catch (err) {
+            return `Not sent: ${err instanceof Error ? err.message : String(err)}`;
+          }
+        },
+      });
+      extra.stop_agent = createTool({
+        id: 'stop_agent',
+        description: 'Stop one of your sub-agents mid-reply. Her chat and branch stay; you can message her again later.',
+        inputSchema: z.object({ id: z.string() }),
+        execute: async ({ id }) => {
+          try {
+            await agents.stop(id);
+            return `Stopped ${id}.`;
+          } catch (err) {
+            return `Not stopped: ${err instanceof Error ? err.message : String(err)}`;
+          }
+        },
+      });
+    }
     if (setTitle)
       extra.set_title = createTool({
         id: 'set_title',
@@ -276,6 +419,7 @@ export class Conversation {
         }
         prompt = { role: 'user', content: parts };
       }
+      this.currentMessage = userMessage;
       const agent = this.deps.makeAgent(this.chatTools(), settings);
       const out = await agent.stream([...store.history(), prompt], { maxSteps: 40, ...settings.streamOptions, abortSignal: abort.signal });
       for await (const chunk of out.fullStream as AsyncIterable<any>) {
@@ -322,6 +466,7 @@ export class Conversation {
       this.add({ role: 'notice', content: `Error: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       if (this.current === abort) this.current = null;
+      this.currentMessage = null;
     }
   }
 }
