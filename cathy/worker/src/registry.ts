@@ -155,8 +155,8 @@ export class Registry {
     await this.init();
     const { results } = await this.db.prepare('SELECT data FROM blobs WHERE id = ? ORDER BY part').bind(id).all();
     if (!results.length) return null;
-    const parts = results.map((r: { data: ArrayBuffer | Uint8Array | number[] }) => (r.data instanceof Uint8Array ? r.data : new Uint8Array(r.data as ArrayBuffer)));
-    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    const parts: Uint8Array[] = results.map((r: { data: ArrayBuffer | Uint8Array | number[] }) => (r.data instanceof Uint8Array ? r.data : new Uint8Array(r.data as ArrayBuffer)));
+    const out = new Uint8Array(parts.reduce((n: number, p: Uint8Array) => n + p.length, 0));
     let at = 0;
     for (const p of parts) out.set(p, (at += p.length) - p.length);
     return out;

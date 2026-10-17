@@ -15,6 +15,9 @@ export interface Box {
   /** Paths are relative to the repo root. */
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): Promise<void>;
+  /** Binary versions, for attachments and artifacts. Absolute paths work too. */
+  readBytes?(path: string): Promise<Uint8Array>;
+  writeBytes?(path: string, bytes: Uint8Array): Promise<void>;
 }
 
 const MAX_OUTPUT = 20_000;

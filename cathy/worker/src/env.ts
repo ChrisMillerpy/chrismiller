@@ -13,4 +13,6 @@ export interface Env {
   FAKE_MODEL?: string;
   /** "1" = in-memory box, no container (local tests and demos). */
   FAKE_BOX?: string;
+  /** Where share links point: the share Worker's address (share/). */
+  SHARE_URL?: string;
 }
