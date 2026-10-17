@@ -260,6 +260,7 @@ try {
     await page.getByTestId('viewer').waitFor();
     await page.waitForTimeout(1500);
     const maths = await page.frameLocator('[data-testid=viewer] iframe').locator('.katex').count();
+    await page.screenshot({ path: join(OUT, 'artifact-viewer.png') });
     await page.getByTestId('viewer').getByRole('button', { name: 'Close' }).click();
     if (!REAL && maths < 2) throw new Error(`maths not rendered (${maths} KaTeX blocks)`);
     return `${maths} maths expressions rendered`;
@@ -323,6 +324,7 @@ try {
       await frame.locator('li[data-k="admin API"]').waitFor({ timeout: 10_000 });
       const lines = await frame.locator('li').allTextContents();
       await page.waitForTimeout(500);
+      await page.screenshot({ path: join(OUT, 'sandbox-probe.png') });
       const bad = lines.filter((l) => /REACHED|VISIBLE|ALLOWED/.test(l));
       for (const l of lines) security.push({ check: `HTML artifact in admin: ${l.split(':')[0]}`, expected: 'blocked', actual: l.split(': ')[1] });
       await page.getByTestId('viewer').getByRole('button', { name: 'Close' }).click();
