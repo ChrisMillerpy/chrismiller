@@ -54,7 +54,7 @@
     <tr><td>GPT sending <code>null</code> for optional fields still runs the tool</td><td class="ok">Pass</td><td>test 11</td></tr>
     <tr><td>Switching Claude → GPT → Claude → GPT mid-chat works; tool calls and results carry over; no thinking carried over; nothing refers to items stored at OpenAI</td><td class="ok">Pass</td><td>test 12</td></tr>
     <tr><td>Existing suite and type-check still pass</td><td class="ok">Pass</td><td>107 tests; <code>typecheck:workers</code> clean</td></tr>
-    <tr><td>A real GPT 6.1 Sol / GPT 6 Astra chat on the preview (read a file, run a command, publish an artifact, show thinking, switch to Opus and back)</td><td class="wait">Waiting</td><td>Needs the <code>OPENAI_API_KEY</code> secret and the workflow patch. Not run yet.</td></tr>
+    <tr><td>A real GPT 6.1 Sol / GPT 6 Astra chat on the preview (read a file, run a command, publish an artifact, show thinking, switch to Opus and back)</td><td class="wait">Waiting</td><td>Needs the <code>OPENAI_API_KEY</code> secret on the Worker. Not run yet.</td></tr>
     <tr><td>The two model ids exist on Chris's OpenAI account</td><td class="wait">Waiting</td><td>Same. Both are in <code>@ai-sdk/openai</code> 4.0.96; <code>gpt-6-sol</code> is there too as a fallback.</td></tr>
   </table>
 
@@ -73,12 +73,13 @@ ok 12 - switching between Claude and GPT mid-chat works, tool calls and results 
   <h2>What Mastra does to tool schemas</h2>
   <p>Optional fields (<code>timeout_seconds</code>, <code>visibility</code>, <code>id</code>) are sent to OpenAI as required-but-nullable, and tools are sent with <code>strict: false</code>. So GPT may answer <code>null</code> for an optional field; test 11 proves our tools accept that.</p>
 
-  <h2>For Chris to do</h2>
+  <h2>For Chris to do (all doable on a phone)</h2>
   <ol>
-    <li>Create an OpenAI project key with a monthly spend limit. Add it as the <code>OPENAI_API_KEY</code> repo secret (not in chat).</li>
-    <li>Apply the workflow patch (my token can't edit <code>.github/workflows/</code>): <a href="/packs/openai-models/openai-workflows.patch">the patch</a>, then <code>git apply openai-workflows.patch</code>. It adds <code>OPENAI_API_KEY</code> to the secrets step in <code>deploy-admin.yml</code> and <code>preview.yml</code>.</li>
-    <li>Tell me when both are done and I'll run the live check and add screenshots here.</li>
+    <li>Create an OpenAI project key with a monthly spend limit.</li>
+    <li>In the Cloudflare dashboard: Workers &amp; Pages, <code>withchris-cathy</code>, Settings, Variables and Secrets. Add a <b>Secret</b> named <code>OPENAI_API_KEY</code>. Deploys leave secrets alone, so it stays.</li>
+    <li>Merge the PR. Tell Cathy, and she runs the live check in a real chat and adds screenshots here.</li>
   </ol>
+  <p class="muted"><b>Optional:</b> <a href="/packs/openai-models/openai-workflows.patch">the workflow patch</a> (two lines in each of <code>deploy-admin.yml</code> and <code>preview.yml</code>) also keeps the key in GitHub and passes it to per-branch previews. It needs a laptop (or the GitHub web editor) because Cathy's token can't edit workflows. Without it, GPT models work in production but not on branch previews.</p>
 
   <h2>Reproduce</h2>
   <pre>npm test
