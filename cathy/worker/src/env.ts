@@ -3,11 +3,16 @@ import type { Sandbox } from '../../sandbox/sandbox.ts';
 
 export interface Env {
   DB: D1Database;
+  /** File bytes: Chris's attachments and Cathy's artifacts. */
+  FILES: R2Bucket;
   SESSION: DurableObjectNamespace<Session>;
   SANDBOX: DurableObjectNamespace<Sandbox>;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_WORKSPACE_ID?: string;
+  /** Default model for new chats. */
   MODEL?: string;
+  /** Models Chris can pick: "id=Label,id=Label". */
+  MODELS?: string;
   CATHY_GITHUB_TOKEN?: string;
   /** "1" = scripted stand-in model, no Claude (local tests and demos). */
   FAKE_MODEL?: string;

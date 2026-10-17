@@ -1,0 +1,156 @@
+// Cathy's HTTP API: routing for admin (/api/*) and share (/share/a/*). No Cloudflare imports,
+// so it's tested in plain Node; index.ts is the Worker entry that adds the Durable Objects.
+import { Registry, uploadKey, versionKey, type Artifact, type Visibility } from './registry.ts';
+import { MAX_FILE, mimeFor, serveFile, shareUrl } from './files.ts';
+import { modelList, resolve, validate, EFFORTS } from './models.ts';
+import type { Env } from './env.ts';
+
+/** What the API needs from the Session Durable Object. */
+export interface SessionStub {
+  fetch(r: Request): Promise<Response>;
+  changed(id: string, e: import('./conversation.ts').Event): Promise<void>;
+}
+export type ApiEnv = Omit<Env, 'SESSION' | 'SANDBOX' | 'DB' | 'FILES'> & { DB: any; FILES: any; SESSION: { getByName(id: string): SessionStub } };
+
+/** Schema is passed in: the Worker imports the .sql files, tests read them from disk. */
+
+const json = (body: unknown, status = 200) => Response.json(body, { status });
+const notFound = () => json({ error: 'Not found' }, 404);
+
+export async function handle(request: Request, env: ApiEnv, schema: string[]): Promise<Response> {
+  const url = new URL(request.url);
+  const registry = new Registry(env.DB, schema, env.FILES);
+  let parts: string[];
+  try {
+    parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  } catch {
+    return notFound();
+  }
+  try {
+    if (parts[0] === 'share') return await share(parts.slice(1), request, registry);
+    if (parts[0] !== 'api') return notFound();
+    if (parts[1] === 'sessions') return await sessions(parts.slice(2), request, url, registry, env);
+    if (parts[1] === 'artifacts') return await artifacts(parts.slice(2), request, url, registry, env);
+    if (parts[1] === 'models' && request.method === 'GET') return json({ models: modelList(env), efforts: EFFORTS, defaults: resolve(env, {}) });
+    return notFound();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return json({ error: message }, /^(Unknown|Effort|Visibility|A title|Give)/.test(message) ? 400 : 500);
+  }
+}
+
+/** A session as the pages see it: with its model and effort filled in. */
+const sessionView = (s: Awaited<ReturnType<Registry['get']>> & {}, env: ApiEnv) => ({ ...s, ...resolve(env, s) });
+
+async function sessions([id, action, sub]: string[], request: Request, url: URL, registry: Registry, env: ApiEnv) {
+  const method = request.method;
+  if (!id && method === 'GET') return json((await registry.list(url.searchParams.get('status') === 'archived' ? 'archived' : 'active')).map((s) => sessionView(s, env)));
+  if (!id && method === 'POST') {
+    const body = (await request.json().catch(() => ({}))) as { title?: string; model?: string; effort?: string };
+    const s = await registry.create(body.title ?? '');
+    const change = validate(env, { model: body.model, effort: body.effort });
+    return json(sessionView(Object.keys(change).length ? await registry.setModel(s.id, change) : s, env), 201);
+  }
+
+  const session = id && (await registry.get(id));
+  if (!session) return json({ error: 'No such session' }, 404);
+  const stub = () => env.SESSION.getByName(session.id);
+
+  if (!action && method === 'GET') return json(sessionView(session, env));
+  // Rename, or change model / effort. Open chat pages hear about it at once.
+  if (!action && method === 'PATCH') {
+    const body = (await request.json().catch(() => ({}))) as { title?: string; model?: string; effort?: string };
+    if (body.title !== undefined) {
+      if (!body.title.trim()) return json({ error: 'Give the chat a title' }, 400);
+      await registry.rename(session.id, body.title, 'chris');
+    }
+    const change = validate(env, { model: body.model, effort: body.effort });
+    if (Object.keys(change).length) await registry.setModel(session.id, change);
+    const updated = sessionView((await registry.get(session.id))!, env);
+    if (body.title !== undefined) await stub().changed(session.id, { type: 'title', title: updated.title });
+    if (Object.keys(change).length) await stub().changed(session.id, { type: 'settings', model: updated.model, effort: updated.effort });
+    return json(updated);
+  }
+  if (action === 'archive' && method === 'POST') {
+    await registry.archive(session.id);
+    return json({ ok: true });
+  }
+  if (action === 'unarchive' && method === 'POST') {
+    await registry.unarchive(session.id);
+    return json({ ok: true });
+  }
+  // Attachments: the page uploads each file first, then sends the message with their ids.
+  if (action === 'uploads' && !sub && method === 'POST') {
+    const name = decodeURIComponent(request.headers.get('x-filename') ?? 'file');
+    const bytes = new Uint8Array(await request.arrayBuffer());
+    if (bytes.length > MAX_FILE) return json({ error: `Files can be up to ${MAX_FILE / 1024 / 1024} MB` }, 413);
+    const type = (request.headers.get('content-type') ?? '').split(';')[0].trim();
+    const mime = type && type !== 'application/octet-stream' ? type : mimeFor(name);
+    const u = await registry.addUpload(session.id, name, mime, bytes);
+    return json({ id: u.id, name: u.name, mime: u.mime, size: u.size }, 201);
+  }
+  if (action === 'uploads' && sub && method === 'GET') {
+    const u = await registry.upload(sub);
+    const bytes = u && u.session_id === session.id ? await registry.getBytes(uploadKey(u.id)) : null;
+    if (!u || !bytes) return notFound();
+    return serveFile({ filename: u.name, mime: u.mime }, bytes, { download: url.searchParams.has('download'), cache: 'private, max-age=86400' });
+  }
+  if (action === 'ws') {
+    const target = new URL(request.url);
+    target.searchParams.set('id', session.id);
+    return stub().fetch(new Request(target, request));
+  }
+  return notFound();
+}
+
+/** An artifact as admin sees it. The token only appears inside share_url. */
+const artifactView = (a: Artifact, env: ApiEnv) => {
+  const { token, ...rest } = a;
+  return { ...rest, share_url: shareUrl(env, token), admin_url: `/artifacts/${a.id}` };
+};
+
+async function artifacts([id, action, sub]: string[], request: Request, url: URL, registry: Registry, env: ApiEnv) {
+  const method = request.method;
+  if (!id && method === 'GET') {
+    const v = url.searchParams.get('visibility') as Visibility | null;
+    const list = await registry.artifacts({ session_id: url.searchParams.get('session') ?? undefined, visibility: v ?? undefined });
+    const titles = new Map((await Promise.all([...new Set(list.map((a) => a.session_id))].map((s) => registry.get(s)))).filter(Boolean).map((s) => [s!.id, s!.title]));
+    return json(list.map((a) => ({ ...artifactView(a, env), session_title: titles.get(a.session_id) ?? '' })));
+  }
+  const a = id && (await registry.artifact(id));
+  if (!a) return json({ error: 'No such artifact' }, 404);
+
+  if (!action && method === 'GET') return json({ ...artifactView(a, env), versions: await registry.versions(a.id), session_title: (await registry.get(a.session_id))?.title ?? '' });
+  if (!action && method === 'PATCH') {
+    const body = (await request.json().catch(() => ({}))) as { title?: string; visibility?: Visibility };
+    return json(artifactView(await registry.updateArtifact(a.id, body), env));
+  }
+  if (!action && method === 'DELETE') {
+    await registry.deleteArtifact(a.id);
+    return json({ ok: true });
+  }
+  if (action === 'new-link' && method === 'POST') return json(artifactView((await registry.newLink(a.id))!, env));
+  // The file itself, for admin (behind Access). ?v=<n> for an older version.
+  if (action === 'raw' && method === 'GET') {
+    const v = Number(url.searchParams.get('v') || a.version);
+    const version = (await registry.versions(a.id)).find((x) => x.version === v);
+    const bytes = version && (await registry.getBytes(versionKey(a.id, v)));
+    if (!version || !bytes) return notFound();
+    return serveFile({ filename: version.filename, mime: version.mime, title: a.title }, bytes, { download: url.searchParams.has('download') });
+  }
+  return notFound();
+}
+
+/**
+ * The public face, reached only through the share Worker. Only "link" artifacts, only by
+ * token, only the latest version. No ids, chats or lists.
+ */
+async function share([kind, token, action, extra]: string[], request: Request, registry: Registry) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return json({ error: 'Read only' }, 405);
+  if (kind !== 'a' || !token || extra || (action && action !== 'download')) return notFound();
+  const a = await registry.shared(token);
+  const bytes = a && (await registry.getBytes(versionKey(a.id, a.version)));
+  if (!a || !bytes) return notFound();
+  // Short cache: switching an artifact back to private takes effect within a minute.
+  return serveFile({ filename: a.filename, mime: a.mime, title: a.title }, bytes, { download: action === 'download', cache: 'public, max-age=60', etag: `"${a.id}-${a.version}"` });
+}
