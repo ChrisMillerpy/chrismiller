@@ -1,0 +1,38 @@
+
+ ⛅️ wrangler 4.149.0 (update available 4.151.1)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 16 files from the assets directory /home/runner/work/chrismiller/chrismiller/packs
+🌀 Starting asset upload...
+🌀 Found 13 new or modified static assets to upload. Proceeding with upload...
++ /cathy-v1/media/unit-tests.txt
++ /cathy-v1/index.html
++ /cathy-v1/media/05-cathy-uses-a-tool-and-replies.png
++ /cathy-v1/media/bug-overflow-before.png
++ /cathy-v1/media/walkthrough.mp4
++ /cathy-v1/media/e2e-results.json
++ /cathy-v1/media/01-admin-home.png
++ /cathy-v1/media/04-send-a-message.png
++ /cathy-v1/media/02-open-cathy.png
++ /index.html
++ /cathy-v1/media/03-start-a-new-chat.png
++ /cathy-v1/media/08-dark-mode.png
++ /cathy-v1/media/07-chat-is-listed-with-a-preview.png
+Uploaded 4 of 13 assets
+Uploaded 8 of 13 assets
+Uploaded 13 of 13 assets
+✨ Success! Uploaded 13 files (1 already uploaded) (1.21 sec)
+
+Total Upload: 118.75 KiB / gzip: 59.25 KiB
+Worker Startup Time: 1 ms
+Your Worker has access to the following bindings:
+Binding                                                    Resource                  
+env.CATHY (withchris-cathy-cathy-yysxyt)                   Worker                    
+env.PACKS                                                  Assets                    
+env.ACCESS_TEAM_DOMAIN ("")                                Environment Variable      
+env.ACCESS_AUD ("")                                        Environment Variable      
+
+Uploaded withchris-admin-cathy-yysxyt (3.58 sec)
+Deployed withchris-admin-cathy-yysxyt triggers (0.43 sec)
+  https://withchris-admin-cathy-yysxyt.withchris.workers.dev
+Current Version ID: d4242ad6-f227-4c8f-ba98-5e4b9a0ce287
