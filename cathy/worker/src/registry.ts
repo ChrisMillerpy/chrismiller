@@ -1,6 +1,6 @@
-// The registry (D1): which Cathy chats exist, the artifacts she publishes, and stored
-// file bytes. Schema lives in d1/migrations and is applied on first use, so there's no
-// separate migration step to forget.
+// The registry: which Cathy chats exist, files Chris attaches and artifacts Cathy publishes.
+// Facts live in D1; file bytes live in R2. The D1 schema is in d1/migrations and is applied
+// on first use, so there's no separate migration step to forget.
 
 export interface Session {
   id: string;
@@ -12,22 +12,35 @@ export interface Session {
   last_message: string | null;
   /** Who named the chat: null (from the first message), 'cathy' or 'chris'. */
   named_by: 'cathy' | 'chris' | null;
+  /** Chosen model and effort; null = defaults. */
+  model: string | null;
+  effort: string | null;
 }
 
-export type Visibility = 'private' | 'link' | 'public';
-export const VISIBILITIES: Visibility[] = ['private', 'link', 'public'];
+export type Visibility = 'private' | 'link';
+export const VISIBILITIES: Visibility[] = ['private', 'link'];
 
 export interface Artifact {
   id: string;
   session_id: string;
   title: string;
+  visibility: Visibility;
+  token: string;
+  version: number;
   filename: string;
   mime: string;
   size: number;
-  visibility: Visibility;
-  token: string;
   created_at: number;
   updated_at: number;
+}
+
+export interface ArtifactVersion {
+  artifact_id: string;
+  version: number;
+  filename: string;
+  mime: string;
+  size: number;
+  created_at: number;
 }
 
 export interface Upload {
@@ -39,13 +52,16 @@ export interface Upload {
   created_at: number;
 }
 
-/** A file name that's safe in a path and a header: no folders, no quotes, no control characters. */
-export const safeName = (name: string) =>
-  name.split(/[\\/]/).pop()!.replace(/[\x00-\x1f"<>|:*?]/g, '_').replace(/^\.+/, '').slice(0, 100) || 'file';
-
 interface D1Like {
   prepare(sql: string): { bind(...args: unknown[]): any; all(): Promise<{ results: any[] }> };
   exec(sql: string): Promise<unknown>;
+}
+
+/** The bits of an R2 bucket the registry uses. */
+export interface R2Like {
+  put(key: string, value: Uint8Array | ArrayBuffer, opts?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  get(key: string): Promise<{ arrayBuffer(): Promise<ArrayBuffer> } | null>;
+  delete(keys: string | string[]): Promise<void>;
 }
 
 const ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
@@ -54,15 +70,22 @@ const oneLine = (s: string, n: number) => {
   const t = s.replace(/\s+/g, ' ').trim();
   return t.length > n ? `${t.slice(0, n - 1)}…` : t;
 };
-/** D1 caps a value at 2 MB, so bytes are stored in parts. */
-export const PART = 1_000_000;
+
+/** A file name that's safe in a path and a header: no folders, no quotes, no control characters. */
+export const safeName = (name: string) =>
+  name.split(/[\\/]/).pop()!.replace(/[\x00-\x1f"<>|:*?]/g, '_').replace(/^\.+/, '').slice(0, 100) || 'file';
+
+export const uploadKey = (id: string) => `uploads/${id}`;
+export const versionKey = (id: string, v: number) => `artifacts/${id}/v${v}`;
 
 export class Registry {
   private ready: Promise<unknown> | null = null;
   private db: D1Like;
+  private files: R2Like | undefined;
   private schema: string[];
-  constructor(db: D1Like, schema: string | string[]) {
+  constructor(db: D1Like, schema: string | string[], files?: R2Like) {
     this.db = db;
+    this.files = files;
     this.schema = Array.isArray(schema) ? schema : [schema];
   }
 
@@ -83,13 +106,23 @@ export class Registry {
     }));
   }
 
+  private bucket(): R2Like {
+    if (!this.files) throw new Error('File storage (R2) is not connected to this Worker.');
+    return this.files;
+  }
+
+  async getBytes(key: string): Promise<Uint8Array | null> {
+    const o = await this.bucket().get(key);
+    return o ? new Uint8Array(await o.arrayBuffer()) : null;
+  }
+
   // ── Sessions ──────────────────────────────────────────────
 
   async create(title: string, now = Date.now()): Promise<Session> {
     await this.init();
     const id = randomId();
     const named_by = title.trim() ? 'chris' : null;
-    const s: Session = { id, title: oneLine(title, 60), branch: `cathy/${id}`, status: 'active', created_at: now, updated_at: now, last_message: null, named_by };
+    const s: Session = { id, title: oneLine(title, 60), branch: `cathy/${id}`, status: 'active', created_at: now, updated_at: now, last_message: null, named_by, model: null, effort: null };
     await this.db
       .prepare('INSERT INTO sessions (id, title, branch, status, created_at, updated_at, last_message, named_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .bind(s.id, s.title, s.branch, s.status, s.created_at, s.updated_at, s.last_message, s.named_by)
@@ -131,6 +164,15 @@ export class Registry {
     return (await this.get(id))?.title === t;
   }
 
+  /** Save the chat's model and/or effort (validated by the caller). */
+  async setModel(id: string, change: { model?: string; effort?: string }) {
+    await this.init();
+    const s = await this.get(id);
+    if (!s) throw new Error(`No session ${id}`);
+    await this.db.prepare('UPDATE sessions SET model = ?, effort = ? WHERE id = ?').bind(change.model ?? s.model, change.effort ?? s.effort, id).run();
+    return (await this.get(id))!;
+  }
+
   async archive(id: string) {
     await this.init();
     await this.db.prepare("UPDATE sessions SET status = 'archived' WHERE id = ?").bind(id).run();
@@ -141,38 +183,12 @@ export class Registry {
     await this.db.prepare("UPDATE sessions SET status = 'active', updated_at = ? WHERE id = ?").bind(now, id).run();
   }
 
-  // ── Blobs: file bytes, in parts ──────────────────────────────
-
-  async putBlob(id: string, bytes: Uint8Array) {
-    await this.init();
-    await this.db.prepare('DELETE FROM blobs WHERE id = ?').bind(id).run();
-    for (let i = 0, part = 0; i < bytes.length || part === 0; i += PART, part++) {
-      await this.db.prepare('INSERT INTO blobs (id, part, data) VALUES (?, ?, ?)').bind(id, part, bytes.slice(i, i + PART)).run();
-    }
-  }
-
-  async getBlob(id: string): Promise<Uint8Array | null> {
-    await this.init();
-    const { results } = await this.db.prepare('SELECT data FROM blobs WHERE id = ? ORDER BY part').bind(id).all();
-    if (!results.length) return null;
-    const parts: Uint8Array[] = results.map((r: { data: ArrayBuffer | Uint8Array | number[] }) => (r.data instanceof Uint8Array ? r.data : new Uint8Array(r.data as ArrayBuffer)));
-    const out = new Uint8Array(parts.reduce((n: number, p: Uint8Array) => n + p.length, 0));
-    let at = 0;
-    for (const p of parts) out.set(p, (at += p.length) - p.length);
-    return out;
-  }
-
-  async deleteBlob(id: string) {
-    await this.init();
-    await this.db.prepare('DELETE FROM blobs WHERE id = ?').bind(id).run();
-  }
-
   // ── Uploads: files Chris attaches to messages ───────────────
 
   async addUpload(session_id: string, name: string, mime: string, bytes: Uint8Array, now = Date.now()): Promise<Upload> {
     await this.init();
     const u: Upload = { id: randomId(10), session_id, name: safeName(name), mime: mime || 'application/octet-stream', size: bytes.length, created_at: now };
-    await this.putBlob(`upload:${u.id}`, bytes);
+    await this.bucket().put(uploadKey(u.id), bytes, { httpMetadata: { contentType: u.mime } });
     await this.db.prepare('INSERT INTO uploads (id, session_id, name, mime, size, created_at) VALUES (?, ?, ?, ?, ?, ?)').bind(u.id, u.session_id, u.name, u.mime, u.size, u.created_at).run();
     return u;
   }
@@ -185,26 +201,32 @@ export class Registry {
 
   // ── Artifacts ──────────────────────────────────────────────
 
-  /** Publish a file, or replace an existing artifact's content (same id and link). */
+  /** Publish a file as a new artifact, or as the next version of an existing one (same id and link). */
   async publish(
     a: { session_id: string; title: string; filename: string; mime: string; visibility?: Visibility; id?: string },
     bytes: Uint8Array,
     now = Date.now(),
   ): Promise<Artifact> {
     await this.init();
-    a = { ...a, filename: safeName(a.filename) };
+    if (a.visibility && !VISIBILITIES.includes(a.visibility)) throw new Error(`Visibility must be one of ${VISIBILITIES.join(', ')}`);
+    const filename = safeName(a.filename);
     const existing = a.id ? await this.artifact(a.id) : null;
     if (a.id && !existing) throw new Error(`No artifact ${a.id}`);
     const art: Artifact = existing
-      ? { ...existing, title: oneLine(a.title, 80) || existing.title, filename: a.filename, mime: a.mime, size: bytes.length, visibility: a.visibility ?? existing.visibility, updated_at: now }
-      : { id: randomId(8), session_id: a.session_id, title: oneLine(a.title, 80) || a.filename, filename: a.filename, mime: a.mime, size: bytes.length, visibility: a.visibility ?? 'private', token: randomId(20), created_at: now, updated_at: now };
-    await this.putBlob(`artifact:${art.id}`, bytes);
+      ? { ...existing, title: oneLine(a.title, 80) || existing.title, filename, mime: a.mime, size: bytes.length, visibility: a.visibility ?? existing.visibility, version: existing.version + 1, updated_at: now }
+      : { id: randomId(8), session_id: a.session_id, title: oneLine(a.title, 80) || filename, filename, mime: a.mime, size: bytes.length, visibility: a.visibility ?? 'private', token: randomId(20), version: 1, created_at: now, updated_at: now };
+    // Bytes first: a row never points at a missing file.
+    await this.bucket().put(versionKey(art.id, art.version), bytes, { httpMetadata: { contentType: art.mime } });
+    await this.db
+      .prepare('INSERT INTO artifact_versions (artifact_id, version, filename, mime, size, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(art.id, art.version, art.filename, art.mime, art.size, now)
+      .run();
     await this.db
       .prepare(
-        `INSERT INTO artifacts (id, session_id, title, filename, mime, size, visibility, token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET title = excluded.title, filename = excluded.filename, mime = excluded.mime, size = excluded.size, visibility = excluded.visibility, updated_at = excluded.updated_at`,
+        `INSERT INTO artifacts (id, session_id, title, visibility, token, version, filename, mime, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET title = excluded.title, visibility = excluded.visibility, version = excluded.version, filename = excluded.filename, mime = excluded.mime, size = excluded.size, updated_at = excluded.updated_at`,
       )
-      .bind(art.id, art.session_id, art.title, art.filename, art.mime, art.size, art.visibility, art.token, art.created_at, art.updated_at)
+      .bind(art.id, art.session_id, art.title, art.visibility, art.token, art.version, art.filename, art.mime, art.size, art.created_at, art.updated_at)
       .run();
     return art;
   }
@@ -215,10 +237,17 @@ export class Registry {
     return results[0] ? { ...results[0] } : null;
   }
 
-  /** What a share link may see: link or public artifacts, by token. Private ones are never found. */
+  async versions(id: string): Promise<ArtifactVersion[]> {
+    await this.init();
+    const { results } = await this.db.prepare('SELECT * FROM artifact_versions WHERE artifact_id = ? ORDER BY version DESC').bind(id).all();
+    return results.map((r: ArtifactVersion) => ({ ...r }));
+  }
+
+  /** What a share link may see: link artifacts, by token. Private ones are never found. */
   async shared(token: string): Promise<Artifact | null> {
     await this.init();
-    const { results } = await this.db.prepare("SELECT * FROM artifacts WHERE token = ? AND visibility IN ('link', 'public')").bind(token).all();
+    if (!/^[a-z0-9]{20}$/.test(token)) return null;
+    const { results } = await this.db.prepare("SELECT * FROM artifacts WHERE token = ? AND visibility = 'link'").bind(token).all();
     return results[0] ? { ...results[0] } : null;
   }
 
@@ -254,7 +283,9 @@ export class Registry {
 
   async deleteArtifact(id: string) {
     await this.init();
+    const vs = await this.versions(id);
     await this.db.prepare('DELETE FROM artifacts WHERE id = ?').bind(id).run();
-    await this.deleteBlob(`artifact:${id}`);
+    await this.db.prepare('DELETE FROM artifact_versions WHERE artifact_id = ?').bind(id).run();
+    if (vs.length) await this.bucket().delete(vs.map((v) => versionKey(id, v.version)));
   }
 }
