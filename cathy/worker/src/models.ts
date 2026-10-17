@@ -51,15 +51,24 @@ export function resolve(env: { MODELS?: string; MODEL?: string }, saved: { model
   return { model, effort };
 }
 
+export type Provider = 'anthropic' | 'openai';
+
+/** Which company serves a model, from its id: gpt-*, o1/o3/o4-style and openai/* are OpenAI; the rest are Anthropic. */
+export function providerFor(model: string): Provider {
+  return /^(gpt-|o\d|openai\/)/.test(model) ? 'openai' : 'anthropic';
+}
+
 /**
- * What a turn sends to Anthropic: the effort, and adaptive thinking with summaries shown,
- * so Chris can read her reasoning. Models that don't support these ignore or reject them;
- * keep MODELS to ones that do.
+ * What a turn sends to the model: the effort, and thinking with summaries shown, so Chris
+ * can read her reasoning. Anthropic gets adaptive thinking. OpenAI gets reasoning effort and
+ * summaries, and store: false so the chat stays with us (history is replayed each turn, which
+ * is also what lets Chris switch between Claude and GPT mid-chat). Models that don't support
+ * these ignore or reject them; keep MODELS to ones that do.
  */
 export function turnSettings(model: string, effort: Effort): TurnSettings {
-  return {
-    model,
-    effort,
-    streamOptions: { providerOptions: { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' } } } },
-  };
+  const providerOptions =
+    providerFor(model) === 'openai'
+      ? { openai: { reasoningEffort: effort, reasoningSummary: 'auto', store: false } }
+      : { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' } } };
+  return { model, effort, streamOptions: { providerOptions } };
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modelList, resolve, turnSettings, validate } from './models.ts';
+import { modelList, providerFor, resolve, turnSettings, validate } from './models.ts';
 
 const env = { MODEL: 'claude-opus-5-5', MODELS: 'claude-opus-5-5=Opus 5.5, claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5' };
 
@@ -26,4 +26,18 @@ test('saved choices fall back to defaults, including when a model is removed', (
 
 test('effort and summarised thinking are sent to Anthropic', () => {
   assert.deepEqual(turnSettings('m', 'high').streamOptions, { providerOptions: { anthropic: { effort: 'high', thinking: { type: 'adaptive', display: 'summarized' } } } });
+});
+
+test('the provider comes from the model id', () => {
+  for (const id of ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-5.5', 'o4-mini', 'openai/gpt-6-sol']) assert.equal(providerFor(id), 'openai', id);
+  for (const id of ['claude-opus-5-5', 'claude-haiku-5-5', 'something-else']) assert.equal(providerFor(id), 'anthropic', id);
+});
+
+test('GPT models get reasoning effort and summaries, and nothing is stored at OpenAI', () => {
+  assert.deepEqual(turnSettings('gpt-6.1-sol', 'high').streamOptions, { providerOptions: { openai: { reasoningEffort: 'high', reasoningSummary: 'auto', store: false } } });
+  for (const e of ['low', 'medium', 'high', 'max'] as const) {
+    assert.equal((turnSettings('gpt-6-astra', e).streamOptions as any).providerOptions.openai.reasoningEffort, e);
+  }
+  assert.equal((turnSettings('gpt-6-astra', 'low').streamOptions as any).providerOptions.anthropic, undefined, 'no Anthropic options for GPT');
+  assert.equal((turnSettings('claude-opus-5-5', 'low').streamOptions as any).providerOptions.openai, undefined, 'no OpenAI options for Claude');
 });
