@@ -1,0 +1,158 @@
+{
+  "base": "http://localhost:8787",
+  "real": false,
+  "when": "2026-10-17T16:24:18.035Z",
+  "passed": true,
+  "steps": [
+    {
+      "name": "Admin home",
+      "ok": true,
+      "ms": 1604,
+      "shot": "01-admin-home.png"
+    },
+    {
+      "name": "Open Cathy",
+      "ok": true,
+      "ms": 2003,
+      "shot": "02-open-cathy.png"
+    },
+    {
+      "name": "Start a new chat",
+      "ok": true,
+      "ms": 2156,
+      "detail": "chat nccryf, branch cathy/nccryf",
+      "shot": "03-start-a-new-chat.png"
+    },
+    {
+      "name": "Chat box fits the phone",
+      "ok": true,
+      "ms": 946,
+      "detail": "font 16px, Send fully on screen, disabled while empty",
+      "shot": "04-chat-box-fits-the-phone.png"
+    },
+    {
+      "name": "Send a message",
+      "ok": true,
+      "ms": 2905,
+      "shot": "05-send-a-message.png"
+    },
+    {
+      "name": "Cathy uses a tool and replies",
+      "ok": true,
+      "ms": 5532,
+      "detail": "reply 6371 ms after sending; tools: run_command git status --short --branch | set_title Demo: Hello Cathy, what branch; reply: \"Demo Cathy here. You said: \"Hello Cathy, what branch are you on?\". I checked my box: ## cathy/nccryfnothing to commit, working tree clean[exit 0].Opus 5.5 · med\"",
+      "shot": "06-cathy-uses-a-tool-and-replies.png"
+    },
+    {
+      "name": "Chat survives a reload",
+      "ok": true,
+      "ms": 2572,
+      "detail": "4 messages restored",
+      "shot": "07-chat-survives-a-reload.png"
+    },
+    {
+      "name": "Chat is listed with a preview",
+      "ok": true,
+      "ms": 1824,
+      "detail": "Demo: Hello Cathy, what branchnowDemo Cathy here. You said: \"Hello Cathy, what branch are you on?\". I checked my box: ## cathy/nccryf nothing to commit, working",
+      "shot": "08-chat-is-listed-with-a-preview.png"
+    },
+    {
+      "name": "Cathy names the chat; Chris renames it",
+      "ok": true,
+      "ms": 3040,
+      "detail": "Cathy named it \"Demo: Hello Cathy, what branch\"; renamed to \"E2E renamed chat\", kept after reload",
+      "shot": "09-cathy-names-the-chat-chris-renames-it.png"
+    },
+    {
+      "name": "Pick a model and effort",
+      "ok": true,
+      "ms": 2087,
+      "detail": "Sonnet 5.5, low effort; kept after reload",
+      "shot": "10-pick-a-model-and-effort.png"
+    },
+    {
+      "name": "Attach an image; Cathy sees it",
+      "ok": true,
+      "ms": 7740,
+      "detail": "reply: \"Demo Cathy here. You said: \"What is in this image?\". I checked my box: ## cathy/nccryfnothing to commit, working tree cl\"; label: Sonnet 5.5 · low effort",
+      "shot": "11-attach-an-image-cathy-sees-it.png"
+    },
+    {
+      "name": "Stop a reply with the square button",
+      "ok": true,
+      "ms": 5305,
+      "detail": "stopped after ~25 words; label \"Stopped · Sonnet 5.5 · low effort\"",
+      "shot": "12-stop-a-reply-with-the-square-button.png"
+    },
+    {
+      "name": "Interrupt with a new message",
+      "ok": true,
+      "ms": 8895,
+      "detail": "first reply stopped; then: \"Demo Cathy here. You said: \"Short one instead\". I checked my box: ## cathy/nccryfnothing to commit, \"",
+      "shot": "13-interrupt-with-a-new-message.png"
+    },
+    {
+      "name": "Cathy publishes an artifact into the chat",
+      "ok": true,
+      "ms": 11994,
+      "detail": "artifact ui75z8wj: Fractions worksheet (private)",
+      "shot": "14-cathy-publishes-an-artifact-into-the-chat.png"
+    },
+    {
+      "name": "Open the artifact full screen",
+      "ok": true,
+      "ms": 2907,
+      "detail": "3 maths expressions rendered",
+      "shot": "15-open-the-artifact-full-screen.png"
+    },
+    {
+      "name": "Share by link; open it logged out",
+      "ok": true,
+      "ms": 5096,
+      "detail": "http://localhost:8788/a/p39rk3jxz4ivk8pxawv6 → 200 in a fresh browser with 0 cookies",
+      "shot": "16-share-by-link-open-it-logged-out.png"
+    },
+    {
+      "name": "Back to private: the link stops working",
+      "ok": true,
+      "ms": 2515,
+      "detail": "http://localhost:8788/a/p39rk3jxz4ivk8pxawv6 → 404",
+      "shot": "17-back-to-private-the-link-stops-working.png"
+    },
+    {
+      "name": "Artifacts page: versions, new link",
+      "ok": true,
+      "ms": 7182,
+      "detail": "old link 404, new link 200",
+      "shot": "18-artifacts-page-versions-new-link.png"
+    },
+    {
+      "name": "A hostile HTML artifact is sandboxed",
+      "ok": true,
+      "ms": 11424,
+      "detail": "origin: null; cookies: blocked; storage: blocked; parent page: blocked; admin API: blocked",
+      "shot": "19-a-hostile-html-artifact-is-sandboxed.png"
+    },
+    {
+      "name": "Search, archive and unarchive",
+      "ok": true,
+      "ms": 5673,
+      "detail": "found by search; archived, then back in Active",
+      "shot": "20-search-archive-and-unarchive.png"
+    },
+    {
+      "name": "Security probes",
+      "ok": true,
+      "ms": 2343,
+      "detail": "16 checks passed",
+      "shot": "21-security-probes.png"
+    },
+    {
+      "name": "Dark mode",
+      "ok": true,
+      "ms": 2884,
+      "shot": "22-dark-mode.png"
+    }
+  ]
+}
