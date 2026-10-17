@@ -2,7 +2,7 @@
 
 The first, simplest working Cathy. YAGNI: build only what's below, harden later.
 
-**Status:** planned, not started. Supersedes the big [harness plan](../harness-plan.md) for now (see [What changed](#what-changed-from-the-harness-plan)).
+**Status:** planned, not started. Replaced the earlier, bigger harness plan, which has been deleted (it's still in git history). See [What changed](#what-changed-from-the-harness-plan).
 
 ## What Chris gets
 
