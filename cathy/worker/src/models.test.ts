@@ -24,6 +24,8 @@ test('saved choices fall back to defaults, including when a model is removed', (
   assert.deepEqual(resolve(env, { model: 'claude-old', effort: 'low' }), { model: 'claude-opus-5-5', effort: 'low' });
 });
 
-test('effort and summarised thinking are sent to Anthropic', () => {
-  assert.deepEqual(turnSettings('m', 'high').streamOptions, { providerOptions: { anthropic: { effort: 'high', thinking: { type: 'adaptive', display: 'summarized' } } } });
+test('effort, summarised thinking and a 1-hour prompt cache are sent to Anthropic', () => {
+  assert.deepEqual(turnSettings('m', 'high').streamOptions, {
+    providerOptions: { anthropic: { effort: 'high', thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } },
+  });
 });
