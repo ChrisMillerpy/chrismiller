@@ -12,12 +12,14 @@ interface Card {
 // Add new features here. External links open in a new tab; internal ones in place.
 const CARDS: Card[] = [
   { id: 'cathy', title: 'Cathy', sub: 'Sessions with your tutor agent', icon: 'chat', href: '/cathy' },
+  { id: 'artifacts', title: 'Artifacts', sub: 'Files Cathy made, private or shared', icon: 'file', href: '/artifacts' },
   { id: 'codebase', title: 'Codebase', sub: 'chrismiller on GitHub', icon: 'code', href: 'https://github.com/ChrisMillerpy/chrismiller' },
   { id: 'packs', title: 'Evidence packs', sub: 'Proof that each change works', icon: 'pack', href: '/packs/' },
 ];
 
 const ICONS: Record<string, string> = {
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
   code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>',
   pack: '<path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/>',
 };
