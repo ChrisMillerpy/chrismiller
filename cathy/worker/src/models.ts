@@ -52,14 +52,16 @@ export function resolve(env: { MODELS?: string; MODEL?: string }, saved: { model
 }
 
 /**
- * What a turn sends to Anthropic: the effort, and adaptive thinking with summaries shown,
- * so Chris can read her reasoning. Models that don't support these ignore or reject them;
- * keep MODELS to ones that do.
+ * What a turn sends to Anthropic: the effort, adaptive thinking with summaries shown (so Chris
+ * can read her reasoning), and a 1-hour prompt cache. With the cache, each step re-reads the
+ * tools, system prompt and history it has already sent at about a tenth of the input price;
+ * 1 hour (not 5 minutes) so it survives Chris stepping away. Models that don't support these
+ * ignore or reject them; keep MODELS to ones that do.
  */
 export function turnSettings(model: string, effort: Effort): TurnSettings {
   return {
     model,
     effort,
-    streamOptions: { providerOptions: { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' } } } },
+    streamOptions: { providerOptions: { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } } },
   };
 }
