@@ -206,3 +206,26 @@ test('the plain id still uses the API key when the plan is also set up', () => {
   assert.equal((buildModel(both, 'chatgpt/gpt-6.1-sol') as any).modelId, 'gpt-6.1-sol');
   assert.match((buildModel(both, 'gpt-6.1-sol') as any).provider, /^openai/);
 });
+
+test('a chat on a plan model with no sign-in says so in the chat, and nothing is sent anywhere', async () => {
+  const api = fakeOpenAI();
+  const notConnected = async () => {
+    throw new Error("ChatGPT isn't connected. Open Admin, then Cathy, then ChatGPT plan, and connect it.");
+  };
+  const model = buildModel({ CHATGPT: notConnected }, 'chatgpt/gpt-6-astra', api.fetch as any);
+  const store = memoryStore();
+  const convo = new Conversation({
+    store,
+    broadcast: () => {},
+    makeAgent: (tools) => createCathy({ model, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    settings: async () => turnSettings('chatgpt/gpt-6-astra', 'medium'),
+  });
+  await convo.fromChris('hello');
+  const last = store.messages().at(-1)!;
+  assert.equal(last.role, 'notice');
+  assert.match(last.content, /ChatGPT isn't connected/);
+  assert.equal(api.urls.length, 0);
+});
