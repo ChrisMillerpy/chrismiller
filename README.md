@@ -38,7 +38,7 @@ Needs Node 22+ (`nvm use` reads `.nvmrc`). One `npm install` at the root covers 
 - **Blog:** posts in `blog/src/content/blog/`; the required fields are in `blog/src/content.config.ts`.
 - **Admin home cards:** `admin/src/home.ts`. Cathy's screens: `admin/src/cathy.ts`. Artifacts: `admin/src/artifacts.ts` and `admin/src/artifact-ui.ts`. Login: `admin/src/auth.ts`.
 - **Cathy:** `cathy/agent/` is the Mastra agent (no Cloudflare code), `cathy/worker/` the Worker (one Durable Object per chat), `cathy/sandbox/` the Linux box each chat gets. Her identity is in `cathy/self/` (`SOUL.md`, `memory/`, `skills/`). She loads it every turn and can edit it through a PR.
-- **Cathy's models:** `MODEL` (default) and `MODELS` (the picker's list) in `cathy/worker/wrangler.jsonc`. Effort levels and the 1-hour prompt cache are in `cathy/worker/src/models.ts`. Each reply in admin shows its tokens and how much came from the cache (hover for exact numbers).
+- **Cathy's models:** `MODEL` (default) and `MODELS` (the picker's list) in `cathy/worker/wrangler.jsonc`. `gpt-*` ids go to OpenAI, the rest to Anthropic (`providerFor` in `models.ts`, models built in `provider.ts`). Effort levels, per-provider thinking settings and the 1-hour Claude prompt cache are in `cathy/worker/src/models.ts`. Each reply in admin shows its tokens and how much came from the cache (hover for exact numbers).
 - **Artifacts and attachments:** bytes in R2 (`withchris-files`), facts in D1 (`d1/migrations/0002_names_artifacts.sql`). Cathy publishes with the `publish_artifact` tool (`cathy/worker/src/box-files.ts`). Each artifact is private (admin only) or link (anyone with the link, served by `share/`).
 - **Evidence packs:** one folder per pack in `packs/`, listed in `packs/index.html`.
 
@@ -70,7 +70,7 @@ Pushing to `main` deploys. Each workflow reports a commit status with the result
 | `deploy-admin.yml` | Cathy first, then share, then admin (after `npm test`) | `admin/`, `cathy/`, `share/`, `shared/`, `d1/` or `packs/` change |
 | `preview.yml` | A throwaway admin + Cathy + share clone per branch, with its own D1 and R2, tested in a browser against real Claude; torn down when the PR closes | a branch touches those folders |
 
-Other secrets the workflows use: `ANTHROPIC_API_KEY`, `CATHY_GITHUB_TOKEN`, `ADMIN_PASSWORD`.
+Other secrets the workflows use: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` (for the GPT models), `CATHY_GITHUB_TOKEN`, `ADMIN_PASSWORD`.
 
 Nothing runs `npm run check` or builds the sites on a PR, so check those locally before merging site changes.
 

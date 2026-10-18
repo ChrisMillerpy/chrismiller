@@ -51,17 +51,26 @@ export function resolve(env: { MODELS?: string; MODEL?: string }, saved: { model
   return { model, effort };
 }
 
+export type Provider = 'anthropic' | 'openai';
+
+/** Which company serves a model, from its id: gpt-*, o1/o3/o4-style and openai/* are OpenAI; the rest are Anthropic. */
+export function providerFor(model: string): Provider {
+  return /^(gpt-|o\d|openai\/)/.test(model) ? 'openai' : 'anthropic';
+}
+
 /**
- * What a turn sends to Anthropic: the effort, adaptive thinking with summaries shown (so Chris
- * can read her reasoning), and a 1-hour prompt cache. With the cache, each step re-reads the
- * tools, system prompt and history it has already sent at about a tenth of the input price;
- * 1 hour (not 5 minutes) so it survives Chris stepping away. Models that don't support these
- * ignore or reject them; keep MODELS to ones that do.
+ * What a turn sends to the model: the effort, and thinking with summaries shown, so Chris
+ * can read her reasoning. Anthropic gets adaptive thinking and a 1-hour prompt cache: each step
+ * re-reads the tools, system prompt and history it has already sent at about a tenth of the input
+ * price, and 1 hour (not 5 minutes) so it survives Chris stepping away. OpenAI gets reasoning
+ * effort and summaries, and store: false so the chat stays with us (history is replayed each turn,
+ * which is also what lets Chris switch between Claude and GPT mid-chat; OpenAI caches prompts
+ * by itself). Models that don't support these ignore or reject them; keep MODELS to ones that do.
  */
 export function turnSettings(model: string, effort: Effort): TurnSettings {
-  return {
-    model,
-    effort,
-    streamOptions: { providerOptions: { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } } },
-  };
+  const providerOptions =
+    providerFor(model) === 'openai'
+      ? { openai: { reasoningEffort: effort, reasoningSummary: 'auto', store: false } }
+      : { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } };
+  return { model, effort, streamOptions: { providerOptions } };
 }

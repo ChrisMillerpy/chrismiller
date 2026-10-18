@@ -9,6 +9,7 @@ export interface Env {
   SANDBOX: DurableObjectNamespace<Sandbox>;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_WORKSPACE_ID?: string;
+  OPENAI_API_KEY?: string;
   /** Default model for new chats. */
   MODEL?: string;
   /** Models Chris can pick: "id=Label,id=Label". */

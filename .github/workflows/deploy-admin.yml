@@ -45,9 +45,10 @@ jobs:
         working-directory: cathy/worker
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CATHY_GITHUB_TOKEN: ${{ secrets.CATHY_GITHUB_TOKEN }}
         run: |
-          jq -n 'env | {ANTHROPIC_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
+          jq -n 'env | {ANTHROPIC_API_KEY, OPENAI_API_KEY, CATHY_GITHUB_TOKEN} | with_entries(select(.value != null and .value != ""))' > secrets.json
           if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json 2>&1 | tail -3; fi
           rm -f secrets.json
 
