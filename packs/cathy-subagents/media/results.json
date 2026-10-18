@@ -1,0 +1,56 @@
+{
+  "base": "http://localhost:8787",
+  "real": false,
+  "at": "2026-10-18T23:50:36.910Z",
+  "steps": [
+    {
+      "name": "Ask Cathy to start a sub-agent on Haiku",
+      "ok": true,
+      "ms": 7792,
+      "detail": "chip \"Demo helper\" under the header; tool: spawn_agent Demo helper",
+      "shot": "01-ask-cathy-to-start-a-sub-agent-on-haiku.png"
+    },
+    {
+      "name": "Its report comes back and the parent answers",
+      "ok": true,
+      "ms": 1605,
+      "detail": "From sub-agent: Demo helper: \"Demo Cathy here. You said: \"[Message from Cathy mnw6y7, who started you]\nCheck the README and report in one line.\". I checked my box: ## cat\" → parent: \"Demo Cathy here. You said: \"[Report from your sub-agent 3ndegt]Demo Cathy here. You said: \"[Message from Cathy mnw6y7, who started you]Check\"",
+      "shot": "02-its-report-comes-back-and-the-parent-answers.png"
+    },
+    {
+      "name": "Open the sub-agent: its own chat, model and branch",
+      "ok": true,
+      "ms": 2594,
+      "detail": "header \"Sub-agent of mnw6y7 · cathy/3ndegt\"; first message From the Cathy that started me (mnw6y7); reply label \"Haiku 5.5 · low effort · 2 in, 0% cached · 2 out\"",
+      "shot": "03-open-the-sub-agent-its-own-chat-model-and-branch.png"
+    },
+    {
+      "name": "Chris talks to the sub-agent directly; nothing is reported up",
+      "ok": true,
+      "ms": 3836,
+      "detail": "sub-agent replied: \"Demo Cathy here. You said: \"Hi helper, Chris here\". I checked my box: ## cathy/3ndegtnothing to commit, working tree cle\"; parent unchanged",
+      "shot": "04-chris-talks-to-the-sub-agent-directly-nothing-is-reported-up.png"
+    },
+    {
+      "name": "Fork a second sub-agent",
+      "ok": true,
+      "ms": 5270,
+      "detail": "chips: Demo helper, Demo fork; fork qwz7bp reported back",
+      "shot": "05-fork-a-second-sub-agent.png"
+    },
+    {
+      "name": "The chat list nests sub-agents under their parent",
+      "ok": true,
+      "ms": 1302,
+      "detail": "list: Demo: Please spawn a helper /   Demo helper /   Demo fork / Demo: Please spawn a helper /   Demo helper; tags: sub-agent · fresh · Haiku 5.5 | sub-agent · fork · Opus 5.5 | sub-agent · fresh · Haiku 5.5",
+      "shot": "06-the-chat-list-nests-sub-agents-under-their-parent.png"
+    },
+    {
+      "name": "Archiving the parent archives its sub-agents",
+      "ok": true,
+      "ms": 2786,
+      "detail": "2 sub-agents archived with it",
+      "shot": "07-archiving-the-parent-archives-its-sub-agents.png"
+    }
+  ]
+}

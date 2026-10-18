@@ -30,6 +30,7 @@ Needs Node 22+ (`nvm use` reads `.nvmrc`). One `npm install` at the root covers 
 | `npm run typecheck:workers` | Type-checks the admin, share and Cathy Workers. |
 | `npm run dev:cathy` | Admin, Cathy and share together with `wrangler dev`, with a scripted stand-in for Claude. Admin is on `:8787`. Share links point at `:8788`, so for those also run `npx wrangler dev -c share/wrangler.jsonc --port 8788`. |
 | `npm run e2e` | Browser test of admin → Cathy (Playwright). See the header of `cathy/e2e/chat.e2e.ts`. |
+| `node cathy/e2e/agents.e2e.ts` | Browser test of sub-agents, against `npm run dev:cathy`. See its header. |
 
 ## Where things are
 
@@ -39,6 +40,7 @@ Needs Node 22+ (`nvm use` reads `.nvmrc`). One `npm install` at the root covers 
 - **Admin home cards:** `admin/src/home.ts`. Cathy's screens: `admin/src/cathy.ts`. Artifacts: `admin/src/artifacts.ts` and `admin/src/artifact-ui.ts`. Login: `admin/src/auth.ts`.
 - **Cathy:** `cathy/agent/` is the Mastra agent (no Cloudflare code), `cathy/worker/` the Worker (one Durable Object per chat), `cathy/sandbox/` the Linux box each chat gets. Her identity is in `cathy/self/` (`SOUL.md`, `memory/`, `skills/`). She loads it every turn and can edit it through a PR.
 - **Cathy's models:** `MODEL` (default) and `MODELS` (the picker's list) in `cathy/worker/wrangler.jsonc`. Effort levels and the 1-hour prompt cache are in `cathy/worker/src/models.ts`. Each reply in admin shows its tokens and how much came from the cache (hover for exact numbers).
+- **Sub-agents:** Cathy starts other Cathys with `spawn_agent` (tools and limits in `cathy/worker/src/conversation.ts`, logic in `cathy/worker/src/agents.ts`, how-to in `cathy/self/skills/sub-agents/`). Each is a normal chat with a `parent_id` (`d1/migrations/0003_subagents.sql`); admin nests them under their parent. Limits: `MAX_WORKING` (5 at once) in `agents.ts`; `MAX_AGENT_MESSAGES` and `MAX_HOPS` in `conversation.ts`.
 - **Artifacts and attachments:** bytes in R2 (`withchris-files`), facts in D1 (`d1/migrations/0002_names_artifacts.sql`). Cathy publishes with the `publish_artifact` tool (`cathy/worker/src/box-files.ts`). Each artifact is private (admin only) or link (anyone with the link, served by `share/`).
 - **Evidence packs:** one folder per pack in `packs/`, listed in `packs/index.html`.
 

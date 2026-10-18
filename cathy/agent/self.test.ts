@@ -86,3 +86,9 @@ test('the artifacts skill covers publishing, privacy and versions', () => {
   assert.match(parseFrontmatter(skill).description, /artifact/i);
   for (const must of [/publish_artifact/, /private/i, /link/i, /student or parent/i, /list_artifacts/, /\bid\b/, /Markdown/, /\$\$/]) assert.match(skill, must);
 });
+
+test('the sub-agents skill covers when to split, the modes, models, file ownership, merging and limits', () => {
+  const skill = readFileSync('cathy/self/skills/sub-agents/SKILL.md', 'utf8');
+  assert.match(parseFrontmatter(skill).description, /sub-agent/i);
+  for (const must of [/spawn_agent/, /list_agents/, /message_agent/, /stop_agent/, /fresh/, /fork/, /custom/, /model/i, /separate files/i, /git merge/, /open_pr/, /report/i, /student or parent/i]) assert.match(skill, must);
+});
