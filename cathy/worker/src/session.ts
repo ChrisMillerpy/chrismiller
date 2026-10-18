@@ -103,7 +103,9 @@ export class Session extends DurableObject<Env> {
 
   private model(id: string) {
     if (this.env.FAKE_MODEL === '1') return demoModel() as any;
-    return buildModel(this.env, id);
+    const vault = this.env.CHATGPT?.getByName('main');
+    // The chat's id keeps its requests together on ChatGPT's side so the prompt can be cached.
+    return buildModel({ ...this.env, CHATGPT: vault && ((force) => vault.accessToken(force)) }, id, undefined, { cacheKey: this.id });
   }
 
   private conversation() {

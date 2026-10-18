@@ -31,3 +31,7 @@ export function fakeR2() {
     delete: async (k: string | string[]) => void [k].flat().forEach((x) => store.delete(x)),
   };
 }
+
+const b64url = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
+/** An unsigned JWT with these claims: enough for code that only reads them. */
+export const jwt = (claims: Record<string, unknown>) => `${b64url({ alg: 'none' })}.${b64url(claims)}.sig`;

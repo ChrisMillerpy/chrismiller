@@ -53,10 +53,13 @@ export function resolve(env: { MODELS?: string; MODEL?: string }, saved: { model
 
 export type Provider = 'anthropic' | 'openai';
 
-/** Which company serves a model, from its id: gpt-*, o1/o3/o4-style and openai/* are OpenAI; the rest are Anthropic. */
+/** Which company serves a model, from its id: gpt-*, o1/o3/o4-style, openai/* and chatgpt/* are OpenAI; the rest are Anthropic. */
 export function providerFor(model: string): Provider {
-  return /^(gpt-|o\d|openai\/)/.test(model) ? 'openai' : 'anthropic';
+  return /^(gpt-|o\d|openai\/|chatgpt\/)/.test(model) ? 'openai' : 'anthropic';
 }
+
+/** "chatgpt/gpt-6-astra" runs on Chris's ChatGPT plan (his sign-in); "gpt-6-astra" runs on the API key. Same model, different bill. */
+export const isChatGPT = (model: string) => model.startsWith('chatgpt/');
 
 /**
  * What a turn sends to the model: the effort, and thinking with summaries shown, so Chris

@@ -9,6 +9,7 @@ import { SCHEMA } from './schema.ts';
 import type { Env } from './env.ts';
 
 export { Session } from './session.ts';
+export { ChatGPT } from './chatgpt-account.ts';
 export { Sandbox } from '../../sandbox/sandbox.ts';
 
 export default {

@@ -7,6 +7,7 @@ import { accessOn, checkAuth, handleLogin, loginBody, loginNext } from './auth.t
 import { homePage } from './home.ts';
 import { chatPage, explorerPage } from './cathy.ts';
 import { artifactPage, artifactsPage } from './artifacts.ts';
+import { chatgptPage } from './chatgpt.ts';
 
 interface Env {
   ADMIN_PASSWORD?: string;
@@ -63,6 +64,7 @@ export default {
     }
 
     if (pathname === '/') return htmlResponse(homePage());
+    if (pathname === '/chatgpt' || pathname === '/chatgpt/') return htmlResponse(chatgptPage());
     if (pathname === '/cathy' || pathname === '/cathy/') return htmlResponse(explorerPage());
     if (/^\/cathy\/[a-z0-9]+$/.test(pathname)) return htmlResponse(chatPage());
   if (pathname === '/artifacts' || pathname === '/artifacts/') return htmlResponse(artifactsPage());
