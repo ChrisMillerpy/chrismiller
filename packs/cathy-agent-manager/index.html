@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Cathy agent manager · RFC and evidence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500..600&family=Public+Sans:wght@400..600&display=swap">
+<style>
+/* The one theme for every site (learn, blog, admin).
+   Dark mode follows the system; a page can force a mode with data-theme="light" | "dark". */
+:root {
+  --paper: #FAFBFD;
+  --bg: #FFFFFF;
+  --panel: #F4F6FB;
+  --ink: #18203A;
+  --muted: #5A6480;
+  --line: #DDE3EE;
+  --grid: #DCE4F4;
+  --cobalt: #2443C9;
+  --cobalt-hover: #1E39B0;
+  --cobalt-soft: #E6EBFC;
+  --fill: #2443C9;          /* solid blue behind white text (buttons, banners) */
+  --fill-hover: #1E39B0;
+  --fill-shadow: #1A2F95;
+  --pen: #C2362B;
+  --mark: #2443C9;
+  --cover: #F0F3FA;
+
+  --display: 'Literata Variable', 'Literata', Georgia, serif;
+  --ui: 'Public Sans Variable', 'Public Sans', -apple-system, system-ui, sans-serif;
+  --hand: 'Kalam', 'Comic Sans MS', cursive;
+  --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  color-scheme: light;
+}
+
+/* Dark: deep navy paper with a faint blue grid, so it still reads as blue and white. */
+:root[data-theme='dark'] {
+  --paper: #0B1222;
+  --bg: #0F1729;
+  --panel: #16203A;
+  --ink: #E8EDF8;
+  --muted: #9BA7C4;
+  --line: #24304D;
+  --grid: #18233F;
+  --cobalt: #8EA6FF;
+  --cobalt-hover: #A9BBFF;
+  --cobalt-soft: #17234A;
+  --fill: #3553E0;
+  --fill-hover: #4462EE;
+  --fill-shadow: #1E33A0;
+  --pen: #FF8A7D;
+  --mark: #8EA6FF;
+  --cover: #131D35;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #0B1222;
+    --bg: #0F1729;
+    --panel: #16203A;
+    --ink: #E8EDF8;
+    --muted: #9BA7C4;
+    --line: #24304D;
+    --grid: #18233F;
+    --cobalt: #8EA6FF;
+    --cobalt-hover: #A9BBFF;
+    --cobalt-soft: #17234A;
+    --fill: #3553E0;
+    --fill-hover: #4462EE;
+    --fill-shadow: #1E33A0;
+    --pen: #FF8A7D;
+    --mark: #8EA6FF;
+    --cover: #131D35;
+    color-scheme: dark;
+  }
+}
+
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.6 var(--ui); }
+main { max-width:820px; margin:0 auto; padding:28px max(16px, env(safe-area-inset-right)) 64px max(16px, env(safe-area-inset-left)); }
+a { color:var(--cobalt); }
+.back { font-weight:600; text-decoration:none; font-size:15px; }
+.eyebrow { font-size:12.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--cobalt); margin:18px 0 6px; }
+h1 { font:600 36px/1.1 var(--display); margin:0 0 12px; }
+h2 { font:600 26px/1.2 var(--display); margin:44px 0 12px; padding-top:12px; border-top:1px solid var(--line); }
+h3 { font:600 19px/1.3 var(--display); margin:26px 0 8px; }
+.lede { font-size:18px; color:var(--muted); }
+code { font:13.5px ui-monospace, monospace; background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
+pre { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; overflow-x:auto; font:13px/1.5 ui-monospace, monospace; }
+table { width:100%; border-collapse:collapse; font-size:14.5px; margin:10px 0; }
+th, td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+th { font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.v { font-weight:700; white-space:nowrap; }
+.v-Proven { color:#1B8A4B; } .v-Partly { color:#B7791F; } .v-Not { color:var(--pen); }
+@media (prefers-color-scheme: dark) { .v-Proven { color:#5BD18B; } .v-Partly { color:#F2B65A; } }
+.box { background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin:14px 0; }
+.try { background:var(--cobalt-soft); border:0; }
+.try b { font-family:var(--display); font-size:18px; }
+video { width:100%; max-width:393px; border-radius:16px; border:1px solid var(--line); display:block; margin:12px auto; background:#000; }
+.shots { display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px; }
+.shots figure { margin:0; } .shots img { width:100%; border-radius:12px; border:1px solid var(--line); display:block; }
+.shots figcaption { font-size:13px; color:var(--muted); margin-top:6px; }
+.pair { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; }
+.pair img { width:100%; border-radius:12px; border:1px solid var(--line); }
+ul.tight li { margin:4px 0; }
+.ok { color:#1B8A4B; } .bad { color:var(--pen); }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="/packs/">‹ Evidence packs</a>
+<p class="eyebrow">RFC and evidence pack · PR #42 (merged)</p>
+<h1>Cathy as an agent manager</h1>
+<p class="lede">Named chats, model and thinking-effort pickers, stop and interrupt, attachments, and artifacts Cathy makes and you can share by link. Everything below comes from automated runs; the tables are generated from their results.</p>
+
+<div class="box" id="live">
+<b>Live now.</b> PR #42 is merged and deployed: everything works on admin except share links. The share Worker isn't deployed because my token can't edit workflow files, so <code>withchris-share.withchris.workers.dev</code> returns Cloudflare error 1042 (no such Worker). Switching an artifact to Link works, but the link won't open yet.<br>
+<b>To finish:</b> on main, run <code>git apply patches/workflows.patch &amp;&amp; git rm -q patches/workflows.patch &amp;&amp; git commit -am 'Deploy R2 and share' &amp;&amp; git push</code>. The deploy then creates the share Worker.
+</div>
+
+<div class="box try">
+<b>Try it yourself</b><br>
+This pack's preview clone: <a href="https://withchris-admin-cathy-yysxyt-evidence.withchris.workers.dev/cathy">withchris-admin-cathy-yysxyt-evidence.withchris.workers.dev</a>. Log in with your admin password. It's its own copy of everything (own chats, own D1 and R2), with real Claude and a real box, so try anything. It's torn down when this pack's PR closes.<br>
+<small>Share links won't open there either until the workflow patch is applied (previews deploy the share Worker only after that).</small>
+</div>
+
+<h2 id="verdict">Verdict</h2>
+<table>
+<tr><th>Goal</th><th>What was checked</th><th>Result</th></tr>
+<tr><td><b>Manage chats</b></td><td>Cathy names chats; you rename (your name wins); search; archive and unarchive</td><td class="v v-Proven"><a href="#real" style="color:inherit">Proven</a></td></tr>
+<tr><td><b>Model and effort</b></td><td>Pickers in the message box, saved per chat, labelled on each reply. Real Claude accepted effort and thinking on Opus 5.5 and Sonnet 5.5 (Haiku not tried).</td><td class="v v-Proven"><a href="#real" style="color:inherit">Proven</a></td></tr>
+<tr><td><b>Stop and interrupt</b></td><td>Square stop button; queue or interrupt; partial reply kept; next turn works</td><td class="v v-Proven"><a href="#real" style="color:inherit">Proven</a></td></tr>
+<tr><td><b>Attachments</b></td><td>Real Claude described an attached image correctly (a half-transparent red pixel: "Pink")</td><td class="v v-Proven"><a href="#real" style="color:inherit">Proven</a></td></tr>
+<tr><td><b>Artifacts in chat</b></td><td>publish_artifact → card with preview → full screen; Markdown with maths; versions</td><td class="v v-Proven"><a href="#real" style="color:inherit">Proven</a></td></tr>
+<tr><td><b>Sharing</b></td><td>Private or link; link opens logged out; private or a new link kills the old one. Proven locally; not live until the share Worker is deployed.</td><td class="v v-Partly"><a href="#live" style="color:inherit">Partly</a></td></tr>
+<tr><td><b>Safety</b></td><td>Share Worker reaches nothing else; HTML artifacts sandboxed; uploads per chat; limits</td><td class="v v-Proven"><a href="#security" style="color:inherit">Proven</a></td></tr>
+</table>
+<p>Unit tests: <b>99 pass, 0 fail</b>. Browser test: <b>22 of 22 steps pass</b>. Security checks: <b>16 of 16 pass</b>.</p>
+
+<h3 id="gaps">What this does not prove yet</h3>
+<ul class="tight">
+<li><b>Share links on real infrastructure.</b> Proven locally (fresh logged-out browser, private and new-link revocation, 16 security probes), but not on Cloudflare: no share Worker is deployed yet. After the patch, the preview re-runs the full test, sharing included.</li>
+<li><b>Haiku 5.5</b> with effort and thinking. Opus 5.5 and Sonnet 5.5 accepted them against the real API; Haiku wasn't tried. If it rejects them, the reply shows an error notice, and the fix is to drop it from <code>MODELS</code>.</li>
+<li><b>Whether summarised thinking shows</b> with real Claude. The Thinking block is tested with the stand-in model; the real run doesn't check for it. Claude may skip thinking on short tasks at low or medium effort. Try a hard question at High effort in the preview.</li>
+</ul>
+
+<h2 id="rfc">RFC</h2>
+
+<h3>Problem</h3>
+<p>Cathy works, but the chat screen is bare next to the Claude Code app. Chats can't be named or found. You can't choose the model or how hard it thinks, and you can't stop it mid-task. You can't hand it a file. Anything it makes stays as text in a chat or a commit, with no simple way to view or share it.</p>
+
+<h3>Goals</h3>
+<ol>
+<li>Manage chats: Cathy names them, you rename (your name wins), search, archive and unarchive.</li>
+<li>Control the agent: model and effort per chat; stop; interrupt with a new message.</li>
+<li>Give her things: attach images and files.</li>
+<li>Get things back: artifacts (documents, worksheets, pages, images, PDFs) shown in the chat.</li>
+<li>Share them: private (admin only) or anyone with the link.</li>
+</ol>
+<p><b>Not goals:</b> email invites, a public gallery, a <code>cathy</code> CLI, PR or diff views. All are possible later on the same backend.</p>
+
+<h3>Design</h3>
+<pre>
+ iPhone / browser
+     │  (Cloudflare Access: learn@withchris.uk)
+     ▼
+ admin Worker ── /api/cathy/* ──▶ Cathy Worker (private) ──▶ Session DO per chat ──▶ Sandbox box
+                                     │        │                  (stop, interrupt,
+                                     │        │                   model, effort)
+                                     ▼        ▼
+                                 D1 registry  R2 withchris-files
+                                     ▲
+ anyone with a link                  │ GET /share/a/&lt;token&gt; only
+     │                               │
+     ▼                               │
+ share Worker (public) ──────────────┘
+</pre>
+<ul>
+<li><b>Data.</b> D1 holds the facts: chats (now with <code>named_by</code>, <code>model</code>, <code>effort</code>), <code>uploads</code>, <code>artifacts</code> and <code>artifact_versions</code>. R2 holds the bytes at <code>uploads/&lt;id&gt;</code> and <code>artifacts/&lt;id&gt;/v&lt;n&gt;</code>. Republishing adds a version, and the link always serves the latest.</li>
+<li><b>Publishing.</b> Cathy calls <code>publish_artifact(path, title, visibility?, id?)</code>. The Worker reads the file from her box, stores it and posts a card in the chat. She never holds storage credentials.</li>
+<li><b>Attachments.</b> The page uploads each file first, then sends the message with their ids. The Session keeps only ids that belong to this chat, writes the files into her box at <code>/uploads/</code>, and passes images and PDFs to Claude inline.</li>
+<li><b>Model and effort.</b> The choices live in <code>MODELS</code> in <code>cathy/worker/wrangler.jsonc</code>, which is the one source of truth. They're read at the start of every turn and sent to Anthropic as <code>effort</code> plus adaptive, summarised thinking.</li>
+<li><b>Stop and interrupt.</b> Each turn has an <code>AbortController</code>. On a stop, her memory keeps only completed steps, so it never holds a tool call without its result. Her thinking isn't stored in memory, because it's signed per model and would break the chat after a model switch.</li>
+<li><b>Sharing.</b> A small public Worker, <code>share/</code>, matches only <code>GET|HEAD /a/&lt;20-char token&gt;[/download]</code> and forwards a bare request with no cookies or query string. Cathy answers only for <code>link</code> artifacts. Responses are cached for 60 seconds, so un-sharing takes effect within a minute.</li>
+</ul>
+
+<h3>Alternatives considered</h3>
+<table>
+<tr><th>Option</th><th>Why not (for now)</th></tr>
+<tr><td>A <code>cathy</code> CLI in her box (<code>cathy file publish x.html</code>)</td><td>It needs a public write endpoint and a token in her box. A tool gives the same result with no new door to the internet. It can still be added later as a layer over the same API.</td></tr>
+<tr><td>File bytes in D1 (the first draft on this branch)</td><td>D1 caps a value at 2 MB and the database at about 500 MB, so files had to be split into pieces. R2 is built for files and has 10 GB free.</td></tr>
+<tr><td>R2 keys in Cathy's box</td><td>Keys would open the whole bucket. Nothing would be recorded in D1, so no cards and no Artifacts page.</td></tr>
+<tr><td>One Access-protected artifacts site with a public path exempted</td><td>It works, but one misconfigured Access rule exposes everything. A separate Worker that can only do one thing is easier to reason about.</td></tr>
+<tr><td>Public gallery and email invites</td><td>Dropped at your request. "Anyone with the link" covers sharing a worksheet.</td></tr>
+</table>
+
+<h3>Security model</h3>
+<ul>
+<li>Admin, the API and private artifacts sit behind Cloudflare Access as before. The share Worker is the only new public surface. It holds no data and no secrets, and forwards a single route.</li>
+<li>Link tokens are 20 characters from a 32-letter alphabet (100 bits), checked by format before any lookup. "New link" replaces the token.</li>
+<li>Every stored file is served with <code>Content-Security-Policy: sandbox allow-scripts …</code> and no <code>allow-same-origin</code>, plus <code>nosniff</code>. In admin, previews are also in sandboxed iframes. So an HTML artifact can run its own scripts but can't read your cookies, use storage, or call admin's API. The <a href="#security">probe below</a> shows this.</li>
+<li>Attachment ids are trusted only if they belong to the chat. File names are cleaned. A 25 MB limit is enforced on the server.</li>
+<li>Cathy's <code>artifacts</code> skill makes artifacts private by default and forbids student or parent details in anything shared.</li>
+</ul>
+
+<h3>Rollout and rollback</h3>
+<ul>
+<li><b>Merged and deployed</b> (Cathy, then admin). D1 migration <code>0002</code> runs on first use and is safe to re-run. The R2 bucket <code>withchris-files</code> was created by the preview workflow from one of my in-progress pushes.</li>
+<li><b>Still to do:</b> apply <code>patches/workflows.patch</code> on main. Its deploy creates <code>withchris-share</code>, and from then on share links work.</li>
+<li><b>Old chats</b> keep working. The Session adds a <code>meta</code> column to existing message tables, and old messages show without labels.</li>
+<li><b>Rollback:</b> revert PR #42. The bucket, share Worker and new D1 tables can stay; the old code ignores them.</li>
+<li><b>Later:</b> move share to <code>artifacts.withchris.uk</code> when the domain moves over. That's one route and one var.</li>
+</ul>
+
+<h2 id="walkthrough">User walkthrough</h2>
+<p>Every feature, used the way you would, on an iPhone-sized screen at 2x, with captions. It uses the local stack with the stand-in model, so replies are scripted, and it's recorded by <code>packs/cathy-agent-manager/walkthrough.ts</code>.</p>
+<video src="media/user-walkthrough.mp4" controls playsinline preload="metadata" poster="media/walk-6.jpg"></video>
+<div class="shots"><figure><a href="media/walk-6.jpg"><img src="media/walk-6.jpg" alt="Walkthrough at 6 s" loading="lazy"></a><figcaption>6 s</figcaption></figure>
+<figure><a href="media/walk-24.jpg"><img src="media/walk-24.jpg" alt="Walkthrough at 24 s" loading="lazy"></a><figcaption>24 s</figcaption></figure>
+<figure><a href="media/walk-38.jpg"><img src="media/walk-38.jpg" alt="Walkthrough at 38 s" loading="lazy"></a><figcaption>38 s</figcaption></figure>
+<figure><a href="media/walk-52.jpg"><img src="media/walk-52.jpg" alt="Walkthrough at 52 s" loading="lazy"></a><figcaption>52 s</figcaption></figure>
+<figure><a href="media/walk-64.jpg"><img src="media/walk-64.jpg" alt="Walkthrough at 64 s" loading="lazy"></a><figcaption>64 s</figcaption></figure>
+<figure><a href="media/walk-76.jpg"><img src="media/walk-76.jpg" alt="Walkthrough at 76 s" loading="lazy"></a><figcaption>76 s</figcaption></figure>
+<figure><a href="media/walk-92.jpg"><img src="media/walk-92.jpg" alt="Walkthrough at 92 s" loading="lazy"></a><figcaption>92 s</figcaption></figure>
+<figure><a href="media/walk-112.jpg"><img src="media/walk-112.jpg" alt="Walkthrough at 112 s" loading="lazy"></a><figcaption>112 s</figcaption></figure></div>
+
+<h2 id="real">With real Claude</h2>
+<p>The preview clone ran the browser test against real Claude and a real box, on the final commit of PR #42 (2026-10-17T16:30:41.241Z). <b>16 of 17 steps passed.</b> The one failure is sharing: the clone has no share Worker yet (see <a href="#live">Live now</a>).</p>
+<table>
+<tr><th></th><th>Step</th><th>What happened</th></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/01-log-in-once.jpg">Log in once</a></td><td>remembered for 400 days</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/02-admin-home.jpg">Admin home</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/03-open-cathy.jpg">Open Cathy</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/04-start-a-new-chat.jpg">Start a new chat</a></td><td>chat id2kaj, branch cathy/id2kaj</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/05-chat-box-fits-the-phone.jpg">Chat box fits the phone</a></td><td>font 16px, Send fully on screen, disabled while empty</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/06-send-a-message.jpg">Send a message</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/07-cathy-uses-a-tool-and-replies.jpg">Cathy uses a tool and replies</a></td><td>reply 25679 ms after sending; tools: run_command git status | set_title Git status check; reply: &quot;I'm on branch cathy/id2kaj, and there are no uncommitted changes.Opus 5.5 · medium effort&quot;</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/08-chat-survives-a-reload.jpg">Chat survives a reload</a></td><td>4 messages restored</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/09-chat-is-listed-with-a-preview.jpg">Chat is listed with a preview</a></td><td>Git status checknowI'm on branch `cathy/id2kaj`, and there are no uncommitted changes.cathy/id2kaj</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/10-cathy-names-the-chat-chris-renames-it.jpg">Cathy names the chat; Chris renames it</a></td><td>Cathy named it &quot;Git status check&quot;; renamed to &quot;E2E renamed chat&quot;, kept after reload</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/11-pick-a-model-and-effort.jpg">Pick a model and effort</a></td><td>Sonnet 5.5, low effort; kept after reload</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/12-attach-an-image-cathy-sees-it.jpg">Attach an image; Cathy sees it</a></td><td>reply: &quot;Pink.Sonnet 5.5 · low effort&quot;; label: Sonnet 5.5 · low effort</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/13-stop-a-reply-with-the-square-button.jpg">Stop a reply with the square button</a></td><td>stopped after ~488 words; label &quot;Stopped · Sonnet 5.5 · low effort&quot;</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/14-interrupt-with-a-new-message.jpg">Interrupt with a new message</a></td><td>first reply stopped; then: &quot;interrupted okSonnet 5.5 · low effort&quot;</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/15-cathy-publishes-an-artifact-into-the-chat.jpg">Cathy publishes an artifact into the chat</a></td><td>artifact 9ywd4mb8: Fractions worksheet (private)</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/real/16-open-the-artifact-full-screen.jpg">Open the artifact full screen</a></td><td>3 maths expressions rendered</td></tr>
+<tr><td class="bad">✗</td><td><a href="media/real/17-share-by-link-open-it-logged-out.jpg">Share by link; open it logged out</a></td><td>Error: share link gave 404</td></tr>
+</table>
+<p>Recorded as it ran:</p>
+<video src="media/real/walkthrough.mp4" controls playsinline preload="metadata"></video>
+
+<h3>Bug the preview found in itself</h3>
+<p>That run reported <code>preview-e2e: success</code> even though a step failed (<code>results.json</code> says <code>passed: false</code>). The cause: <code>node … | tee e2e.log</code> takes the exit code from <code>tee</code>. The fix, <code>set -o pipefail</code>, is in <code>patches/workflows.patch</code>.</p>
+
+<h2 id="local">The full test, locally</h2>
+<p>The same test plus the local-only checks (search and archive, the hostile HTML artifact, security probes), using the stand-in model and local D1 and R2. 22 of 22 steps pass.</p>
+<video src="media/walkthrough.mp4" controls playsinline preload="metadata"></video>
+
+<h2 id="steps">Step by step</h2>
+<table>
+<tr><th></th><th>Step</th><th>Detail</th></tr>
+<tr><td class="ok">✓</td><td><a href="media/01-admin-home.jpg">Admin home</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/02-open-cathy.jpg">Open Cathy</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/03-start-a-new-chat.jpg">Start a new chat</a></td><td>chat nccryf, branch cathy/nccryf</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/04-chat-box-fits-the-phone.jpg">Chat box fits the phone</a></td><td>font 16px, Send fully on screen, disabled while empty</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/05-send-a-message.jpg">Send a message</a></td><td></td></tr>
+<tr><td class="ok">✓</td><td><a href="media/06-cathy-uses-a-tool-and-replies.jpg">Cathy uses a tool and replies</a></td><td>reply 6371 ms after sending; tools: run_command git status --short --branch | set_title Demo: Hello Cathy, what branch; reply: &quot;Demo Cathy here. You said: &quot;Hello Cathy, what branch are you on?&quot;. I checked my box: ## cathy/nccryfnothing to commit, working tree </td></tr>
+<tr><td class="ok">✓</td><td><a href="media/07-chat-survives-a-reload.jpg">Chat survives a reload</a></td><td>4 messages restored</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/08-chat-is-listed-with-a-preview.jpg">Chat is listed with a preview</a></td><td>Demo: Hello Cathy, what branchnowDemo Cathy here. You said: &quot;Hello Cathy, what branch are you on?&quot;. I checked my box: ## cathy/nccryf nothing to commit, working</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/09-cathy-names-the-chat-chris-renames-it.jpg">Cathy names the chat; Chris renames it</a></td><td>Cathy named it &quot;Demo: Hello Cathy, what branch&quot;; renamed to &quot;E2E renamed chat&quot;, kept after reload</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/10-pick-a-model-and-effort.jpg">Pick a model and effort</a></td><td>Sonnet 5.5, low effort; kept after reload</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/11-attach-an-image-cathy-sees-it.jpg">Attach an image; Cathy sees it</a></td><td>reply: &quot;Demo Cathy here. You said: &quot;What is in this image?&quot;. I checked my box: ## cathy/nccryfnothing to commit, working tree cl&quot;; label: Sonnet 5.5 · low effort</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/12-stop-a-reply-with-the-square-button.jpg">Stop a reply with the square button</a></td><td>stopped after ~25 words; label &quot;Stopped · Sonnet 5.5 · low effort&quot;</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/13-interrupt-with-a-new-message.jpg">Interrupt with a new message</a></td><td>first reply stopped; then: &quot;Demo Cathy here. You said: &quot;Short one instead&quot;. I checked my box: ## cathy/nccryfnothing to commit, &quot;</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/14-cathy-publishes-an-artifact-into-the-chat.jpg">Cathy publishes an artifact into the chat</a></td><td>artifact ui75z8wj: Fractions worksheet (private)</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/15-open-the-artifact-full-screen.jpg">Open the artifact full screen</a></td><td>3 maths expressions rendered</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/16-share-by-link-open-it-logged-out.jpg">Share by link; open it logged out</a></td><td>http://localhost:8788/a/p39rk3jxz4ivk8pxawv6 → 200 in a fresh browser with 0 cookies</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/17-back-to-private-the-link-stops-working.jpg">Back to private: the link stops working</a></td><td>http://localhost:8788/a/p39rk3jxz4ivk8pxawv6 → 404</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/18-artifacts-page-versions-new-link.jpg">Artifacts page: versions, new link</a></td><td>old link 404, new link 200</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/19-a-hostile-html-artifact-is-sandboxed.jpg">A hostile HTML artifact is sandboxed</a></td><td>origin: null; cookies: blocked; storage: blocked; parent page: blocked; admin API: blocked</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/20-search-archive-and-unarchive.jpg">Search, archive and unarchive</a></td><td>found by search; archived, then back in Active</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/21-security-probes.jpg">Security probes</a></td><td>16 checks passed</td></tr>
+<tr><td class="ok">✓</td><td><a href="media/22-dark-mode.jpg">Dark mode</a></td><td></td></tr>
+</table>
+
+<h3>The key moments</h3>
+<div class="pair">
+<figure><img src="media/artifact-viewer.jpg" alt="Worksheet artifact full screen with rendered fractions"><figcaption>A Markdown worksheet opened full screen, with its maths rendered.</figcaption></figure>
+<figure><img src="media/share-logged-out.jpg" alt="The same worksheet opened by link in a fresh browser"><figcaption>The same worksheet opened by its link in a fresh browser with no cookies.</figcaption></figure>
+<figure><img src="media/sandbox-probe.jpg" alt="Sandbox probe: everything blocked"><figcaption>A hostile HTML artifact: origin null, and cookies, storage, parent page and admin API all blocked.</figcaption></figure>
+</div>
+
+<h3>Every screenshot</h3>
+<div class="shots">
+<figure><a href="media/01-admin-home.jpg"><img src="media/01-admin-home.jpg" alt="Admin home" loading="lazy"></a><figcaption>Admin home</figcaption></figure>
+<figure><a href="media/02-open-cathy.jpg"><img src="media/02-open-cathy.jpg" alt="Open Cathy" loading="lazy"></a><figcaption>Open Cathy</figcaption></figure>
+<figure><a href="media/03-start-a-new-chat.jpg"><img src="media/03-start-a-new-chat.jpg" alt="Start a new chat" loading="lazy"></a><figcaption>Start a new chat</figcaption></figure>
+<figure><a href="media/04-chat-box-fits-the-phone.jpg"><img src="media/04-chat-box-fits-the-phone.jpg" alt="Chat box fits the phone" loading="lazy"></a><figcaption>Chat box fits the phone</figcaption></figure>
+<figure><a href="media/05-send-a-message.jpg"><img src="media/05-send-a-message.jpg" alt="Send a message" loading="lazy"></a><figcaption>Send a message</figcaption></figure>
+<figure><a href="media/06-cathy-uses-a-tool-and-replies.jpg"><img src="media/06-cathy-uses-a-tool-and-replies.jpg" alt="Cathy uses a tool and replies" loading="lazy"></a><figcaption>Cathy uses a tool and replies</figcaption></figure>
+<figure><a href="media/07-chat-survives-a-reload.jpg"><img src="media/07-chat-survives-a-reload.jpg" alt="Chat survives a reload" loading="lazy"></a><figcaption>Chat survives a reload</figcaption></figure>
+<figure><a href="media/08-chat-is-listed-with-a-preview.jpg"><img src="media/08-chat-is-listed-with-a-preview.jpg" alt="Chat is listed with a preview" loading="lazy"></a><figcaption>Chat is listed with a preview</figcaption></figure>
+<figure><a href="media/09-cathy-names-the-chat-chris-renames-it.jpg"><img src="media/09-cathy-names-the-chat-chris-renames-it.jpg" alt="Cathy names the chat; Chris renames it" loading="lazy"></a><figcaption>Cathy names the chat; Chris renames it</figcaption></figure>
+<figure><a href="media/10-pick-a-model-and-effort.jpg"><img src="media/10-pick-a-model-and-effort.jpg" alt="Pick a model and effort" loading="lazy"></a><figcaption>Pick a model and effort</figcaption></figure>
+<figure><a href="media/11-attach-an-image-cathy-sees-it.jpg"><img src="media/11-attach-an-image-cathy-sees-it.jpg" alt="Attach an image; Cathy sees it" loading="lazy"></a><figcaption>Attach an image; Cathy sees it</figcaption></figure>
+<figure><a href="media/12-stop-a-reply-with-the-square-button.jpg"><img src="media/12-stop-a-reply-with-the-square-button.jpg" alt="Stop a reply with the square button" loading="lazy"></a><figcaption>Stop a reply with the square button</figcaption></figure>
+<figure><a href="media/13-interrupt-with-a-new-message.jpg"><img src="media/13-interrupt-with-a-new-message.jpg" alt="Interrupt with a new message" loading="lazy"></a><figcaption>Interrupt with a new message</figcaption></figure>
+<figure><a href="media/14-cathy-publishes-an-artifact-into-the-chat.jpg"><img src="media/14-cathy-publishes-an-artifact-into-the-chat.jpg" alt="Cathy publishes an artifact into the chat" loading="lazy"></a><figcaption>Cathy publishes an artifact into the chat</figcaption></figure>
+<figure><a href="media/15-open-the-artifact-full-screen.jpg"><img src="media/15-open-the-artifact-full-screen.jpg" alt="Open the artifact full screen" loading="lazy"></a><figcaption>Open the artifact full screen</figcaption></figure>
+<figure><a href="media/16-share-by-link-open-it-logged-out.jpg"><img src="media/16-share-by-link-open-it-logged-out.jpg" alt="Share by link; open it logged out" loading="lazy"></a><figcaption>Share by link; open it logged out</figcaption></figure>
+<figure><a href="media/17-back-to-private-the-link-stops-working.jpg"><img src="media/17-back-to-private-the-link-stops-working.jpg" alt="Back to private: the link stops working" loading="lazy"></a><figcaption>Back to private: the link stops working</figcaption></figure>
+<figure><a href="media/18-artifacts-page-versions-new-link.jpg"><img src="media/18-artifacts-page-versions-new-link.jpg" alt="Artifacts page: versions, new link" loading="lazy"></a><figcaption>Artifacts page: versions, new link</figcaption></figure>
+<figure><a href="media/19-a-hostile-html-artifact-is-sandboxed.jpg"><img src="media/19-a-hostile-html-artifact-is-sandboxed.jpg" alt="A hostile HTML artifact is sandboxed" loading="lazy"></a><figcaption>A hostile HTML artifact is sandboxed</figcaption></figure>
+<figure><a href="media/20-search-archive-and-unarchive.jpg"><img src="media/20-search-archive-and-unarchive.jpg" alt="Search, archive and unarchive" loading="lazy"></a><figcaption>Search, archive and unarchive</figcaption></figure>
+<figure><a href="media/21-security-probes.jpg"><img src="media/21-security-probes.jpg" alt="Security probes" loading="lazy"></a><figcaption>Security probes</figcaption></figure>
+<figure><a href="media/22-dark-mode.jpg"><img src="media/22-dark-mode.jpg" alt="Dark mode" loading="lazy"></a><figcaption>Dark mode</figcaption></figure>
+</div>
+
+<h2 id="security">Security checks</h2>
+<table>
+<tr><th></th><th>Check</th><th>Expected</th><th>Actual</th></tr>
+<tr><td class="ok">✓</td><td>Private artifact via its old share link</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>Old link after &quot;New link&quot;</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>New link</td><td>200</td><td>200</td></tr>
+<tr><td class="ok">✓</td><td>HTML artifact in admin: origin</td><td>blocked</td><td>null</td></tr>
+<tr><td class="ok">✓</td><td>HTML artifact in admin: cookies</td><td>blocked</td><td>blocked</td></tr>
+<tr><td class="ok">✓</td><td>HTML artifact in admin: storage</td><td>blocked</td><td>blocked</td></tr>
+<tr><td class="ok">✓</td><td>HTML artifact in admin: parent page</td><td>blocked</td><td>blocked</td></tr>
+<tr><td class="ok">✓</td><td>HTML artifact in admin: admin API</td><td>blocked</td><td>blocked</td></tr>
+<tr><td class="ok">✓</td><td>Share: wrong token</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>Share: admin API path</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>Share: Cathy share path directly</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>Share: path traversal</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>Share: POST</td><td>405</td><td>405</td></tr>
+<tr><td class="ok">✓</td><td>Reading another chat's upload</td><td>404</td><td>404</td></tr>
+<tr><td class="ok">✓</td><td>26 MB upload</td><td>413</td><td>413</td></tr>
+<tr><td class="ok">✓</td><td>Path-traversal file name is cleaned</td><td>passwd</td><td>passwd</td></tr>
+</table>
+<p>Unit tests check the same rules without a browser: <code>share/src/index.test.ts</code> (only one route, nothing else reaches Cathy) and <code>cathy/worker/src/api.test.ts</code> (private, wrong, old tokens; Markdown can't break out of its page).</p>
+
+<h2 id="unit">Unit tests</h2>
+<p><b>99 pass, 0 fail</b>, up from 70. New areas: registry (names, uploads, artifacts, versions, R2), API routes, share Worker, box files, models, conversation (stop, interrupt, thinking, labels), and the artifacts skill. Full output: <a href="media/unit-tests.txt">unit-tests.txt</a>.</p>
+<p><b>Test-first:</b> stop/interrupt and memory after a stop, the share route rules, box-files, and the artifacts skill each began as a failing test. The earlier registry and API code got its tests straight after. For that code I checked that removing a key guard turns a test red (for example, the "another chat's artifact" check).</p>
+
+<h2 id="code">Load-bearing code</h2>
+<h3>The share Worker forwards one route, bare</h3>
+<pre>const TOKEN = /^\/a\/([a-z0-9]{20})(\/download)?\/?$/;
+…
+// Only the token and the download flag go through: no query string, no cookies, no other headers.
+const target = new URL(`https://cathy.internal/share/a/${m[1]}${m[2] ?? ''}`);
+const res = await env.CATHY.fetch(new Request(target, { method: request.method }));</pre>
+<h3>Only link artifacts are ever found by token</h3>
+<pre>async shared(token) {
+  if (!/^[a-z0-9]{20}$/.test(token)) return null;
+  … "SELECT * FROM artifacts WHERE token = ? AND visibility = 'link'"</pre>
+<h3>After a stop, memory keeps only finished steps</h3>
+<pre>/** After a stop: drop tool calls that never got a result (and empty messages left behind). */
+export function completeSteps(messages) {
+  const answered = new Set(… toolCallId of every tool result …);
+  return forMemory(messages.map((m) => … keep tool-call only if answered.has(p.toolCallId) …));
+}</pre>
+<h3>Every stored file runs sandboxed</h3>
+<pre>export const SANDBOX_CSP = "sandbox allow-scripts allow-modals allow-downloads allow-popups; default-src * data: blob: 'unsafe-inline' 'unsafe-eval'";</pre>
+
+<h2 id="before-live">Before this goes live</h2>
+<ol>
+<li>Apply <code>patches/workflows.patch</code> on main. The command is at the top of the file and in <a href="#live">Live now</a>.</li>
+<li>Check <code>share-deploy</code> goes green, then switch one artifact to Link and open it on your phone.</li>
+<li>Later: <code>artifacts.withchris.uk</code> once the domain moves (one route, one var).</li>
+</ol>
+
+<h2 id="reproduce">Reproduce</h2>
+<pre>npm ci
+npm test                                   # 99 unit tests
+npm run typecheck:workers
+npm run dev:cathy                          # admin on :8787 (stand-in model)
+npx wrangler dev -c share/wrangler.jsonc --port 8788   # share links
+BASE_URL=http://localhost:8787 OUT=e2e-out npm run e2e
+BASE_URL=http://localhost:8787 OUT=walk node packs/cathy-agent-manager/walkthrough.ts   # the user walkthrough
+node packs/cathy-agent-manager/build.mjs   # rebuild this page from e2e-out (copy results into media/)</pre>
+<p>Local run 2026-10-17T16:24:18.035Z against http://localhost:8787. Real run 2026-10-17T16:30:41.241Z: <a href="https://github.com/ChrisMillerpy/chrismiller/actions/runs/39049272391">Actions log</a>.</p>
+</main>
+</body>
+</html>

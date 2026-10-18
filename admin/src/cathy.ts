@@ -212,6 +212,9 @@ const CHAT_JS = `
     const d = document.createElement('details'); d.className = 'm thinking'; d.dataset.testid = 'thinking'; if (open) d.open = true;
     d.innerHTML = '<summary>Thinking</summary><div></div>'; d.querySelector('div').textContent = text; return d;
   }
+  // Tokens for a reply, e.g. " · 48k in, 91% cached · 1.2k out". Hover for exact numbers.
+  const kTok = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n));
+  const tokenLabel = (u) => (u ? ' · ' + kTok(u.input) + ' in' + (u.input ? ', ' + Math.round((100 * u.cacheRead) / u.input) + '% cached' : '') + ' · ' + kTok(u.output) + ' out' : '');
   function add(m) {
     thread.querySelector('.hint')?.remove();
     if (m.role === 'assistant' && m.thinking) place(thinkingBlock(m.thinking));
@@ -221,7 +224,8 @@ const CHAT_JS = `
       d.innerHTML = md(m.content || '');
       if (m.model || m.stopped) {
         const l = document.createElement('div'); l.className = 'label'; l.dataset.testid = 'reply-label';
-        l.innerHTML = (m.stopped ? '<span class="stopped">Stopped</span>' + (m.model ? ' · ' : '') : '') + esc(m.model ? (names[m.model] || m.model) + ' · ' + m.effort + ' effort' : '');
+        l.innerHTML = (m.stopped ? '<span class="stopped">Stopped</span>' + (m.model ? ' · ' : '') : '') + esc(m.model ? (names[m.model] || m.model) + ' · ' + m.effort + ' effort' : '') + esc(tokenLabel(m.usage));
+        if (m.usage) l.title = 'Input ' + m.usage.input + ' (cache read ' + m.usage.cacheRead + ', cache write ' + m.usage.cacheWrite + ') · output ' + m.usage.output + ' tokens';
         d.appendChild(l);
       }
     } else if (m.role === 'user') {

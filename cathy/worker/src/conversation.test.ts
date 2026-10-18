@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Conversation, MAX_HOPS, memoryStore, type Event } from './conversation.ts';
+import { Conversation, MAX_HOPS, memoryStore, tokens, type Event } from './conversation.ts';
 import { createCathy } from '../../agent/cathy.ts';
 import { fakeModel, type Step } from '../../agent/fake-model.ts';
 import type { Box } from '../../agent/box.ts';
@@ -121,6 +121,10 @@ test('message_cathy sends with one more hop; a message from Chris resets the cou
   });
   await convo.fromChris('tell the other Cathy hi');
   assert.deepEqual(sent, [{ to: 'other', text: 'hi', hops: 1 }]);
+});
+
+test('Cathys can message each other up to 10 times in a row without Chris', () => {
+  assert.equal(MAX_HOPS, 10);
 });
 
 test(`a chain of Cathy-to-Cathy messages stops after ${MAX_HOPS} hops`, async () => {
@@ -272,6 +276,22 @@ test('each reply is labelled with the model and effort, and effort reaches the m
   await convo.fromChris('again');
   assert.equal(store.messages().at(-1)!.model, 'claude-sonnet-5-5');
   assert.deepEqual(model.calls[1].providerOptions?.anthropic, { effort: 'low' });
+});
+
+test('each reply records its tokens for the whole turn, including what came from the prompt cache', async () => {
+  const { convo, store } = withSettings([
+    { tool: 'run_command', input: { command: 'ls' }, usage: { inputTokens: 1000, outputTokens: 50, cachedInputTokens: 0, cacheCreationInputTokens: 900 } },
+    { text: 'Done.', usage: { inputTokens: 1200, outputTokens: 20, cachedInputTokens: 900 } },
+  ]);
+  await convo.fromChris('go');
+  assert.deepEqual(store.messages().at(-1)!.usage, { input: 2200, cacheRead: 900, cacheWrite: 900, output: 70 });
+});
+
+test('tokens() reads both usage shapes: flat numbers and per-kind objects', () => {
+  assert.deepEqual(tokens({ inputTokens: 10, outputTokens: 2, cachedInputTokens: 6 }), { input: 10, cacheRead: 6, cacheWrite: 0, output: 2 });
+  assert.deepEqual(tokens({ inputTokens: { total: 10, noCache: 1, cacheRead: 6, cacheWrite: 3 }, outputTokens: { total: 2 } }), { input: 10, cacheRead: 6, cacheWrite: 3, output: 2 });
+  assert.equal(tokens(undefined), undefined);
+  assert.equal(tokens({}), undefined);
 });
 
 test('thinking streams live and is kept on the reply, but not in memory', async () => {

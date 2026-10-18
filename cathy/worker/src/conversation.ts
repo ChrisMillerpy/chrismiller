@@ -4,7 +4,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
-export const MAX_HOPS = 3;
+export const MAX_HOPS = 10;
 
 export type Role = 'user' | 'assistant' | 'tool' | 'update' | 'cathy' | 'notice' | 'artifact';
 /** A file Chris attached to a message. Bytes are in R2 under its id. */
@@ -30,6 +30,15 @@ export interface Message {
   thinking?: string;
   /** Chris stopped this reply part-way. */
   stopped?: boolean;
+  /** Tokens for the whole turn (assistant messages). */
+  usage?: Tokens;
+}
+/** A turn's tokens. `input` is all input; `cacheRead` and `cacheWrite` are the parts read from and saved to the prompt cache. */
+export interface Tokens {
+  input: number;
+  cacheRead: number;
+  cacheWrite: number;
+  output: number;
 }
 /** An attachment ready for a turn: where it sits in the box, and its bytes. */
 export interface Attachment extends FileRef {
@@ -299,8 +308,9 @@ export class Conversation {
       }
       const text = (await out.text).trim();
       const response = await out.response;
+      const usage = tokens(await Promise.resolve(out.totalUsage).catch(() => undefined));
       store.appendHistory([userMessage, ...forMemory(response?.messages ?? [{ role: 'assistant', content: text }])]);
-      if (text) this.add({ role: 'assistant', content: text, ...label });
+      if (text) this.add({ role: 'assistant', content: text, ...label, ...(usage ? { usage } : {}) });
     } catch (err) {
       if (abort.signal.aborted) {
         store.appendHistory([userMessage, { role: 'assistant', content: `${streamed.trim()}\n\n(Chris stopped me here.)`.trim() }]);
@@ -330,6 +340,25 @@ export function forMemory(messages: any[]): any[] {
 export function completeSteps(messages: any[]): any[] {
   const answered = new Set(messages.filter((m) => m.role === 'tool').flatMap((m) => (Array.isArray(m.content) ? m.content.map((p: any) => p.toolCallId) : [])));
   return forMemory(messages.map((m) => (m.role === 'assistant' && Array.isArray(m.content) ? { ...m, content: m.content.filter((p: any) => p.type !== 'tool-call' || answered.has(p.toolCallId)) } : m)));
+}
+
+/**
+ * A turn's token counts from the model's usage report, or undefined if there isn't one.
+ * Reads both shapes in use: flat numbers (inputTokens, cachedInputTokens, cacheCreationInputTokens)
+ * and per-kind objects (inputTokens: { total, cacheRead, cacheWrite }).
+ */
+export function tokens(u: any): Tokens | undefined {
+  if (!u || typeof u !== 'object') return undefined;
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  const inObj = u.inputTokens && typeof u.inputTokens === 'object' ? u.inputTokens : null;
+  const outObj = u.outputTokens && typeof u.outputTokens === 'object' ? u.outputTokens : null;
+  const t: Tokens = {
+    input: n(inObj ? inObj.total : u.inputTokens),
+    cacheRead: n(inObj ? inObj.cacheRead : u.cachedInputTokens),
+    cacheWrite: n(inObj ? inObj.cacheWrite : u.cacheCreationInputTokens),
+    output: n(outObj ? outObj.total : u.outputTokens),
+  };
+  return t.input || t.output ? t : undefined;
 }
 
 const kb = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);

@@ -1,0 +1,82 @@
+[
+  {
+    "check": "Private artifact via its old share link",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "Old link after \"New link\"",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "New link",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "check": "HTML artifact in admin: origin",
+    "expected": "blocked",
+    "actual": "null"
+  },
+  {
+    "check": "HTML artifact in admin: cookies",
+    "expected": "blocked",
+    "actual": "blocked"
+  },
+  {
+    "check": "HTML artifact in admin: storage",
+    "expected": "blocked",
+    "actual": "blocked"
+  },
+  {
+    "check": "HTML artifact in admin: parent page",
+    "expected": "blocked",
+    "actual": "blocked"
+  },
+  {
+    "check": "HTML artifact in admin: admin API",
+    "expected": "blocked",
+    "actual": "blocked"
+  },
+  {
+    "check": "Share: wrong token",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "Share: admin API path",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "Share: Cathy share path directly",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "Share: path traversal",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "Share: POST",
+    "expected": 405,
+    "actual": 405
+  },
+  {
+    "check": "Reading another chat's upload",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "check": "26 MB upload",
+    "expected": 413,
+    "actual": 413
+  },
+  {
+    "check": "Path-traversal file name is cleaned",
+    "expected": "passwd",
+    "actual": "passwd"
+  }
+]

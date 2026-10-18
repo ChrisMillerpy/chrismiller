@@ -60,15 +60,17 @@ export function providerFor(model: string): Provider {
 
 /**
  * What a turn sends to the model: the effort, and thinking with summaries shown, so Chris
- * can read her reasoning. Anthropic gets adaptive thinking. OpenAI gets reasoning effort and
- * summaries, and store: false so the chat stays with us (history is replayed each turn, which
- * is also what lets Chris switch between Claude and GPT mid-chat). Models that don't support
- * these ignore or reject them; keep MODELS to ones that do.
+ * can read her reasoning. Anthropic gets adaptive thinking and a 1-hour prompt cache: each step
+ * re-reads the tools, system prompt and history it has already sent at about a tenth of the input
+ * price, and 1 hour (not 5 minutes) so it survives Chris stepping away. OpenAI gets reasoning
+ * effort and summaries, and store: false so the chat stays with us (history is replayed each turn,
+ * which is also what lets Chris switch between Claude and GPT mid-chat; OpenAI caches prompts
+ * by itself). Models that don't support these ignore or reject them; keep MODELS to ones that do.
  */
 export function turnSettings(model: string, effort: Effort): TurnSettings {
   const providerOptions =
     providerFor(model) === 'openai'
       ? { openai: { reasoningEffort: effort, reasoningSummary: 'auto', store: false } }
-      : { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' } } };
+      : { anthropic: { effort, thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } };
   return { model, effort, streamOptions: { providerOptions } };
 }

@@ -13,7 +13,7 @@ import type { Env } from './env.ts';
 import { SCHEMA } from './schema.ts';
 
 /** Extra facts on a message, kept as JSON so new ones don't need new columns. */
-const META = ['files', 'model', 'effort', 'thinking', 'stopped'] as const;
+const META = ['files', 'model', 'effort', 'thinking', 'stopped', 'usage'] as const;
 
 export class Session extends DurableObject<Env> {
   private convo: Conversation | null = null;
