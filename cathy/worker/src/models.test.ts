@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modelList, resolve, turnSettings, validate } from './models.ts';
+import { isChatGPT, modelList, providerFor, resolve, turnSettings, validate } from './models.ts';
 
 const env = { MODEL: 'claude-opus-5-5', MODELS: 'claude-opus-5-5=Opus 5.5, claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5' };
 
@@ -28,4 +28,26 @@ test('effort, summarised thinking and a 1-hour prompt cache are sent to Anthropi
   assert.deepEqual(turnSettings('m', 'high').streamOptions, {
     providerOptions: { anthropic: { effort: 'high', thinking: { type: 'adaptive', display: 'summarized' }, cacheControl: { type: 'ephemeral', ttl: '1h' } } },
   });
+});
+
+test('the provider comes from the model id', () => {
+  for (const id of ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-5.5', 'o4-mini', 'openai/gpt-6-sol']) assert.equal(providerFor(id), 'openai', id);
+  for (const id of ['claude-opus-5-5', 'claude-haiku-5-5', 'something-else']) assert.equal(providerFor(id), 'anthropic', id);
+});
+
+test('GPT models get reasoning effort and summaries, and nothing is stored at OpenAI', () => {
+  assert.deepEqual(turnSettings('gpt-6.1-sol', 'high').streamOptions, { providerOptions: { openai: { reasoningEffort: 'high', reasoningSummary: 'auto', store: false } } });
+  for (const e of ['low', 'medium', 'high', 'max'] as const) {
+    assert.equal((turnSettings('gpt-6-astra', e).streamOptions as any).providerOptions.openai.reasoningEffort, e);
+  }
+  assert.equal((turnSettings('gpt-6-astra', 'low').streamOptions as any).providerOptions.anthropic, undefined, 'no Anthropic options for GPT');
+  assert.equal((turnSettings('claude-opus-5-5', 'low').streamOptions as any).providerOptions.openai, undefined, 'no OpenAI options for Claude');
+});
+
+test('chatgpt/ ids run on the ChatGPT plan and get the OpenAI settings', () => {
+  assert.equal(isChatGPT('chatgpt/gpt-6.1-sol'), true);
+  assert.equal(isChatGPT('gpt-6.1-sol'), false, 'the plain id stays on the API');
+  assert.equal(isChatGPT('claude-opus-5-5'), false);
+  assert.equal(providerFor('chatgpt/gpt-6-astra'), 'openai');
+  assert.deepEqual(turnSettings('chatgpt/gpt-6-astra', 'max').streamOptions, { providerOptions: { openai: { reasoningEffort: 'max', reasoningSummary: 'auto', store: false } } });
 });

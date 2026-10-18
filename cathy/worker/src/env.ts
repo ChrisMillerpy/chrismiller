@@ -1,5 +1,6 @@
 import type { Session } from './session.ts';
 import type { Sandbox } from '../../sandbox/sandbox.ts';
+import type { ChatGPT } from './chatgpt-account.ts';
 
 export interface Env {
   DB: D1Database;
@@ -7,8 +8,11 @@ export interface Env {
   FILES: R2Bucket;
   SESSION: DurableObjectNamespace<Session>;
   SANDBOX: DurableObjectNamespace<Sandbox>;
+  /** The ChatGPT plan sign-in (tokens live only in this object). */
+  CHATGPT: DurableObjectNamespace<ChatGPT>;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_WORKSPACE_ID?: string;
+  OPENAI_API_KEY?: string;
   /** Default model for new chats. */
   MODEL?: string;
   /** Models Chris can pick: "id=Label,id=Label". */

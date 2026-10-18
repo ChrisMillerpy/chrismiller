@@ -2,7 +2,9 @@
 // so it's tested in plain Node; index.ts is the Worker entry that adds the Durable Objects.
 import { Registry, uploadKey, versionKey, type Artifact, type Visibility } from './registry.ts';
 import { MAX_FILE, mimeFor, serveFile, shareUrl } from './files.ts';
-import { modelList, resolve, validate, EFFORTS } from './models.ts';
+import { isChatGPT, modelList, resolve, validate, EFFORTS } from './models.ts';
+import { BASE_URL, chatgptFetch } from './chatgpt-fetch.ts';
+import type { Vault } from './chatgpt-vault.ts';
 import type { Env } from './env.ts';
 
 /** What the API needs from the Session Durable Object. */
@@ -10,7 +12,16 @@ export interface SessionStub {
   fetch(r: Request): Promise<Response>;
   changed(id: string, e: import('./conversation.ts').Event): Promise<void>;
 }
-export type ApiEnv = Omit<Env, 'SESSION' | 'SANDBOX' | 'DB' | 'FILES'> & { DB: any; FILES: any; SESSION: { getByName(id: string): SessionStub } };
+/** What the API needs from the ChatGPT sign-in Durable Object. */
+export type VaultStub = Pick<Vault, 'status' | 'start' | 'finish' | 'accessToken' | 'disconnect'>;
+export type ApiEnv = Omit<Env, 'SESSION' | 'SANDBOX' | 'DB' | 'FILES' | 'CHATGPT'> & {
+  DB: any;
+  FILES: any;
+  SESSION: { getByName(id: string): SessionStub };
+  CHATGPT: { getByName(name: string): VaultStub };
+  /** Tests only: stands in for the network when the ChatGPT test request is sent. */
+  fetchImpl?: typeof globalThis.fetch;
+};
 
 /** Schema is passed in: the Worker imports the .sql files, tests read them from disk. */
 
@@ -31,6 +42,7 @@ export async function handle(request: Request, env: ApiEnv, schema: string[]): P
     if (parts[0] !== 'api') return notFound();
     if (parts[1] === 'sessions') return await sessions(parts.slice(2), request, url, registry, env);
     if (parts[1] === 'artifacts') return await artifacts(parts.slice(2), request, url, registry, env);
+    if (parts[1] === 'chatgpt') return await chatgpt(parts.slice(2), request, env);
     if (parts[1] === 'models' && request.method === 'GET') return json({ models: modelList(env), efforts: EFFORTS, defaults: resolve(env, {}) });
     return notFound();
   } catch (err) {
@@ -153,4 +165,66 @@ async function share([kind, token, action, extra]: string[], request: Request, r
   if (!a || !bytes) return notFound();
   // Short cache: switching an artifact back to private takes effect within a minute.
   return serveFile({ filename: a.filename, mime: a.mime, title: a.title }, bytes, { download: action === 'download', cache: 'public, max-age=60', etag: `"${a.id}-${a.version}"` });
+}
+
+/**
+ * Chris's ChatGPT plan sign-in. Reached only through admin (behind Access). Nothing here returns
+ * a token or the account id: status is who is connected, and the test returns the words the model said.
+ */
+async function chatgpt([action]: string[], request: Request, env: ApiEnv) {
+  const vault = env.CHATGPT.getByName('main');
+  const method = request.method;
+  const planModels = modelList(env).map((m) => m.id).filter(isChatGPT);
+  if (!action && method === 'GET') return json({ ...(await vault.status()), models: planModels });
+  if (!action && method === 'DELETE') {
+    await vault.disconnect();
+    return json({ ok: true });
+  }
+  if (method !== 'POST' || !['start', 'finish', 'test'].includes(action)) return notFound();
+  // JSON only: a form posted from another site can't set this, so it can't start, finish or test a sign-in.
+  if (!/^application\/json\b/i.test(request.headers.get('content-type') ?? '')) return json({ error: 'Send JSON' }, 415);
+  const body = (await request.json().catch(() => ({}))) as { input?: string; model?: string };
+
+  if (action === 'start') return json(await vault.start());
+  if (action === 'finish') {
+    try {
+      return json(await vault.finish(String(body.input ?? '')));
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    }
+  }
+  // test: one small request on the plan, so Chris sees what ChatGPT really answers.
+  const model = body.model ?? planModels[0];
+  if (!model || !planModels.includes(model)) return json({ error: 'Pick one of the ChatGPT plan models' }, 400);
+  try {
+    const send = chatgptFetch({ token: (force) => vault.accessToken(force), fetch: env.fetchImpl });
+    const res = await send(`${BASE_URL}/responses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ model: model.slice('chatgpt/'.length), reasoning: { effort: 'low' }, input: [{ role: 'user', content: [{ type: 'input_text', text: 'Reply with the single word: ready' }] }] }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      let said = text;
+      try {
+        const j = JSON.parse(text);
+        said = j?.error?.message ?? j?.detail ?? text;
+      } catch {}
+      return json({ ok: false, model, error: `ChatGPT answered ${res.status}: ${String(said).slice(0, 400)}` });
+    }
+    const reply = [...text.matchAll(/^data: (.*)$/gm)]
+      .map((m) => {
+        try {
+          return JSON.parse(m[1]);
+        } catch {
+          return {};
+        }
+      })
+      .filter((e) => e.type === 'response.output_text.delta')
+      .map((e) => e.delta)
+      .join('');
+    return json({ ok: true, model, reply: reply.trim() });
+  } catch (e) {
+    return json({ ok: false, model, error: e instanceof Error ? e.message : String(e) });
+  }
 }

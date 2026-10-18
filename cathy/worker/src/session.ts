@@ -1,7 +1,6 @@
 // One Session Durable Object per chat: stores the conversation in its SQLite, talks to
 // open chat pages over WebSockets, runs Cathy, and reaches her sandbox for commands.
 import { DurableObject } from 'cloudflare:workers';
-import { createAnthropic } from '@ai-sdk/anthropic';
 import { createCathy } from '../../agent/cathy.ts';
 import type { Box } from '../../agent/box.ts';
 import { Conversation, type Event, type FileRef, type Message, type Store } from './conversation.ts';
@@ -10,6 +9,7 @@ import { artifactView, attachToBox, publishFromBox } from './box-files.ts';
 import { demoBox, demoModel } from './demo.ts';
 import { resolve, turnSettings } from './models.ts';
 import { agents, childInstructions, snapshot, type Agents } from './agents.ts';
+import { buildModel } from './provider.ts';
 import type { Env } from './env.ts';
 import { SCHEMA } from './schema.ts';
 
@@ -108,11 +108,9 @@ export class Session extends DurableObject<Env> {
 
   private model(id: string) {
     if (this.env.FAKE_MODEL === '1') return demoModel() as any;
-    const anthropic = createAnthropic({
-      apiKey: this.env.ANTHROPIC_API_KEY,
-      headers: this.env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': this.env.ANTHROPIC_WORKSPACE_ID } : undefined,
-    });
-    return anthropic(id);
+    const vault = this.env.CHATGPT?.getByName('main');
+    // The chat's id keeps its requests together on ChatGPT's side so the prompt can be cached.
+    return buildModel({ ...this.env, CHATGPT: vault && ((force) => vault.accessToken(force)) }, id, undefined, { cacheKey: this.id });
   }
 
   private conversation() {

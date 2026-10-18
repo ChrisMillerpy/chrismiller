@@ -1,0 +1,231 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { buildModel } from './provider.ts';
+import { createCathy } from '../../agent/cathy.ts';
+import { fakeModel } from '../../agent/fake-model.ts';
+import { turnSettings } from './models.ts';
+import { Conversation, memoryStore, type Event } from './conversation.ts';
+import type { Box } from '../../agent/box.ts';
+
+test('GPT models need OPENAI_API_KEY, and the error says so', () => {
+  assert.throws(() => buildModel({ ANTHROPIC_API_KEY: 'a' }, 'gpt-6-astra'), /OPENAI_API_KEY isn't set/);
+});
+
+test('Claude models still need ANTHROPIC_API_KEY, GPT ones do not', () => {
+  assert.throws(() => buildModel({ OPENAI_API_KEY: 'o' }, 'claude-opus-5-5'), /ANTHROPIC_API_KEY isn't set/);
+  assert.equal((buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6-astra') as any).provider.split('.')[0], 'openai');
+  assert.equal((buildModel({ ANTHROPIC_API_KEY: 'a' }, 'claude-opus-5-5') as any).provider.split('.')[0], 'anthropic');
+});
+
+/** A fake OpenAI endpoint: records the request, answers with a short streamed reply. */
+function fakeOpenAI(script: { call?: { name: string; args: unknown }; thinking?: string } = {}) {
+  const bodies: any[] = [];
+  const urls: string[] = [];
+  const headers: Headers[] = [];
+  const fetch = async (url: any, init: any) => {
+    urls.push(String(url));
+    headers.push(new Headers(init.headers));
+    bodies.push(JSON.parse(init.body));
+    const sawResult = JSON.stringify(JSON.parse(init.body).input).includes('function_call_output');
+    const events = script.call && !sawResult ? callEvents(script.call) : [
+      { type: 'response.created', response: { id: 'resp_1', created_at: 1, model: 'gpt-6-astra' } },
+      ...(script.thinking ? reasoningEvents(script.thinking) : []),
+      { type: 'response.output_item.added', output_index: 0, item: { type: 'message', id: 'msg_1', role: 'assistant', content: [] } },
+      { type: 'response.content_part.added', item_id: 'msg_1', output_index: 0, content_index: 0, part: { type: 'output_text', text: '' } },
+      { type: 'response.output_text.delta', item_id: 'msg_1', output_index: 0, content_index: 0, delta: 'Hello.' },
+      { type: 'response.output_item.done', output_index: 0, item: { type: 'message', id: 'msg_1', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: 'Hello.', annotations: [] }] } },
+      { type: 'response.completed', response: { id: 'resp_1', created_at: 1, model: 'gpt-6-astra', output: [], usage: { input_tokens: 1, output_tokens: 1 } } },
+    ];
+    return new Response(events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('') + 'data: [DONE]\n\n', { headers: { 'content-type': 'text/event-stream' } });
+  };
+  return { fetch, bodies, urls, headers };
+}
+
+const box: Box = {
+  async run() {
+    return { exitCode: 0, stdout: '', stderr: '' };
+  },
+  async readFile() {
+    return '';
+  },
+  async writeFile() {},
+};
+
+test('a GPT turn goes to the Responses API with every tool, strict-compatible schemas, effort, summaries and store off', async () => {
+  const api = fakeOpenAI();
+  const model = buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6-astra', api.fetch as any);
+  const agent = createCathy({ model, box, sessionId: 's', branch: 'cathy/s' });
+  const settings = turnSettings('gpt-6-astra', 'max');
+  const out = await agent.stream([{ role: 'user', content: 'hi' }], { ...settings.streamOptions });
+  assert.equal((await out.text).trim(), 'Hello.');
+  assert.match(api.urls[0], /\/responses$/);
+  const body = api.bodies[0];
+  assert.equal(body.model, 'gpt-6-astra');
+  assert.equal(body.store, false);
+  assert.equal(body.reasoning.effort, 'max');
+  assert.equal(body.reasoning.summary, 'auto');
+  assert.ok(body.tools.length >= 3, 'her tools are sent');
+  for (const t of body.tools) {
+    assert.equal(t.type, 'function');
+    const props = Object.keys(t.parameters?.properties ?? {});
+    if (t.strict) assert.deepEqual([...(t.parameters.required ?? [])].sort(), props.sort(), `${t.name}: strict mode needs every property required`);
+    assert.equal(t.parameters?.type, 'object', t.name);
+  }
+});
+
+test('every tool Cathy has in a real chat (box tools and chat tools) is sent to OpenAI with a valid schema', async () => {
+  const api = fakeOpenAI();
+  const model = buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6.1-sol', api.fetch as any);
+  const store = memoryStore();
+  const convo = new Conversation({
+    store,
+    broadcast: () => {},
+    makeAgent: (tools, s) => createCathy({ model, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    settings: async () => turnSettings('gpt-6.1-sol', 'medium'),
+    setTitle: async () => true,
+    publishArtifact: async () => ({}) as any,
+    listArtifacts: async () => [],
+  });
+  await convo.fromChris('hello');
+  assert.equal(store.messages().at(-1)!.content, 'Hello.');
+  const tools = api.bodies[0].tools;
+  const names = tools.map((t: any) => t.name).sort();
+  for (const n of ['read_file', 'write_file', 'edit_file', 'list_files', 'grep', 'run_command', 'open_pr', 'set_title', 'publish_artifact', 'list_artifacts', 'tell_chris', 'list_cathys', 'message_cathy']) {
+    assert.ok(names.includes(n), `missing ${n}`);
+  }
+  for (const t of tools) {
+    assert.equal(t.parameters?.type, 'object', t.name);
+    // OpenAI strict mode: every property must be listed as required (optional ones become nullable).
+    if (t.strict) assert.deepEqual([...(t.parameters.required ?? [])].sort(), Object.keys(t.parameters.properties ?? {}).sort(), `${t.name}: strict needs every property required`);
+    assert.equal(t.parameters.additionalProperties, false, `${t.name}: needs additionalProperties: false`);
+  }
+});
+
+function reasoningEvents(text: string) {
+  const done = { type: 'reasoning', id: 'rs_1', summary: [{ type: 'summary_text', text }], encrypted_content: null };
+  return [
+    { type: 'response.output_item.added', output_index: 0, item: { type: 'reasoning', id: 'rs_1', summary: [], encrypted_content: null } },
+    { type: 'response.reasoning_summary_part.added', item_id: 'rs_1', summary_index: 0 },
+    { type: 'response.reasoning_summary_text.delta', item_id: 'rs_1', summary_index: 0, delta: text },
+    { type: 'response.output_item.done', output_index: 0, item: done },
+  ];
+}
+
+function callEvents(call: { name: string; args: unknown }) {
+  const item = { type: 'function_call', id: 'fc_1', call_id: 'call_1', name: call.name, arguments: JSON.stringify(call.args), status: 'completed' };
+  return [
+    { type: 'response.created', response: { id: 'resp_0', created_at: 1, model: 'gpt-6-astra' } },
+    { type: 'response.output_item.added', output_index: 0, item: { ...item, arguments: '' } },
+    { type: 'response.function_call_arguments.delta', item_id: 'fc_1', output_index: 0, delta: item.arguments },
+    { type: 'response.output_item.done', output_index: 0, item },
+    { type: 'response.completed', response: { id: 'resp_0', created_at: 1, model: 'gpt-6-astra', output: [], usage: { input_tokens: 1, output_tokens: 1 } } },
+  ];
+}
+
+test('GPT sends null for optional fields; the tools accept that and still run', async () => {
+  const ran: string[] = [];
+  const spyBox: Box = { ...box, async run(command) { ran.push(command); return { exitCode: 0, stdout: 'done', stderr: '' }; } };
+  const api = fakeOpenAI({ call: { name: 'run_command', args: { command: 'echo hi', timeout_seconds: null } } });
+  const model = buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6-astra', api.fetch as any);
+  const agent = createCathy({ model, box: spyBox, sessionId: 's', branch: 'cathy/s' });
+  const out = await agent.stream([{ role: 'user', content: 'run it' }], { maxSteps: 5, ...turnSettings('gpt-6-astra', 'low').streamOptions });
+  assert.equal((await out.text).trim(), 'Hello.');
+  assert.ok(ran.includes('echo hi'), 'the command ran despite timeout_seconds: null');
+  assert.equal(api.bodies.length, 2, 'the result went back to the model');
+});
+
+test('switching between Claude and GPT mid-chat works, tool calls and results included, no thinking carried over', async () => {
+  const api = fakeOpenAI({ call: { name: 'run_command', args: { command: 'echo hi' } }, thinking: 'GPT reasoning.' });
+  const gpt = buildModel({ OPENAI_API_KEY: 'o' }, 'gpt-6.1-sol', api.fetch as any);
+  const claude = fakeModel([{ text: 'Claude here.', thinking: 'Claude reasoning.' }]);
+  const events: Event[] = [];
+  const settings = { model: 'gpt-6.1-sol', effort: 'medium' };
+  const store = memoryStore();
+  const convo = new Conversation({
+    store,
+    broadcast: (e) => events.push(e),
+    makeAgent: (tools, s) => createCathy({ model: (s!.model.startsWith('gpt') ? gpt : claude) as any, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    settings: async () => turnSettings(settings.model, settings.effort as any),
+  });
+
+  await convo.fromChris('run it');
+  assert.ok(events.some((e) => e.type === 'thinking' && e.text === 'GPT reasoning.'), 'GPT thinking streams to the chat');
+  assert.equal(store.messages().at(-1)!.thinking, 'GPT reasoning.');
+
+  settings.model = 'claude-opus-5-5';
+  await convo.fromChris('now you');
+  assert.equal(store.messages().at(-1)!.content, 'Claude here.');
+  const seen = JSON.stringify(claude.calls[0].prompt);
+  assert.match(seen, /echo hi/, 'Claude sees the tool call GPT made');
+  assert.match(seen, /tool-result/, 'and its result');
+  assert.doesNotMatch(seen, /GPT reasoning/, 'but not GPT thinking');
+
+  settings.model = 'gpt-6-astra';
+  await convo.fromChris('and back');
+  const last = api.bodies.at(-1);
+  const input = JSON.stringify(last.input);
+  assert.doesNotMatch(input, /item_reference/, 'nothing refers to items stored at OpenAI');
+  assert.doesNotMatch(input, /"type":"reasoning"/, 'no reasoning items replayed');
+  assert.doesNotMatch(input, /Claude reasoning/, 'Claude thinking is not sent to GPT');
+  assert.match(input, /Claude here\./, 'GPT sees what Claude said');
+  assert.match(input, /function_call_output/, 'and the earlier tool result');
+  assert.equal(last.store, false);
+});
+
+test('a chatgpt/ model goes to the ChatGPT backend with the plan sign-in, never to the API, never with the API key', async () => {
+  const api = fakeOpenAI();
+  const keys = { OPENAI_API_KEY: 'sk-api-key', CHATGPT: async () => ({ access: 'plan-token', accountId: 'acct_9' }) };
+  const model = buildModel(keys, 'chatgpt/gpt-6-astra', api.fetch as any, { cacheKey: 'chat-7' });
+  const agent = createCathy({ model, box, sessionId: 's', branch: 'cathy/s' });
+  const out = await agent.stream([{ role: 'user', content: 'hi' }], { ...turnSettings('chatgpt/gpt-6-astra', 'high').streamOptions });
+  assert.equal((await out.text).trim(), 'Hello.');
+  assert.equal(api.urls[0], 'https://chatgpt.com/backend-api/codex/responses');
+  assert.equal(api.bodies[0].model, 'gpt-6-astra', 'the prefix is not sent');
+  assert.equal(api.bodies[0].store, false);
+  assert.equal(api.bodies[0].reasoning.effort, 'high');
+  assert.equal(api.headers[0].get('authorization'), 'Bearer plan-token');
+  assert.equal(api.headers[0].get('chatgpt-account-id'), 'acct_9');
+  assert.equal(api.headers[0].get('session_id'), 'chat-7');
+  assert.ok(api.bodies[0].tools.length >= 3, 'her tools are sent');
+  assert.ok(api.urls.every((u) => !u.includes('api.openai.com')));
+  assert.doesNotMatch(JSON.stringify(api.headers.map((h) => [...h])), /sk-api-key/);
+});
+
+test('without a ChatGPT sign-in a chatgpt/ model fails clearly and does not fall back to the paid API', () => {
+  assert.throws(() => buildModel({ OPENAI_API_KEY: 'sk-api-key' }, 'chatgpt/gpt-6-astra'), /ChatGPT plan isn't set up/i);
+});
+
+test('the plain id still uses the API key when the plan is also set up', () => {
+  const both = { OPENAI_API_KEY: 'sk-api-key', CHATGPT: async () => ({ access: 't', accountId: 'a' }) };
+  assert.equal((buildModel(both, 'chatgpt/gpt-6.1-sol') as any).modelId, 'gpt-6.1-sol');
+  assert.match((buildModel(both, 'gpt-6.1-sol') as any).provider, /^openai/);
+});
+
+test('a chat on a plan model with no sign-in says so in the chat, and nothing is sent anywhere', async () => {
+  const api = fakeOpenAI();
+  const notConnected = async () => {
+    throw new Error("ChatGPT isn't connected. Open Admin, then Cathy, then ChatGPT plan, and connect it.");
+  };
+  const model = buildModel({ CHATGPT: notConnected }, 'chatgpt/gpt-6-astra', api.fetch as any);
+  const store = memoryStore();
+  const convo = new Conversation({
+    store,
+    broadcast: () => {},
+    makeAgent: (tools) => createCathy({ model, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    settings: async () => turnSettings('chatgpt/gpt-6-astra', 'medium'),
+  });
+  await convo.fromChris('hello');
+  const last = store.messages().at(-1)!;
+  assert.equal(last.role, 'notice');
+  assert.match(last.content, /ChatGPT isn't connected/);
+  assert.equal(api.urls.length, 0);
+});
