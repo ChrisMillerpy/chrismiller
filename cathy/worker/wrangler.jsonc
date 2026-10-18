@@ -12,9 +12,9 @@
   // Lets the Worker import d1/migrations/*.sql as text.
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "vars": {
-    // Default model for new chats, and the models Chris can pick in a chat ("id=Label", comma-separated). gpt-* ids go to OpenAI (needs the OPENAI_API_KEY secret), the rest to Anthropic.
+    // Default model for new chats, and the models Chris can pick in a chat ("id=Label", comma-separated). gpt-* ids go to OpenAI (needs the OPENAI_API_KEY secret), chatgpt/* ids to OpenAI on Chris's ChatGPT plan (sign-in in admin, no key), the rest to Anthropic.
     "MODEL": "claude-opus-5-5",
-    "MODELS": "claude-opus-5-5=Opus 5.5,claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5=Haiku 5.5,gpt-6.1-sol=GPT 6.1 Sol,gpt-6-astra=GPT 6 Astra",
+    "MODELS": "claude-opus-5-5=Opus 5.5,claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5=Haiku 5.5,gpt-6.1-sol=GPT 6.1 Sol,gpt-6-astra=GPT 6 Astra,chatgpt/gpt-6.1-sol=GPT 6.1 Sol (ChatGPT plan),chatgpt/gpt-6-astra=GPT 6 Astra (ChatGPT plan)",
     // Where share links point (the share Worker, share/). Becomes https://artifacts.withchris.uk with the domain.
     "SHARE_URL": "https://withchris-share.withchris.workers.dev",
     // Not secret. Needed because the Anthropic API key isn't tied to one workspace.
@@ -26,6 +26,7 @@
   "durable_objects": {
     "bindings": [
       { "name": "SESSION", "class_name": "Session" },
+      { "name": "CHATGPT", "class_name": "ChatGPT" },
       { "name": "SANDBOX", "class_name": "Sandbox" }
     ]
   },
@@ -38,6 +39,7 @@
   ],
   "exports": {
     "Session": { "type": "durable-object", "storage": "sqlite" },
+    "ChatGPT": { "type": "durable-object", "storage": "sqlite" },
     "Sandbox": { "type": "durable-object", "storage": "sqlite", "container": "sandbox" }
   },
   "observability": { "enabled": true }
