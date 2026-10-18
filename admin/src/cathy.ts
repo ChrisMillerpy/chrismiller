@@ -266,11 +266,15 @@ const CHAT_JS = `
       try { d.appendChild(artifactCard(JSON.parse(m.content))); } catch { d.textContent = m.content; }
     } else d.textContent = m.content;
     if (m.role === 'cathy') {
-      const kid = agentsById[m.sender];
-      d.dataset.from = kid ? 'From sub-agent: ' + kid.title : session?.parent_id === m.sender ? 'From the Cathy that started me (' + m.sender + ')' : 'From Cathy ' + m.sender;
+      d.dataset.sender = m.sender; label(d);
       const o = document.createElement('a'); o.className = 'open'; o.href = '/cathy/' + encodeURIComponent(m.sender); o.textContent = 'Open chat ›'; d.appendChild(o);
     }
     return place(d);
+  }
+  // Who a Cathy message is from, by name when we know it. Re-run when the sub-agent list arrives.
+  function label(d) {
+    const from = d.dataset.sender, kid = agentsById[from];
+    d.dataset.from = kid ? 'From sub-agent: ' + kid.title : session?.parent_id === from ? 'From the Cathy that started me (' + from + ')' : 'From Cathy ' + from;
   }
   // Sub-agents of this chat, as chips under the header. Refreshed when one is started, stopped or reports.
   let agentsById = {}, agentsTimer = 0;
@@ -279,6 +283,7 @@ const CHAT_JS = `
     if (!r?.ok) return;
     const kids = (await r.json()).filter((s) => s.parent_id === id).sort((a, b) => a.created_at - b.created_at);
     agentsById = Object.fromEntries(kids.map((k) => [k.id, k]));
+    thread.querySelectorAll('.m.cathy').forEach(label);
     $('agents').replaceChildren(...kids.map((k) => {
       const a = document.createElement('a'); a.href = '/cathy/' + k.id; a.dataset.state = k.state; a.dataset.testid = 'agent-chip';
       a.title = (k.task || '') + ' · ' + (names[k.model] || k.model) + ' · ' + k.state;
