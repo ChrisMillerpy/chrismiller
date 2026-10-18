@@ -21,8 +21,10 @@ test('Claude models still need ANTHROPIC_API_KEY, GPT ones do not', () => {
 function fakeOpenAI(script: { call?: { name: string; args: unknown }; thinking?: string } = {}) {
   const bodies: any[] = [];
   const urls: string[] = [];
+  const headers: Headers[] = [];
   const fetch = async (url: any, init: any) => {
     urls.push(String(url));
+    headers.push(new Headers(init.headers));
     bodies.push(JSON.parse(init.body));
     const sawResult = JSON.stringify(JSON.parse(init.body).input).includes('function_call_output');
     const events = script.call && !sawResult ? callEvents(script.call) : [
@@ -36,7 +38,7 @@ function fakeOpenAI(script: { call?: { name: string; args: unknown }; thinking?:
     ];
     return new Response(events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('') + 'data: [DONE]\n\n', { headers: { 'content-type': 'text/event-stream' } });
   };
-  return { fetch, bodies, urls };
+  return { fetch, bodies, urls, headers };
 }
 
 const box: Box = {
@@ -174,4 +176,33 @@ test('switching between Claude and GPT mid-chat works, tool calls and results in
   assert.match(input, /Claude here\./, 'GPT sees what Claude said');
   assert.match(input, /function_call_output/, 'and the earlier tool result');
   assert.equal(last.store, false);
+});
+
+test('a chatgpt/ model goes to the ChatGPT backend with the plan sign-in, never to the API, never with the API key', async () => {
+  const api = fakeOpenAI();
+  const keys = { OPENAI_API_KEY: 'sk-api-key', CHATGPT: async () => ({ access: 'plan-token', accountId: 'acct_9' }) };
+  const model = buildModel(keys, 'chatgpt/gpt-6-astra', api.fetch as any, { cacheKey: 'chat-7' });
+  const agent = createCathy({ model, box, sessionId: 's', branch: 'cathy/s' });
+  const out = await agent.stream([{ role: 'user', content: 'hi' }], { ...turnSettings('chatgpt/gpt-6-astra', 'high').streamOptions });
+  assert.equal((await out.text).trim(), 'Hello.');
+  assert.equal(api.urls[0], 'https://chatgpt.com/backend-api/codex/responses');
+  assert.equal(api.bodies[0].model, 'gpt-6-astra', 'the prefix is not sent');
+  assert.equal(api.bodies[0].store, false);
+  assert.equal(api.bodies[0].reasoning.effort, 'high');
+  assert.equal(api.headers[0].get('authorization'), 'Bearer plan-token');
+  assert.equal(api.headers[0].get('chatgpt-account-id'), 'acct_9');
+  assert.equal(api.headers[0].get('session_id'), 'chat-7');
+  assert.ok(api.bodies[0].tools.length >= 3, 'her tools are sent');
+  assert.ok(api.urls.every((u) => !u.includes('api.openai.com')));
+  assert.doesNotMatch(JSON.stringify(api.headers.map((h) => [...h])), /sk-api-key/);
+});
+
+test('without a ChatGPT sign-in a chatgpt/ model fails clearly and does not fall back to the paid API', () => {
+  assert.throws(() => buildModel({ OPENAI_API_KEY: 'sk-api-key' }, 'chatgpt/gpt-6-astra'), /ChatGPT plan isn't set up/i);
+});
+
+test('the plain id still uses the API key when the plan is also set up', () => {
+  const both = { OPENAI_API_KEY: 'sk-api-key', CHATGPT: async () => ({ access: 't', accountId: 'a' }) };
+  assert.equal((buildModel(both, 'chatgpt/gpt-6.1-sol') as any).modelId, 'gpt-6.1-sol');
+  assert.match((buildModel(both, 'gpt-6.1-sol') as any).provider, /^openai/);
 });

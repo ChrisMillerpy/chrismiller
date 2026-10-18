@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modelList, providerFor, resolve, turnSettings, validate } from './models.ts';
+import { isChatGPT, modelList, providerFor, resolve, turnSettings, validate } from './models.ts';
 
 const env = { MODEL: 'claude-opus-5-5', MODELS: 'claude-opus-5-5=Opus 5.5, claude-sonnet-5-5=Sonnet 5.5,claude-haiku-5-5' };
 
@@ -42,4 +42,12 @@ test('GPT models get reasoning effort and summaries, and nothing is stored at Op
   }
   assert.equal((turnSettings('gpt-6-astra', 'low').streamOptions as any).providerOptions.anthropic, undefined, 'no Anthropic options for GPT');
   assert.equal((turnSettings('claude-opus-5-5', 'low').streamOptions as any).providerOptions.openai, undefined, 'no OpenAI options for Claude');
+});
+
+test('chatgpt/ ids run on the ChatGPT plan and get the OpenAI settings', () => {
+  assert.equal(isChatGPT('chatgpt/gpt-6.1-sol'), true);
+  assert.equal(isChatGPT('gpt-6.1-sol'), false, 'the plain id stays on the API');
+  assert.equal(isChatGPT('claude-opus-5-5'), false);
+  assert.equal(providerFor('chatgpt/gpt-6-astra'), 'openai');
+  assert.deepEqual(turnSettings('chatgpt/gpt-6-astra', 'max').streamOptions, { providerOptions: { openai: { reasoningEffort: 'max', reasoningSummary: 'auto', store: false } } });
 });
