@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Cathy on your ChatGPT plan: evidence pack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Public+Sans:wght@400..600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root { --paper:#FAFBFD; --bg:#FFFFFF; --ink:#18203A; --muted:#5A6480; --line:#DDE3EE; --cobalt:#2443C9; --ok:#1B7F4B; --wait:#9A6700; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --paper:#0B1222; --bg:#0F1729; --ink:#E8EDF8; --muted:#9BA7C4; --line:#24304D; --cobalt:#8EA6FF; --ok:#5FD38D; --wait:#E3B341; color-scheme: dark; } }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 'Public Sans', system-ui, sans-serif; }
+  main { max-width:780px; margin:0 auto; padding:28px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); }
+  a { color:var(--cobalt); } a.back { text-decoration:none; font-weight:600; font-size:15px; }
+  p.eyebrow { font-size:12.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--cobalt); margin:18px 0 6px; }
+  h1 { font:600 36px/1.1 Literata, Georgia, serif; margin:0 0 20px; }
+  h2 { font:600 24px/1.2 Literata, Georgia, serif; margin:36px 0 10px; }
+  table { border-collapse:collapse; width:100%; background:var(--bg); border:1px solid var(--line); font-size:15px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .ok { color:var(--ok); font-weight:600; } .wait { color:var(--wait); font-weight:600; }
+  code, pre { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:13.5px; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px 14px; overflow-x:auto; white-space:pre-wrap; }
+  .shots { display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:12px; }
+  figure { margin:0; } figure img { width:100%; border:1px solid var(--line); border-radius:12px; display:block; }
+  figcaption { font-size:13px; color:var(--muted); margin-top:4px; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/packs/">‹ Evidence packs</a>
+  <p class="eyebrow">Evidence pack</p>
+  <h1>Cathy on your ChatGPT plan</h1>
+
+  <h2>RFC</h2>
+  <p><b>Problem.</b> Chris wants Cathy's GPT chats to count against his ChatGPT plan rather than bill the OpenAI API.</p>
+  <p><b>How it works.</b> OpenAI's Codex CLI signs in with a ChatGPT account (OAuth with PKCE, using Codex's public client id) and sends normal Responses API requests to <code>chatgpt.com/backend-api/codex/responses</code>, with the account token and a few headers. Cathy does the same. The design follows the open-source opencode plugin that does this, read line by line.</p>
+  <p><b>Design.</b></p>
+  <ul>
+    <li><b>Picker.</b> New ids <code>chatgpt/gpt-6.1-sol</code> and <code>chatgpt/gpt-6-astra</code>, labelled "(ChatGPT plan)", next to the API ones. Same model, different bill, so Chris chooses each time. A plan model never falls back to the API key, and an API model never uses the plan.</li>
+    <li><b>Sign-in</b> (<code>chatgpt-oauth.ts</code>). Admin → ChatGPT plan → Start → sign in → the browser lands on a <code>localhost</code> page that can't load (that's Codex's fixed redirect) → paste that address back. A one-time <code>state</code> (compared in constant time) ties the paste to the sign-in Cathy started; it's single use and expires after 10 minutes.</li>
+    <li><b>Token store</b> (<code>chatgpt-vault.ts</code>, <code>chatgpt-account.ts</code>). A dedicated Durable Object, <code>ChatGPT</code> "main". See Security.</li>
+    <li><b>Requests</b> (<code>chatgpt-fetch.ts</code>). A custom <code>fetch</code> given to the existing OpenAI model: rewrites the body for the backend (<code>store: false</code>, streamed, ids and server references stripped, system → developer, encrypted reasoning kept), adds the token and Codex headers, and the chat id as the prompt-cache key. On a 401 it refreshes once and retries. A spent plan becomes "Your ChatGPT plan's usage limit is used up. It resets in about…".</li>
+    <li><b>Admin page</b> (<code>admin/src/chatgpt-ui.ts</code>). Status (email and plan), connect, a "Send test" button that shows exactly what ChatGPT answers, and disconnect.</li>
+  </ul>
+  <p><b>Alternatives rejected.</b> <i>Running Codex CLI in the box</i> (the <code>ai-sdk-provider-codex-cli</code> route): Codex then runs its own tools and agent loop instead of Cathy's, and the sign-in would sit in the box where any command could read it. <i>The opencode plugin as a dependency</i>: it's built for opencode, uses Node file APIs, and rewrites prompts for opencode's tool names. <i>Storing tokens in D1 or a Worker secret</i>: D1 is shared with chats and artifacts and readable by more code; secrets can't be updated at runtime, and the refresh token rotates. <i>A real redirect to admin</i>: Codex's client only allows its <code>localhost</code> redirect.</p>
+
+  <h2>Security: where the token lives</h2>
+  <ul>
+    <li><b>Only in the <code>ChatGPT</code> Durable Object's storage</b>, encrypted at rest by Cloudflare. Not in D1, R2, a secret, a log, Cathy's box or any chat.</li>
+    <li><b>Nothing on the network can reach it.</b> The object has no <code>fetch</code> handler. Only the Cathy Worker's own code calls it, through a binding. The Cathy Worker itself has no public address, and admin, the only way in, is behind Cloudflare Access.</li>
+    <li><b>The refresh token, PKCE verifier and id token never leave the object.</b> The only thing that does is a short-lived access token, handed to the code making the request. The API returns status (email, plan) and the test reply, never a token or the account id (tested).</li>
+    <li><b>Token only to chatgpt.com.</b> The fetch refuses any other host, plain http, odd ports or credentials in the URL before it even asks for the token, and never follows redirects (tested).</li>
+    <li><b>Cathy never sees it.</b> It isn't in her context, her tools or her box's environment (the box only gets the GitHub token), and she has no tool that touches the ChatGPT routes.</li>
+    <li><b>No logging.</b> Nothing logs the token, account id or messages. Error messages name the status code, never the request or response body, which can echo secrets (tested).</li>
+    <li><b>Cross-site requests.</b> Changing routes only accept <code>application/json</code>, which a form on another site can't send, and they sit behind Access anyway.</li>
+    <li><b>Refresh races.</b> ChatGPT rotates the refresh token, so two refreshes at once would kill the sign-in. Refreshes run one at a time (<code>singleFlight</code>), and the new token is saved before it's used. A dead refresh token wipes the sign-in and says to reconnect. A temporary failure keeps it.</li>
+    <li><b>Page safety.</b> The admin page puts server text on the page only as text, never as HTML (tested with a hostile message in a real browser).</li>
+    <li><b>Disconnect</b> deletes everything stored.</li>
+  </ul>
+  <p><b>Honest risks.</b> This is Codex's sign-in, not an official API for other apps. It could stop working without notice, and I can't confirm OpenAI's terms cover it (the opencode plugin says "personal development use", and this is one person's use). <code>chatgpt.com</code> may refuse requests from Cloudflare's network. My box gets 403 from it, so the first real sign-in is the real test. Usage comes out of the same limit as ChatGPT.</p>
+
+  <h2>Rollout and rollback</h2>
+  <p>Merge: nothing changes for existing chats. No secrets needed, and the new Durable Object is created on deploy. Then admin → ChatGPT plan → connect → Send test. <b>Rollback:</b> Disconnect, and/or remove the <code>chatgpt/</code> entries from <code>MODELS</code>. Chats on them fall back to the default model.</p>
+
+  <h2>Verdict</h2>
+  <table>
+    <tr><th>Claim</th><th>Result</th><th>Proof</th></tr>
+    <tr><td>Sign-in: PKCE, state, single use, 10-minute expiry, every paste shape, clear errors</td><td class="ok">Pass</td><td>oauth + vault tests</td></tr>
+    <tr><td>Token store: refresh before expiry, one refresh at a time, rotated token saved first, dead token disconnects, blip doesn't</td><td class="ok">Pass</td><td>vault tests</td></tr>
+    <tr><td>No route returns a token or account id; no logs contain them</td><td class="ok">Pass</td><td>api + fetch tests</td></tr>
+    <tr><td>Token goes only to chatgpt.com; redirects never followed</td><td class="ok">Pass</td><td>fetch tests</td></tr>
+    <tr><td>A <code>chatgpt/</code> chat goes to the backend with the plan token, all tools, effort, <code>store: false</code>; never the API key</td><td class="ok">Pass</td><td>provider tests (real OpenAI client, fake backend)</td></tr>
+    <tr><td>Not connected: plain message in the chat, nothing sent; no fallback to the API</td><td class="ok">Pass</td><td>provider tests</td></tr>
+    <tr><td>Routes run in the real Workers runtime (Durable Object storage, wrong state refused, form posts refused)</td><td class="ok">Pass</td><td>local <code>wrangler dev</code></td></tr>
+    <tr><td>Admin page on a phone: states, errors, XSS, confirm, no sideways scroll, tap sizes, dark mode</td><td class="ok">Pass</td><td>16 of 16 browser checks, screenshots below</td></tr>
+    <tr><td>Whole suite and type-check</td><td class="ok">Pass</td><td>146 of 146 tests; <code>typecheck:workers</code> clean</td></tr>
+    <tr><td>A real sign-in, and a real reply from ChatGPT through a Cloudflare Worker</td><td class="wait">Waiting</td><td>Needs Chris to sign in after deploy. Not run.</td></tr>
+    <tr><td>Sol and Astra are offered on Chris's plan under these ids</td><td class="wait">Waiting</td><td>Codex's own model list has both. "Send test" will tell.</td></tr>
+  </table>
+
+  <h2>Screenshots (iPhone-sized)</h2>
+  <p class="muted">Not-connected states are the real local Worker. Connected states mock the API, because I can't sign in to OpenAI from a test box.</p>
+  <div class="shots">
+    <figure><img src="/packs/chatgpt-plan/shots/0-home.png" alt="Home: new ChatGPT plan card" loading="lazy"><figcaption>Home: new ChatGPT plan card</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/1-not-connected.png" alt="Not connected" loading="lazy"><figcaption>Not connected</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/2-started.png" alt="Started: open ChatGPT, paste back" loading="lazy"><figcaption>Started: open ChatGPT, paste back</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/3-wrong-address.png" alt="Wrong address refused" loading="lazy"><figcaption>Wrong address refused</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/4-connected-tested.png" alt="Connected, test passed (mocked)" loading="lazy"><figcaption>Connected, test passed (mocked)</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/5-refused.png" alt="ChatGPT refuses: shown in words (mocked)" loading="lazy"><figcaption>ChatGPT refuses: shown in words (mocked)</figcaption></figure>
+    <figure><img src="/packs/chatgpt-plan/shots/6-dark.png" alt="Dark mode" loading="lazy"><figcaption>Dark mode</figcaption></figure>
+  </div>
+
+  <h2>Tests written first</h2>
+  <p>Each part's tests were written and seen failing (module missing) before its code. One exception: "a chat on a plan model with no sign-in says so" was written after and passed straight away, because the existing error handling already covers it. It stays as a guard. Note: my box was wiped partway through, and the uncommitted half was rewritten from the same design and re-tested.</p>
+  <pre>ok - the page script is valid JavaScript
+ok - everything the script looks up is on the page
+ok - whatever the server sends is shown as text, never as HTML
+ok - it only calls the ChatGPT endpoints through admin, and every POST says it is JSON
+ok - disconnecting asks first
+ok - the page explains the odd "can't be reached" step, and points at the privacy setting
+ok - chatgpt: status, start, finish, disconnect, and no route ever returns a token or the account id
+ok - chatgpt: a wrong or missing pasted address is a 400 with a reason, not a crash
+ok - chatgpt: changing anything needs JSON, so a form posted from another site does nothing
+ok - chatgpt test: sends one small request on the plan and reports the reply
+ok - chatgpt test: what ChatGPT said is shown when it refuses, and only plan models can be tested
+ok - the body is made stateless and Codex-shaped: no ids, no references, stored nowhere, streamed
+ok - a request carries the ChatGPT token, account and Codex headers, replaces the SDK key, and never follows redirects
+ok - the token is only ever sent to chatgpt.com, and never requested for anywhere else
+ok - an expired token is refreshed once and the request retried; a second 401 is passed on
+ok - hitting the plan limit gives a plain message, not raw JSON
+ok - no token, account id or request body is ever written to the console
+ok - a login has a PKCE challenge that matches its verifier, a state, and the Codex redirect
+ok - pasted sign-in results are understood in every shape
+ok - the code is exchanged with the verifier, and the tokens come back with an expiry and the account
+ok - a failed exchange explains itself without echoing the code, verifier or response body
+ok - a response without the fields we need is refused
+ok - refresh keeps the old refresh token if none is sent, and flags a dead one as permanent
+ok - connecting stores the sign-in and reports who, but status never contains a token
+ok - the sign-in link is single use, expires, and only matches its own state
+ok - a result with no code, an error, or no state is refused clearly
+ok - an access token is handed out; near expiry it is refreshed and the rotated refresh token is saved first
+ok - many callers at once cause one refresh, and force refreshes even a fresh token
+ok - a dead refresh token disconnects and says to reconnect; a hiccup keeps the sign-in
+ok - not connected is an error that says how to connect
+ok - disconnect wipes everything stored</pre>
+
+  <h2>Reproduce</h2>
+  <pre>npm test
+npm run typecheck:workers
+npm run dev:cathy            # then, in another terminal:
+node packs/chatgpt-plan/ui-check.mjs</pre>
+</main>
+</body>
+</html>
