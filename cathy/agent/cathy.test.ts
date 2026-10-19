@@ -43,3 +43,12 @@ test('a turn can call a tool on the box and then answer', async () => {
   // The tool result went back to the model on the second call.
   assert.match(JSON.stringify(model.calls[1]), /withchris\.uk/);
 });
+
+test('a sub-agent can be built without some tools and with extra instructions after her self', async () => {
+  const cathy = createCathy({ model: fakeModel([]) as any, box, sessionId: 'c1', branch: 'cathy/c1', withoutTools: ['open_pr'], extraInstructions: async () => '## You are a sub-agent\nReport back.' });
+  const tools = Object.keys(await cathy.listTools());
+  assert.ok(!tools.includes('open_pr'));
+  assert.ok(tools.includes('run_command'));
+  const text = String(await cathy.getInstructions());
+  assert.match(text, /## You are a sub-agent\nReport back\.$/);
+});

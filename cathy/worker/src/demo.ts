@@ -49,6 +49,7 @@ try { say('parent page', parent.document ? 'REACHED' : 'blocked'); } catch (e) {
  * quoting the tool result. Enough to exercise tools, streaming and history end to end.
  * It names new chats. "publish" publishes worksheet.md ("probe": probe.html), with a link if asked.
  * "long" gives a slow 150-word reply, so stop and interrupt can be tested.
+ * "spawn" starts a sub-agent ("fork" forks; "haiku" picks Haiku, low effort). Messages that start with "[" (from other Cathys) never spawn or rename.
  */
 export function demoModel() {
   const usage = { inputTokens: 1, outputTokens: 1, totalTokens: 2 };
@@ -78,7 +79,14 @@ export function demoModel() {
       const images = Array.isArray(lastUser?.content) ? lastUser.content.filter((p: any) => p.type === 'file' && /^image\//.test(p.mediaType)).length : 0;
 
       if (!calledThisTurn.includes('run_command')) call('run_command', { command: 'git status --short --branch' });
-      else if (firstTurn && has('set_title') && !calledThisTurn.includes('set_title')) call('set_title', { title: `Demo: ${said.split(/\s+/).slice(0, 4).join(' ') || 'files'}` });
+      else if (firstTurn && !said.startsWith('[') && has('set_title') && !calledThisTurn.includes('set_title')) call('set_title', { title: `Demo: ${said.split(/\s+/).slice(0, 4).join(' ') || 'files'}` });
+      else if (/spawn/i.test(said) && !said.startsWith('[') && has('spawn_agent') && !calledThisTurn.includes('spawn_agent'))
+        call('spawn_agent', {
+          task: 'Check the README and report in one line.',
+          title: /fork/i.test(said) ? 'Demo fork' : 'Demo helper',
+          mode: /fork/i.test(said) ? 'fork' : 'fresh',
+          ...(/haiku/i.test(said) ? { model: 'claude-haiku-5-5', effort: 'low' } : {}),
+        });
       else if (/publish/i.test(said) && has('publish_artifact') && !calledThisTurn.includes('publish_artifact'))
         call('publish_artifact', { path: /probe/i.test(said) ? 'probe.html' : 'worksheet.md', title: /probe/i.test(said) ? 'Sandbox probe' : 'Fractions worksheet', visibility: /public/i.test(said) ? 'public' : /link/i.test(said) ? 'link' : 'private' });
       else {

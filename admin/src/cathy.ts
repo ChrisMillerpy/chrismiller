@@ -26,22 +26,36 @@ const EXPLORER_CSS = `
   .chat .branch { font:12px var(--mono, ui-monospace, monospace); color:var(--cobalt); margin-top:6px; }
   .restore { position:absolute; right:12px; bottom:10px; border:1px solid var(--line); background:var(--bg); color:var(--cobalt); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; cursor:pointer; }
   .empty, .error { color:var(--muted); padding:24px 4px; }
+  /* Sub-agents sit under their parent, indented with a rule. */
+  .chats li.sub { margin-left:22px; }
+  .chats li.sub::before { content:''; position:absolute; left:-13px; top:-10px; bottom:50%; width:9px; border-left:2px solid var(--line); border-bottom:2px solid var(--line); border-bottom-left-radius:8px; }
+  .chat .meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; align-items:center; }
+  .chat .meta .branch { margin-top:0; }
+  .tag { font-size:12px; font-weight:600; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
+  .tag.working { color:var(--cobalt); border-color:color-mix(in srgb, var(--cobalt) 40%, var(--line)); }
+  .tag.working::before { content:'● '; }
   .error { color:var(--pen); }
 `;
 
 const EXPLORER_JS = `
   const list = document.getElementById('chats'), q = document.getElementById('q'), tabs = document.getElementById('tabs');
-  let status = 'active', sessions = [];
+  let status = 'active', sessions = [], models = {};
+  fetch('/api/cathy/models').then((r) => r.ok ? r.json() : null).then((m) => { if (m) { m.models.forEach((x) => models[x.id] = x.label); draw(); } }).catch(() => {});
   const ago = (t) => { const s = (Date.now() - t) / 1000; if (s < 60) return 'now'; if (s < 3600) return Math.floor(s / 60) + 'm'; if (s < 86400) return Math.floor(s / 3600) + 'h'; return Math.floor(s / 86400) + 'd'; };
-  function row(s) {
+  function row(s, sub) {
     const a = document.createElement('a');
-    a.className = 'chat'; a.href = '/cathy/' + s.id; a.dataset.testid = 'chat-row';
-    a.innerHTML = '<div class="row"><div class="title"></div><div class="when"></div></div><div class="preview"></div><div class="branch"></div>';
+    a.className = 'chat'; a.href = '/cathy/' + s.id; a.dataset.testid = sub ? 'agent-row' : 'chat-row';
+    a.innerHTML = '<div class="row"><div class="title"></div><div class="when"></div></div><div class="preview"></div><div class="meta"></div>';
     a.querySelector('.title').textContent = s.title || 'New chat';
     a.querySelector('.when').textContent = ago(s.updated_at);
     a.querySelector('.preview').textContent = s.last_message || 'No messages yet';
-    a.querySelector('.branch').textContent = s.branch;
+    const meta = a.querySelector('.meta');
+    const tag = (text, cls) => { const t = document.createElement('span'); t.className = 'tag' + (cls ? ' ' + cls : ''); t.textContent = text; meta.appendChild(t); };
+    if (s.state === 'working') tag('working', 'working');
+    if (s.parent_id) tag('sub-agent · ' + (s.mode || 'fresh') + ' · ' + (models[s.model] || s.model));
+    const b = document.createElement('span'); b.className = 'branch'; b.textContent = s.branch; meta.appendChild(b);
     const li = document.createElement('li'); li.appendChild(a);
+    if (sub) li.className = 'sub';
     if (status === 'archived') {
       const b = document.createElement('button'); b.className = 'restore'; b.textContent = 'Unarchive'; b.dataset.testid = 'unarchive';
       b.onclick = async () => { b.disabled = true; await fetch('/api/cathy/sessions/' + s.id + '/unarchive', { method: 'POST' }); load(); };
@@ -49,11 +63,19 @@ const EXPLORER_JS = `
     }
     return li;
   }
+  // Each chat, with its sub-agents under it (oldest first). A search shows every match flat.
   function draw() {
     const term = q.value.trim().toLowerCase();
-    const shown = sessions.filter((s) => !term || [s.title, s.last_message, s.branch].join(' ').toLowerCase().includes(term));
-    list.replaceChildren(...shown.map(row));
-    if (!shown.length) list.innerHTML = '<li class="empty">' + (term ? 'No chats match.' : status === 'archived' ? 'Nothing archived.' : 'No chats yet. Start one.') + '</li>';
+    let items;
+    if (term) items = sessions.filter((s) => [s.title, s.last_message, s.branch, s.task].join(' ').toLowerCase().includes(term)).map((s) => row(s, false));
+    else {
+      const ids = new Set(sessions.map((s) => s.id));
+      const kids = {};
+      sessions.filter((s) => s.parent_id && ids.has(s.parent_id)).forEach((s) => (kids[s.parent_id] ||= []).push(s));
+      items = sessions.filter((s) => !(s.parent_id && ids.has(s.parent_id))).flatMap((s) => [row(s, false), ...(kids[s.id] || []).sort((x, y) => x.created_at - y.created_at).map((k) => row(k, true))]);
+    }
+    list.replaceChildren(...items);
+    if (!items.length) list.innerHTML = '<li class="empty">' + (term ? 'No chats match.' : status === 'archived' ? 'Nothing archived.' : 'No chats yet. Start one.') + '</li>';
   }
   async function load() {
     try {
@@ -100,6 +122,15 @@ const CHAT_CSS = `
   header .name { font-family:var(--display); font-weight:600; font-size:17px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-radius:6px; outline:none; cursor:text; }
   header .name:focus { white-space:normal; box-shadow:0 0 0 2px var(--cobalt); padding:0 4px; }
   header .branch { font:12px ui-monospace, monospace; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  header .branch a { color:var(--cobalt); font-family:var(--ui); font-weight:600; text-decoration:none; }
+  /* This chat's sub-agents: one chip each, linking to its chat. */
+  .agents { flex:none; display:flex; gap:6px; overflow-x:auto; padding:8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); border-bottom:1px solid var(--line); background:var(--paper); scrollbar-width:none; }
+  .agents:empty { display:none; }
+  .agents a { flex:none; display:inline-flex; align-items:center; gap:6px; max-width:240px; border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:999px; padding:5px 11px; font-size:13px; font-weight:600; text-decoration:none; }
+  .agents a span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .agents a i { width:8px; height:8px; border-radius:50%; background:var(--line); flex:none; }
+  .agents a[data-state=working] i { background:var(--cobalt); animation:blink 1.2s infinite; }
+  .cathy .open { display:block; margin-top:4px; font-size:12px; font-weight:600; color:var(--cobalt); text-decoration:none; }
   .hbtn { flex:none; background:none; border:0; color:var(--muted); font-size:14px; cursor:pointer; padding:6px; text-decoration:none; }
   #log { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
   .thread { max-width:760px; margin:0 auto; padding:20px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); display:flex; flex-direction:column; gap:14px; }
@@ -234,8 +265,32 @@ const CHAT_JS = `
     } else if (m.role === 'artifact') {
       try { d.appendChild(artifactCard(JSON.parse(m.content))); } catch { d.textContent = m.content; }
     } else d.textContent = m.content;
-    if (m.role === 'cathy') d.dataset.from = 'From Cathy ' + m.sender;
+    if (m.role === 'cathy') {
+      d.dataset.sender = m.sender; label(d);
+      const o = document.createElement('a'); o.className = 'open'; o.href = '/cathy/' + encodeURIComponent(m.sender); o.textContent = 'Open chat ›'; d.appendChild(o);
+    }
     return place(d);
+  }
+  // Who a Cathy message is from, by name when we know it. Re-run when the sub-agent list arrives.
+  function label(d) {
+    const from = d.dataset.sender, kid = agentsById[from];
+    d.dataset.from = kid ? 'From sub-agent: ' + kid.title : session?.parent_id === from ? 'From the Cathy that started me (' + from + ')' : 'From Cathy ' + from;
+  }
+  // Sub-agents of this chat, as chips under the header. Refreshed when one is started, stopped or reports.
+  let agentsById = {}, agentsTimer = 0;
+  async function loadAgents() {
+    const r = await fetch('/api/cathy/sessions').catch(() => null);
+    if (!r?.ok) return;
+    const kids = (await r.json()).filter((s) => s.parent_id === id).sort((a, b) => a.created_at - b.created_at);
+    agentsById = Object.fromEntries(kids.map((k) => [k.id, k]));
+    thread.querySelectorAll('.m.cathy').forEach(label);
+    $('agents').replaceChildren(...kids.map((k) => {
+      const a = document.createElement('a'); a.href = '/cathy/' + k.id; a.dataset.state = k.state; a.dataset.testid = 'agent-chip';
+      a.title = (k.task || '') + ' · ' + (names[k.model] || k.model) + ' · ' + k.state;
+      a.innerHTML = '<i></i><span></span>'; a.querySelector('span').textContent = k.title; return a;
+    }));
+    clearTimeout(agentsTimer);
+    if (kids.some((k) => k.state === 'working')) agentsTimer = setTimeout(loadAgents, 10000);
   }
   function setStatus(s) {
     status = s;
@@ -282,6 +337,7 @@ const CHAT_JS = `
       }
       if (ev.type === 'message') {
         if (ev.message.role === 'assistant' || ev.message.role === 'tool') { thread.querySelectorAll('[data-streaming]').forEach((n) => n.remove()); live = liveThink = null; }
+        if (ev.message.role === 'cathy' || (ev.message.role === 'tool' && /^(spawn|stop)_agent/.test(ev.message.content))) loadAgents();
         add(ev.message);
       }
     };
@@ -362,8 +418,13 @@ const CHAT_JS = `
       m.models.forEach((x) => { names[x.id] = x.label; modelSel.add(new Option(x.label, x.id)); });
       m.efforts.forEach((x) => effortSel.add(new Option(x[0].toUpperCase() + x.slice(1) + ' effort', x)));
     }
-    if (s) { session = s; $('branch').textContent = s.branch; showTitle(s.title); modelSel.value = s.model; effortSel.value = s.effort; }
-  }).finally(connect); // after the model names are known, so reply labels read well
+    if (s) {
+      session = s; showTitle(s.title); modelSel.value = s.model; effortSel.value = s.effort;
+      const br = $('branch'); br.textContent = s.branch;
+      if (s.parent_id) { br.textContent = ' · ' + s.branch; const p = document.createElement('a'); p.href = '/cathy/' + s.parent_id; p.textContent = 'Sub-agent of ' + s.parent_id; p.dataset.testid = 'parent-link'; br.prepend(p); }
+    }
+    return loadAgents();
+  }).finally(connect); // after the model names (and sub-agent names) are known, so labels read well
 `;
 
 export const chatPage = () =>
@@ -376,6 +437,7 @@ export const chatPage = () =>
   <a class="hbtn" href="/artifacts">Artifacts</a>
   <button class="hbtn" id="archive" type="button">Archive</button>
 </header>
+<nav class="agents" id="agents" aria-label="Sub-agents" data-testid="agents"></nav>
 <div id="log"><div class="thread" id="thread">
   <div class="working" id="working" data-testid="status" data-status="connecting"><span class="dots"><i></i><i></i><i></i></span><span>Cathy is working…</span></div>
 </div></div>

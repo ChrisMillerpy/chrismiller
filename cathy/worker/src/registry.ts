@@ -15,7 +15,19 @@ export interface Session {
   /** Chosen model and effort; null = defaults. */
   model: string | null;
   effort: string | null;
+  /** Sub-agents: the chat that started this one (null if Chris did), how, and with what task. */
+  parent_id: string | null;
+  mode: AgentMode | null;
+  task: string | null;
+  instructions: string | null;
+  /** Whether Cathy is answering right now. */
+  state: AgentState;
 }
+
+export type AgentMode = 'fresh' | 'fork' | 'custom';
+export const MODES: AgentMode[] = ['fresh', 'fork', 'custom'];
+export type AgentState = 'working' | 'idle';
+const STATES: AgentState[] = ['working', 'idle'];
 
 export type Visibility = 'private' | 'link';
 export const VISIBILITIES: Visibility[] = ['private', 'link'];
@@ -122,12 +134,58 @@ export class Registry {
     await this.init();
     const id = randomId();
     const named_by = title.trim() ? 'chris' : null;
-    const s: Session = { id, title: oneLine(title, 60), branch: `cathy/${id}`, status: 'active', created_at: now, updated_at: now, last_message: null, named_by, model: null, effort: null };
+    const s: Session = { id, title: oneLine(title, 60), branch: `cathy/${id}`, status: 'active', created_at: now, updated_at: now, last_message: null, named_by, model: null, effort: null, parent_id: null, mode: null, task: null, instructions: null, state: 'idle' };
     await this.db
       .prepare('INSERT INTO sessions (id, title, branch, status, created_at, updated_at, last_message, named_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .bind(s.id, s.title, s.branch, s.status, s.created_at, s.updated_at, s.last_message, s.named_by)
       .run();
     return s;
+  }
+
+  /** A sub-agent's chat. It starts out working (its task is on the way), so it counts towards the parent's limit at once. */
+  async createChild(
+    parent_id: string,
+    a: { title: string; task: string; mode: AgentMode; instructions?: string | null; model?: string | null; effort?: string | null },
+    now = Date.now(),
+  ): Promise<Session> {
+    await this.init();
+    if (!MODES.includes(a.mode)) throw new Error(`Mode must be one of ${MODES.join(', ')}`);
+    const id = randomId();
+    const s: Session = {
+      id,
+      title: oneLine(a.title || a.task, 60),
+      branch: `cathy/${id}`,
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+      last_message: null,
+      named_by: 'cathy',
+      model: a.model ?? null,
+      effort: a.effort ?? null,
+      parent_id,
+      mode: a.mode,
+      task: a.task,
+      instructions: a.instructions?.trim() || null,
+      state: 'working',
+    };
+    await this.db
+      .prepare('INSERT INTO sessions (id, title, branch, status, created_at, updated_at, last_message, named_by, model, effort, parent_id, mode, task, instructions, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(s.id, s.title, s.branch, s.status, s.created_at, s.updated_at, s.last_message, s.named_by, s.model, s.effort, s.parent_id, s.mode, s.task, s.instructions, s.state)
+      .run();
+    return s;
+  }
+
+  /** A chat's active sub-agents, oldest first. */
+  async children(parent_id: string): Promise<Session[]> {
+    await this.init();
+    const { results } = await this.db.prepare("SELECT * FROM sessions WHERE parent_id = ? AND status = 'active' ORDER BY created_at, rowid").bind(parent_id).all();
+    return results.map((r: Session) => ({ ...r }));
+  }
+
+  async setState(id: string, state: AgentState) {
+    await this.init();
+    if (!STATES.includes(state)) throw new Error(`State must be one of ${STATES.join(', ')}`);
+    await this.db.prepare('UPDATE sessions SET state = ? WHERE id = ?').bind(state, id).run();
   }
 
   async get(id: string): Promise<Session | null> {
@@ -173,14 +231,15 @@ export class Registry {
     return (await this.get(id))!;
   }
 
+  /** Archive a chat and its sub-agents. */
   async archive(id: string) {
     await this.init();
-    await this.db.prepare("UPDATE sessions SET status = 'archived' WHERE id = ?").bind(id).run();
+    await this.db.prepare("UPDATE sessions SET status = 'archived' WHERE id = ? OR parent_id = ?").bind(id, id).run();
   }
 
   async unarchive(id: string, now = Date.now()) {
     await this.init();
-    await this.db.prepare("UPDATE sessions SET status = 'active', updated_at = ? WHERE id = ?").bind(now, id).run();
+    await this.db.prepare("UPDATE sessions SET status = 'active', updated_at = ? WHERE id = ? OR parent_id = ?").bind(now, id, id).run();
   }
 
   // ── Uploads: files Chris attaches to messages ───────────────

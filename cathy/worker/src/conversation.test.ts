@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Conversation, MAX_HOPS, memoryStore, tokens, type Event } from './conversation.ts';
+import { Conversation, MAX_AGENT_MESSAGES, MAX_HOPS, memoryStore, tokens, type Event } from './conversation.ts';
 import { createCathy } from '../../agent/cathy.ts';
 import { fakeModel, type Step } from '../../agent/fake-model.ts';
 import type { Box } from '../../agent/box.ts';
@@ -371,4 +371,131 @@ test('stop drops queued messages and says so', async () => {
   await Promise.all([first, second]);
   assert.ok(store.messages().some((m) => m.role === 'notice' && /1 queued message was not answered/.test(m.content)));
   assert.ok(!store.messages().some((m) => m.content === 'never'));
+});
+
+// ── Sub-agents ──────────────────────────────────────────────
+
+function agentSetup(script: Step[], extra: Partial<import('./conversation.ts').Deps> = {}) {
+  const model = fakeModel(script);
+  const store = memoryStore();
+  const reports: { text: string; stopped: boolean }[] = [];
+  const convo = new Conversation({
+    store,
+    broadcast: () => {},
+    makeAgent: (tools) => createCathy({ model: model as any, box, sessionId: 's', branch: 'cathy/s', tools }),
+    onActivity: async () => {},
+    sendToCathy: async () => {},
+    listCathys: async () => [],
+    report: async (text, stopped) => void reports.push({ text, stopped }),
+    ...extra,
+  });
+  return { convo, store, model, reports };
+}
+
+test('a task from the parent is answered and the final reply goes back to the parent as a report', async () => {
+  const { convo, store, model, reports } = agentSetup([{ tool: 'run_command', input: { command: 'ls' } }, { text: 'Done: added 3 tests, pushed.' }]);
+  await convo.fromParent('p1', 'Add tests');
+  assert.deepEqual(reports, [{ text: 'Done: added 3 tests, pushed.', stopped: false }]);
+  assert.ok(store.messages().some((m) => m.role === 'cathy' && m.sender === 'p1' && m.content === 'Add tests'));
+  assert.match(JSON.stringify(model.calls[0].prompt), /Message from Cathy p1, who started you/);
+});
+
+test('when Chris talks to a sub-agent directly, nothing is reported to the parent', async () => {
+  const { convo, reports } = agentSetup([{ text: 'Hi Chris.' }]);
+  await convo.fromChris('how is it going?');
+  assert.deepEqual(reports, []);
+});
+
+test('if Chris stops a sub-agent, the parent hears it stopped; if the parent stops it, nothing comes back', async () => {
+  const a = agentSetup([{ text: 'a b c d e f g h', slow: 15 }]);
+  const done = a.convo.fromParent('p1', 'long job');
+  await waitFor(() => a.store.messages().length >= 1 && a.convo.status === 'thinking');
+  await new Promise((r) => setTimeout(r, 40));
+  a.convo.stop();
+  await done;
+  assert.equal(a.reports.length, 1);
+  assert.equal(a.reports[0].stopped, true);
+
+  const b = agentSetup([{ text: 'a b c d e f g h', slow: 15 }]);
+  const done2 = b.convo.fromParent('p1', 'long job');
+  await new Promise((r) => setTimeout(r, 40));
+  b.convo.stop({ silent: true });
+  await done2;
+  assert.deepEqual(b.reports, []);
+});
+
+test('a report from a sub-agent shows in the chat and gives the parent a turn', async () => {
+  const { convo, store, model } = agentSetup([{ text: 'Merged its branch.' }]);
+  await convo.fromAgent('c1', 'Done, pushed cathy/c1.');
+  assert.ok(store.messages().some((m) => m.role === 'cathy' && m.sender === 'c1' && m.content === 'Done, pushed cathy/c1.'));
+  assert.match(JSON.stringify(model.calls[0].prompt), /Report from your sub-agent c1/);
+  assert.equal(store.messages().at(-1)!.content, 'Merged its branch.');
+});
+
+test('spawn_agent, list_agents, message_agent and stop_agent call the agent controls', async () => {
+  const seen: any[] = [];
+  const view = { id: 'c1', title: 'T', mode: 'fresh', state: 'working', model: 'claude-haiku-5-5', effort: 'low', branch: 'cathy/c1', task: 'x', last_message: null, url: '/cathy/c1' };
+  const { convo, model } = agentSetup(
+    [
+      { tool: 'spawn_agent', input: { task: 'Write tests', mode: 'fresh', model: 'claude-haiku-5-5', effort: 'low' } },
+      { tool: 'list_agents', input: {} },
+      { tool: 'message_agent', input: { id: 'c1', text: 'also docs' } },
+      { tool: 'stop_agent', input: { id: 'c1' } },
+      { text: 'ok' },
+    ],
+    {
+      agents: {
+        spawn: async (i) => (seen.push(['spawn', i]), view as any),
+        list: async () => (seen.push(['list']), [view as any]),
+        message: async (id, text) => void seen.push(['message', id, text]),
+        stop: async (id) => void seen.push(['stop', id]),
+      },
+    },
+  );
+  await convo.fromChris('split this up');
+  assert.deepEqual(seen, [['spawn', { task: 'Write tests', mode: 'fresh', model: 'claude-haiku-5-5', effort: 'low' }], ['list'], ['message', 'c1', 'also docs'], ['stop', 'c1']]);
+  assert.match(JSON.stringify(model.calls[1].prompt), /Started sub-agent c1/);
+  assert.match(JSON.stringify(model.calls[1].prompt), /\/cathy\/c1/);
+});
+
+test('without agent controls (a sub-agent), there are no spawn tools', async () => {
+  const { convo, model } = agentSetup([{ text: 'ok' }]);
+  await convo.fromParent('p1', 'go');
+  const names = (model.calls[0].tools ?? []).map((t: any) => t.name);
+  assert.ok(!names.includes('spawn_agent'));
+  assert.ok(names.includes('message_cathy'));
+});
+
+test(`parent-to-agent messages are capped at ${MAX_AGENT_MESSAGES} until Chris speaks again`, async () => {
+  const sent: string[] = [];
+  const { convo, store } = agentSetup([{ tool: 'message_agent', input: { id: 'c1', text: 'more' } }, { text: 'ok' }, { tool: 'message_agent', input: { id: 'c1', text: 'more' } }, { text: 'ok' }], {
+    agents: { spawn: async () => ({}) as any, list: async () => [], message: async (_id, t) => void sent.push(t), stop: async () => {} },
+  });
+  store.setNumber('agent_msgs', MAX_AGENT_MESSAGES);
+  await convo.fromAgent('c1', 'report');
+  assert.deepEqual(sent, [], 'over the cap: not sent');
+  assert.ok(store.messages().some((m) => m.role === 'tool' && /loop guard/i.test(m.content)));
+  await convo.fromChris('keep going');
+  assert.deepEqual(sent, ['more'], 'Chris speaking resets the cap');
+});
+
+test('a fork gets the conversation so far, including the message being worked on', async () => {
+  let forked: unknown[] = [];
+  let convoRef: Conversation;
+  const { convo } = agentSetup([{ text: 'First answer.' }, { tool: 'spawn_agent', input: { task: 'part B', mode: 'fork' } }, { text: 'Started.' }], {
+    agents: {
+      spawn: async () => ((forked = convoRef.forkHistory()), { id: 'c1', url: '/cathy/c1', branch: 'cathy/c1', model: 'm', mode: 'fork' }) as any,
+      list: async () => [],
+      message: async () => {},
+      stop: async () => {},
+    },
+  });
+  convoRef = convo;
+  await convo.fromChris('first question');
+  await convo.fromChris('now split it');
+  const text = JSON.stringify(forked);
+  assert.match(text, /first question/);
+  assert.match(text, /First answer/);
+  assert.match(text, /now split it/);
+  assert.equal((forked.at(-1) as any).role, 'assistant', 'ends on an assistant turn, so the task can follow as a user message');
 });

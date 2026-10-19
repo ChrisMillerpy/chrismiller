@@ -13,14 +13,23 @@ export interface CathyOptions {
   sessionId: string;
   branch: string;
   tools?: Record<string, any>;
+  /** Tools to leave out, e.g. open_pr for a sub-agent. */
+  withoutTools?: string[];
+  /** Added after her self, e.g. a sub-agent's role. Read every turn. */
+  extraInstructions?: () => Promise<string | undefined>;
 }
 
-export function createCathy({ model, box, sessionId, branch, tools = {} }: CathyOptions) {
+export function createCathy({ model, box, sessionId, branch, tools = {}, withoutTools = [], extraInstructions }: CathyOptions) {
+  const all: Record<string, any> = { ...boxTools(box, branch), ...tools };
+  for (const name of withoutTools) delete all[name];
   return new Agent({
     id: 'cathy',
     name: 'Cathy',
-    instructions: async () => instructions(sessionId, branch, await loadSelf(box)),
+    instructions: async () => {
+      const [self, extra] = await Promise.all([loadSelf(box), extraInstructions?.()]);
+      return [instructions(sessionId, branch, self), extra?.trim()].filter(Boolean).join('\n\n');
+    },
     model,
-    tools: { ...boxTools(box, branch), ...tools },
+    tools: all,
   });
 }

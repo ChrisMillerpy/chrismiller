@@ -152,3 +152,47 @@ test('republishing adds a version: same id and link, new content, old versions k
   assert.deepEqual(await reg.versions(a.id), []);
   assert.equal(r2.store.size, 0, 'all versions removed from R2');
 });
+
+// ── Sub-agents ──────────────────────────────────────────────
+
+test('a child chat records its parent, mode, task, instructions, model and effort, and starts working', async () => {
+  const reg = new Registry(fakeD1(), SCHEMA);
+  const p = await reg.create('Parent', 1000);
+  assert.equal(p.parent_id, null);
+  assert.equal(p.state, 'idle');
+  const c = await reg.createChild(p.id, { title: 'Write the tests', task: 'Add tests for X', mode: 'custom', instructions: 'You are a tester.', model: 'claude-haiku-5-5', effort: 'low' }, 2000);
+  assert.equal(c.branch, `cathy/${c.id}`);
+  assert.deepEqual(await reg.get(c.id), { ...c });
+  assert.equal(c.parent_id, p.id);
+  assert.equal(c.mode, 'custom');
+  assert.equal(c.task, 'Add tests for X');
+  assert.equal(c.instructions, 'You are a tester.');
+  assert.equal(c.model, 'claude-haiku-5-5');
+  assert.equal(c.effort, 'low');
+  assert.equal(c.state, 'working');
+  assert.equal(c.named_by, 'cathy', 'Chris can still rename it');
+});
+
+test('children lists a chat\'s active sub-agents, oldest first; state can change', async () => {
+  const reg = new Registry(fakeD1(), SCHEMA);
+  const p = await reg.create('Parent', 1000);
+  const other = await reg.create('Other', 1000);
+  const a = await reg.createChild(p.id, { title: 'a', task: 'a', mode: 'fresh' }, 2000);
+  const b = await reg.createChild(p.id, { title: 'b', task: 'b', mode: 'fork' }, 3000);
+  await reg.createChild(other.id, { title: 'x', task: 'x', mode: 'fresh' }, 4000);
+  assert.deepEqual((await reg.children(p.id)).map((s) => s.id), [a.id, b.id]);
+  await reg.setState(a.id, 'idle');
+  assert.equal((await reg.get(a.id))!.state, 'idle');
+  await assert.rejects(reg.setState(a.id, 'asleep' as any));
+});
+
+test('archiving a chat archives its sub-agents too, and unarchiving brings them back', async () => {
+  const reg = new Registry(fakeD1(), SCHEMA);
+  const p = await reg.create('Parent', 1000);
+  const c = await reg.createChild(p.id, { title: 'c', task: 'c', mode: 'fresh' }, 2000);
+  await reg.archive(p.id);
+  assert.equal((await reg.get(c.id))!.status, 'archived');
+  assert.deepEqual(await reg.children(p.id), []);
+  await reg.unarchive(p.id);
+  assert.equal((await reg.get(c.id))!.status, 'active');
+});

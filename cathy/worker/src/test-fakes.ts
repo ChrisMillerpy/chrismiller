@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 
 const read = (f: string) => readFileSync(new URL(`../../../d1/migrations/${f}`, import.meta.url), 'utf8');
-export const SCHEMA = [read('0001_sessions.sql'), read('0002_names_artifacts.sql')];
+export const SCHEMA = [read('0001_sessions.sql'), read('0002_names_artifacts.sql'), read('0003_subagents.sql')];
 
 /** Just enough of the D1 API, backed by an in-memory SQLite database. */
 export function fakeD1() {
