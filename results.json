@@ -1,0 +1,41 @@
+{
+  "base": "https://withchris-admin-cathy-7kbsht.withchris.workers.dev",
+  "real": true,
+  "when": "2026-10-20T13:54:03.543Z",
+  "passed": false,
+  "steps": [
+    {
+      "name": "Log in once",
+      "ok": true,
+      "ms": 1229,
+      "detail": "remembered for 400 days",
+      "shot": "01-log-in-once.png"
+    },
+    {
+      "name": "Admin home",
+      "ok": true,
+      "ms": 836,
+      "shot": "02-admin-home.png"
+    },
+    {
+      "name": "Open Cathy",
+      "ok": true,
+      "ms": 860,
+      "shot": "03-open-cathy.png"
+    },
+    {
+      "name": "Start a new chat",
+      "ok": true,
+      "ms": 6619,
+      "detail": "chat fsj5y3, branch cathy/fsj5y3",
+      "shot": "04-start-a-new-chat.png"
+    },
+    {
+      "name": "Chat box fits the phone",
+      "ok": false,
+      "ms": 102,
+      "detail": "Error: Send is cut off (400 > 393)",
+      "shot": "05-chat-box-fits-the-phone.png"
+    }
+  ]
+}

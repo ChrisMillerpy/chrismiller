@@ -1,0 +1,7 @@
+✓ Log in once (1229 ms) — remembered for 400 days
+✓ Admin home (836 ms)
+✓ Open Cathy (860 ms)
+✓ Start a new chat (6619 ms) — chat fsj5y3, branch cathy/fsj5y3
+✗ Chat box fits the phone: Error: Send is cut off (400 > 393)
+video: 26 frames → walkthrough.mp4
+FAILED → /home/runner/work/chrismiller/chrismiller/e2e-out

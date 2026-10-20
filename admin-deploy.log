@@ -1,0 +1,24 @@
+
+ ⛅️ wrangler 4.149.0 (update available 4.151.3)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 112 files from the assets directory /home/runner/work/chrismiller/chrismiller/packs
+🌀 Starting asset upload...
+🌀 Found 1 new or modified static asset to upload. Proceeding with upload...
++ /money-mvp/index.html
+Uploaded 1 of 1 asset
+✨ Success! Uploaded 1 file (100 already uploaded) (0.92 sec)
+
+Total Upload: 133.10 KiB / gzip: 63.23 KiB
+Worker Startup Time: 1 ms
+Your Worker has access to the following bindings:
+Binding                                                    Resource                  
+env.CATHY (withchris-cathy-cathy-7kbsht)                   Worker                    
+env.PACKS                                                  Assets                    
+env.ACCESS_TEAM_DOMAIN ("")                                Environment Variable      
+env.ACCESS_AUD ("")                                        Environment Variable      
+
+Uploaded withchris-admin-cathy-7kbsht (4.25 sec)
+Deployed withchris-admin-cathy-7kbsht triggers (0.58 sec)
+  https://withchris-admin-cathy-7kbsht.withchris.workers.dev
+Current Version ID: f58d1b58-d2c9-477e-ad1a-344952728645
