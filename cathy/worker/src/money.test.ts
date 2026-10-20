@@ -147,5 +147,6 @@ test('receive: other webhook types are ignored, junk is refused', async () => {
   const { money, post, posted } = setup();
   assert.deepEqual(await receive({ type: 'transaction.updated', data: {} }, { money, post }), { ok: true, posted: false });
   assert.deepEqual(await receive({ type: 'transaction.created', data: { id: 1 } }, { money, post }), { ok: false, posted: false });
+  assert.deepEqual(await receive('nope', { money, post }), { ok: false, posted: false });
   assert.equal(posted.length, 0);
 });

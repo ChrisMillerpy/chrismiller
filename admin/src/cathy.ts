@@ -162,6 +162,9 @@ const CHAT_CSS = `
   .tool { align-self:flex-start; max-width:100%; font:13px/1.4 ui-monospace, monospace; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .tool::before { content:'› '; color:var(--cobalt); }
   .artifact { align-self:flex-start; width:100%; display:flex; }
+  /* A Monzo transaction (Money chat): the bank's line, then Cathy's reply below it. */
+  .money { align-self:flex-start; max-width:85%; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:8px 12px; white-space:pre-wrap; font-size:15px; font-variant-numeric:tabular-nums; }
+  .money::before { content:'Monzo'; display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:2px; }
   .notice { align-self:center; font-size:13px; color:var(--pen); text-align:center; }
   .hint { color:var(--muted); font-size:15px; text-align:center; margin-top:18vh; line-height:1.5; }
   .hint b { display:block; font-family:var(--display); color:var(--ink); font-size:22px; margin-bottom:6px; }

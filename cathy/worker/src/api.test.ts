@@ -139,3 +139,25 @@ test('Markdown artifacts are served as a rendered page with maths, and the Markd
   const rawMd = await call('GET', `/share/a/${a.token}/download`);
   assert.equal(await rawMd.text(), md);
 });
+
+test('money: a Monzo webhook (forwarded by the money Worker) is stored and posted to the Money chat', async () => {
+  const { env, call, registry } = setup();
+  const posted: any[] = [];
+  env.SESSION = { getByName: (id: string) => ({ fetch: async () => new Response(), changed: async () => {}, receiveMoney: async (myId: string, text: string, reply: boolean) => void posted.push({ id, myId, text, reply }) }) } as any;
+  const body = { type: 'transaction.created', data: { id: 'tx_1', amount: -420, currency: 'GBP', created: '2026-10-21T08:15:00Z', description: 'PRET', category: 'eating_out', merchant: { name: 'Pret A Manger' }, metadata: {} } };
+  const r = await call('POST', '/money/monzo', body, { 'content-type': 'application/json' });
+  assert.equal(r.status, 200);
+  assert.equal(posted.length, 1);
+  assert.equal(posted[0].id, posted[0].myId);
+  assert.equal((await registry().get(posted[0].id))!.title, 'Money');
+  assert.match(posted[0].text, /Pret A Manger/);
+  assert.equal((await call('POST', '/money/monzo', body, { 'content-type': 'application/json' })).status, 200, 'retries are fine');
+  assert.equal(posted.length, 1, 'but not posted twice');
+});
+
+test('money: junk gets a 400, and only POST works', async () => {
+  const { call } = setup();
+  assert.equal((await call('POST', '/money/monzo', { type: 'transaction.created', data: { id: 3 } }, { 'content-type': 'application/json' })).status, 400);
+  assert.equal((await call('POST', '/money/monzo', 'not json', { 'content-type': 'application/json' })).status, 400);
+  assert.equal((await call('GET', '/money/monzo')).status, 404);
+});

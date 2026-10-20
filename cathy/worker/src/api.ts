@@ -5,12 +5,15 @@ import { MAX_FILE, mimeFor, serveFile, shareUrl } from './files.ts';
 import { isChatGPT, modelList, resolve, validate, EFFORTS } from './models.ts';
 import { BASE_URL, chatgptFetch } from './chatgpt-fetch.ts';
 import type { Vault } from './chatgpt-vault.ts';
+import { Money, receive } from './money.ts';
 import type { Env } from './env.ts';
 
 /** What the API needs from the Session Durable Object. */
 export interface SessionStub {
   fetch(r: Request): Promise<Response>;
   changed(id: string, e: import('./conversation.ts').Event): Promise<void>;
+  /** Post a Monzo transaction line to this chat (the Money chat). */
+  receiveMoney?(id: string, text: string, reply: boolean): Promise<void>;
 }
 /** What the API needs from the ChatGPT sign-in Durable Object. */
 export type VaultStub = Pick<Vault, 'status' | 'start' | 'finish' | 'accessToken' | 'disconnect'>;
@@ -39,6 +42,7 @@ export async function handle(request: Request, env: ApiEnv, schema: string[]): P
   }
   try {
     if (parts[0] === 'share') return await share(parts.slice(1), request, registry);
+    if (parts[0] === 'money') return await money(parts.slice(1), request, registry, env);
     if (parts[0] !== 'api') return notFound();
     if (parts[1] === 'sessions') return await sessions(parts.slice(2), request, url, registry, env);
     if (parts[1] === 'artifacts') return await artifacts(parts.slice(2), request, url, registry, env);
@@ -165,6 +169,22 @@ async function share([kind, token, action, extra]: string[], request: Request, r
   if (!a || !bytes) return notFound();
   // Short cache: switching an artifact back to private takes effect within a minute.
   return serveFile({ filename: a.filename, mime: a.mime, title: a.title }, bytes, { download: action === 'download', cache: 'public, max-age=60', etag: `"${a.id}-${a.version}"` });
+}
+
+/**
+ * Monzo webhooks, reached only through the money Worker (money/), which has already checked the
+ * secret URL. Always 200 for a well-formed body, so Monzo doesn't retry what we've already stored.
+ */
+async function money([source, extra]: string[], request: Request, registry: Registry, env: ApiEnv) {
+  if (source !== 'monzo' || extra || request.method !== 'POST') return notFound();
+  const body = await request.json().catch(() => null);
+  const result = await receive(body, {
+    money: new Money(env.DB, registry),
+    post: async (chat, text, reply) => {
+      await env.SESSION.getByName(chat).receiveMoney?.(chat, text, reply);
+    },
+  });
+  return json(result, result.ok ? 200 : 400);
 }
 
 /**

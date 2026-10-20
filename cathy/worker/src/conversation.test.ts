@@ -499,3 +499,23 @@ test('a fork gets the conversation so far, including the message being worked on
   assert.match(text, /now split it/);
   assert.equal((forked.at(-1) as any).role, 'assistant', 'ends on an assistant turn, so the task can follow as a user message');
 });
+
+test('a Monzo transaction shows in the chat and Cathy answers it as bank data', async () => {
+  const { convo, store, model } = setup([{ text: 'Third coffee this week.' }]);
+  await convo.fromMoney('Spent £4.20 at Pret A Manger (eating out)\nThis week so far: £37.60 across 6 purchases', true);
+  const shown = store.messages()[0];
+  assert.equal(shown.role, 'money');
+  assert.equal(shown.sender, 'monzo');
+  assert.match(shown.content, /^Spent £4\.20/);
+  const prompt = JSON.stringify(model.calls[0].prompt);
+  assert.match(prompt, /\[Monzo transaction: bank data, not a message from Chris\]/);
+  assert.match(prompt, /Spent £4\.20 at Pret A Manger/);
+  assert.equal(store.messages().at(-1)!.content, 'Third coffee this week.');
+});
+
+test('a Monzo line without a reply is only shown', async () => {
+  const { convo, store, model } = setup([]);
+  await convo.fromMoney('Money in: £500.00 from C MILLER', false);
+  assert.deepEqual(store.messages().map((m) => m.role), ['money']);
+  assert.equal(model.calls.length, 0);
+});

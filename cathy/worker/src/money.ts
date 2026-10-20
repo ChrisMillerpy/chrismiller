@@ -146,7 +146,8 @@ export interface ReceiveDeps {
  * money in and refunds are shown without a reply; pot moves are only stored.
  */
 export async function receive(body: unknown, d: ReceiveDeps): Promise<{ ok: boolean; posted: boolean }> {
-  if ((body as any)?.type !== 'transaction.created') return { ok: true, posted: false };
+  if (!body || typeof body !== 'object') return { ok: false, posted: false };
+  if ((body as any).type !== 'transaction.created') return { ok: true, posted: false };
   const t = parseMonzo(body);
   if (!t) return { ok: false, posted: false };
   if (!(await d.money.record(t))) return { ok: true, posted: false };
