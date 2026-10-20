@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Money MVP: evidence pack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Public+Sans:wght@400..600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root { --paper:#FAFBFD; --bg:#FFFFFF; --ink:#18203A; --muted:#5A6480; --line:#DDE3EE; --cobalt:#2443C9; --ok:#1B7F4B; --wait:#9A6700; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --paper:#0B1222; --bg:#0F1729; --ink:#E8EDF8; --muted:#9BA7C4; --line:#24304D; --cobalt:#8EA6FF; --ok:#5FD38D; --wait:#E3B341; color-scheme: dark; } }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 'Public Sans', system-ui, sans-serif; }
+  main { max-width:780px; margin:0 auto; padding:28px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); }
+  a { color:var(--cobalt); } a.back { text-decoration:none; font-weight:600; font-size:15px; }
+  p.eyebrow { font-size:12.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--cobalt); margin:18px 0 6px; }
+  h1 { font:600 36px/1.1 Literata, Georgia, serif; margin:0 0 20px; }
+  h2 { font:600 24px/1.2 Literata, Georgia, serif; margin:36px 0 10px; }
+  table { border-collapse:collapse; width:100%; background:var(--bg); border:1px solid var(--line); font-size:15px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .ok { color:var(--ok); font-weight:600; } .wait { color:var(--wait); font-weight:600; }
+  code, pre { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:13.5px; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px 14px; overflow-x:auto; white-space:pre-wrap; }
+  .shots { display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:12px; }
+  figure { margin:0; } figure img { width:100%; border:1px solid var(--line); border-radius:12px; display:block; }
+  figcaption { font-size:13px; color:var(--muted); margin-top:4px; }
+  .muted { color:var(--muted); }
+</style>
+<body>
+<main>
+  <a class="back" href="/packs/">‹ Evidence packs</a>
+  <p class="eyebrow">Evidence pack</p>
+  <h1>Money MVP: Monzo spending in a Cathy chat</h1>
+
+  <h2>RFC</h2>
+  <p><b>Problem.</b> Chris doesn't track spending after the fact. He wants each purchase to show up in a thread he can talk to, with Cathy noticing what's in or out of plan. This is step one of "spending on autopilot".</p>
+  <p><b>Design.</b></p>
+  <ul>
+    <li><b>Monzo webhook.</b> Monzo's developer API calls a URL on every transaction. Chris registers it once, using a short-lived token from the Monzo developer portal. After that <b>we never hold a Monzo token</b>: Monzo pushes to us, and we can't read the account, move money or pay anyone.</li>
+    <li><b>Public <code>money/</code> Worker</b> (<code>withchris-money</code>). It does one thing: <code>POST /monzo/&lt;secret&gt;</code> is forwarded, body only, to the private Cathy Worker. Monzo doesn't sign its webhooks, so a secret of 32+ characters in the URL is the lock. It's compared in constant time, and any other path, method or secret gets a 404 before Cathy sees it. Bodies are capped at 64 KB. Same shape as <code>share/</code>.</li>
+    <li><b>Cathy: <code>money.ts</code>.</b> It parses <code>transaction.created</code> and keeps a cut-down record in D1 (<code>d1/migrations/0004_money.sql</code>): id, pence, currency, time, London week, merchant, category and kind. Then it works out the week's net spend and posts one line to a chat called <b>Money</b>. That chat is made on first use, and made again if archived.</li>
+    <li><b>Kinds.</b> Purchases and declines get a short reply from Cathy. Money in and shop refunds are shown with no reply. Pot moves are only stored. Monzo retries are ignored by transaction id.</li>
+    <li><b>Admin.</b> A new "Monzo" message style, shown above Cathy's reply. The Money chat is a normal chat, so Chris can tell Cathy his weekly budget there and ask questions.</li>
+  </ul>
+  <p><b>Alternatives rejected.</b></p>
+  <ul>
+    <li><i>TSB via Open Banking</i>: needs an aggregator and polling (no live pings), and re-consent every 90 days.</li>
+    <li><i>Polling Monzo</i>: we'd have to store a token that can read everything.</li>
+    <li><i>Paying for Chris</i>: needs FCA authorisation. Standing orders, pots and subscriptions already cover the scheduled side.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <ul>
+    <li><b>No Monzo token is stored.</b> The only secret is the webhook URL secret (repo secret <code>MONZO_WEBHOOK_SECRET</code>, then a Worker secret). If it leaks, the worst anyone can do is post fake lines into the Money chat. The fix is to rotate it and re-register.</li>
+    <li><b>Data stays behind Access.</b> Transactions live in D1, behind admin's Cloudflare Access. Nothing goes in the repo, and no account numbers or card details are kept.</li>
+    <li><b>Prompt injection.</b> Merchant names come from outside, so they're cut to 60 characters on one line, with brackets and control characters stripped. That means they can't fake a "[Message from Chris]". The prompt labels them as bank data and tells Cathy never to act on them. The remaining risk is that Cathy's Money replies run with her normal tools. The risk is small, because names are short and come from card networks.</li>
+    <li><b>Only the body crosses.</b> From <code>money/</code> to Cathy goes the request body and nothing else: no cookies, headers or query string.</li>
+  </ul>
+
+  <h2>Rollout and rollback</h2>
+  <ol>
+    <li>Make a secret with <code>openssl rand -hex 24</code> and add it as the repo secret <code>MONZO_WEBHOOK_SECRET</code>.</li>
+    <li>Apply <a href="deploy-admin.patch">deploy-admin.patch</a> (<code>git apply packs/money-mvp/deploy-admin.patch</code>). My token can't edit workflows.</li>
+    <li>Merge. This deploys the new <code>withchris-money</code> Worker.</li>
+    <li>At <a href="https://developers.monzo.com">developers.monzo.com</a>, sign in and approve in the Monzo app. In the playground, copy the access token and your account id (<code>GET /accounts</code>), then:
+      <pre>curl https://api.monzo.com/webhooks -H "Authorization: Bearer $TOKEN" \
+  -d account_id=$ACCOUNT -d url=https://withchris-money.withchris.workers.dev/monzo/$SECRET</pre>
+      The token expires in a few hours. The webhook stays.</li>
+    <li>Tap your card. A line appears in the Money chat within seconds.</li>
+  </ol>
+  <p><b>Rollback.</b> Delete the webhook (<code>DELETE /webhooks/&lt;id&gt;</code>) or remove the secret, and nothing gets through. Archive the Money chat.</p>
+
+  <h2>Verdict</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th><th>Evidence</th></tr>
+    <tr><td>Parses purchases, declines, income, refunds and pot moves; refuses malformed bodies</td><td class="ok">Pass</td><td>money tests</td></tr>
+    <tr><td>Merchant text cleaned (one line, no brackets, 60 chars)</td><td class="ok">Pass</td><td>money tests</td></tr>
+    <tr><td>Week is Monday-based in London time, correct across both clock changes</td><td class="ok">Pass</td><td>money tests</td></tr>
+    <tr><td>Retries stored and posted once. Week total nets refunds and leaves out income, pots, declines and last week</td><td class="ok">Pass</td><td>money and api tests</td></tr>
+    <tr><td>Public Worker forwards only the right secret, POST, ≤64 KB and nothing else. With no secret set, it stays closed</td><td class="ok">Pass</td><td>money/ tests</td></tr>
+    <tr><td>Cathy answers purchases as labelled bank data. Money in is shown without a turn</td><td class="ok">Pass</td><td>conversation tests</td></tr>
+    <tr><td>Local end to end: curl → money Worker → Cathy → Money chat in admin</td><td class="ok">Pass</td><td>local <code>wrangler dev</code>. Five webhooks sent (purchase plus its retry, Gousto, a declined Deliveroo, money in, a pot move) gave four lines, as designed</td></tr>
+    <tr><td>Whole suite and type-check</td><td class="ok">Pass</td><td>194 of 194 tests; <code>typecheck:workers</code> clean</td></tr>
+    <tr><td>A real Monzo transaction</td><td class="wait">Waiting</td><td>Needs deploy and the webhook registered</td></tr>
+  </table>
+
+  <h2>Tests written first</h2>
+  <p><code>cathy/worker/src/money.test.ts</code> came first, then the money tests in <code>conversation.test.ts</code> and <code>api.test.ts</code>, then <code>money/src/index.test.ts</code>. Each one failed before its code was written.</p>
+</main>
+</body>
+</html>
