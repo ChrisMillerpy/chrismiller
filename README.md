@@ -10,6 +10,7 @@ Chris Miller's maths tutoring business, in one repo: three public sites, a priva
 | `admin/` | Private home screen: Cathy chats, artifacts, link to this repo, evidence packs | `withchris-admin.withchris.workers.dev` |
 | `cathy/` | Cathy's code, plus her soul, memory and skills | private Worker `withchris-cathy`, reached through admin and share |
 | `share/` | Public, read-only links to artifacts Chris shares | `withchris-share.withchris.workers.dev` (later `artifacts.withchris.uk`) |
+| `money/` | Public Monzo webhook: forwards Chris's transactions to Cathy's Money chat | `withchris-money.withchris.workers.dev` |
 | `shared/` | Header, footer, layout, theme and `site.ts` (name, email, addresses), used by every site and admin | — |
 | `packs/` | Evidence packs: proof that a change works. Served by admin at `/packs/` | — |
 | `d1/` | SQL for Cathy's registry: chats, attachments, artifacts | — |
@@ -43,6 +44,7 @@ Needs Node 22+ (`nvm use` reads `.nvmrc`). One `npm install` at the root covers 
 - **ChatGPT plan:** connect it at admin → ChatGPT plan (`admin/src/chatgpt-ui.ts`). The sign-in lives only in the `ChatGPT` Durable Object (`cathy/worker/src/chatgpt-account.ts`, logic in `chatgpt-vault.ts` and `chatgpt-oauth.ts`); requests go through `chatgpt-fetch.ts`, which only ever sends it to chatgpt.com. Uses the same sign-in as OpenAI's Codex CLI, which isn't an official option for other apps, so it can break without notice.
 - **Sub-agents:** Cathy starts other Cathys with `spawn_agent` (tools and limits in `cathy/worker/src/conversation.ts`, logic in `cathy/worker/src/agents.ts`, how-to in `cathy/self/skills/sub-agents/`). Each is a normal chat with a `parent_id` (`d1/migrations/0003_subagents.sql`); admin nests them under their parent. Limits: `MAX_WORKING` (5 at once) in `agents.ts`; `MAX_AGENT_MESSAGES` and `MAX_HOPS` in `conversation.ts`.
 - **Artifacts and attachments:** bytes in R2 (`withchris-files`), facts in D1 (`d1/migrations/0002_names_artifacts.sql`). Cathy publishes with the `publish_artifact` tool (`cathy/worker/src/box-files.ts`). Each artifact is private (admin only) or link (anyone with the link, served by `share/`).
+- **Money:** Monzo calls `money/` (secret URL, `MONZO_WEBHOOK_SECRET`) on every transaction; `cathy/worker/src/money.ts` stores it in D1 (`d1/migrations/0004_money.sql`) and posts it to the "Money" chat. Setup in `packs/money-mvp/`.
 - **Evidence packs:** one folder per pack in `packs/`, listed in `packs/index.html`.
 
 ## Writing a blog post

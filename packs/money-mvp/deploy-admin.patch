@@ -1,0 +1,31 @@
+diff --git a/.github/workflows/deploy-admin.yml b/.github/workflows/deploy-admin.yml
+index 2593611..ebff120 100644
+--- a/.github/workflows/deploy-admin.yml
++++ b/.github/workflows/deploy-admin.yml
+@@ -7,7 +7,7 @@ name: Deploy admin and Cathy
+ on:
+   push:
+     branches: [main]
+-    paths: ['admin/**', 'cathy/**', 'shared/**', 'd1/**', 'packs/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-admin.yml']
++    paths: ['admin/**', 'cathy/**', 'money/**', 'shared/**', 'd1/**', 'packs/**', 'package.json', 'package-lock.json', '.github/workflows/deploy-admin.yml']
+   workflow_dispatch:
+ 
+ permissions:
+@@ -52,6 +52,17 @@ jobs:
+           if [ "$(jq length secrets.json)" -gt 0 ]; then npx wrangler secret bulk secrets.json 2>&1 | tail -3; fi
+           rm -f secrets.json
+ 
++      - name: Deploy money (public Monzo webhook; reaches Cathy, so after her)
++        id: money
++        if: steps.cathy.outcome == 'success'
++        working-directory: money
++        env:
++          MONZO_WEBHOOK_SECRET: ${{ secrets.MONZO_WEBHOOK_SECRET }}
++        run: |
++          set -o pipefail
++          npx wrangler deploy 2>&1 | tail -5
++          if [ -n "$MONZO_WEBHOOK_SECRET" ]; then jq -n '{MONZO_WEBHOOK_SECRET: env.MONZO_WEBHOOK_SECRET}' > s.json && npx wrangler secret bulk s.json >/dev/null; rm -f s.json; fi
++
+       - name: Deploy admin
+         id: admin
+         if: steps.cathy.outcome == 'success'

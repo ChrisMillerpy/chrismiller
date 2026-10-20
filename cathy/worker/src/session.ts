@@ -247,6 +247,12 @@ export class Session extends DurableObject<Env> {
     this.ctx.waitUntil(this.conversation().fromCathy(from, text, hops));
   }
 
+  /** A Monzo transaction for the Money chat (money.ts). Returns at once; Cathy answers in the background. */
+  async receiveMoney(myId: string, text: string, reply: boolean) {
+    this.setId(myId);
+    this.ctx.waitUntil(this.conversation().fromMoney(text, reply));
+  }
+
   // ── Sub-agents ──────────────────────────────────────────────
 
   /** This chat is a new sub-agent: remember its parent, take a copy of her conversation (fork mode), and start on the task. */

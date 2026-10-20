@@ -1,0 +1,13 @@
+// Public money Worker: receives Monzo's transaction webhook and forwards it to the private Cathy Worker.
+// It holds one secret (MONZO_WEBHOOK_SECRET, the secret part of the webhook URL) and no data.
+// See money/src/index.ts and packs/money-mvp/.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "withchris-money",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "services": [{ "binding": "CATHY", "service": "withchris-cathy" }],
+  "observability": { "enabled": true }
+}
